@@ -164,6 +164,52 @@ func TestUpdateAPITokenRequestValid(t *testing.T) {
 	})
 }
 
+func TestAPITokenWithSecretValid(t *testing.T) {
+	t.Parallel()
+
+	now := time.Now()
+	validJWT := "synthetic.fixture.00000000000000000000000000000013"
+
+	baseToken := APIToken{
+		TokenID:   "abcdefghij",
+		UserID:    1,
+		RoleID:    1,
+		TTL:       3600,
+		Status:    TokenStatusActive,
+		CreatedAt: now,
+		UpdatedAt: now,
+	}
+
+	t.Run("valid token with secret", func(t *testing.T) {
+		t.Parallel()
+		ats := APITokenWithSecret{
+			APIToken: baseToken,
+			Token:    validJWT,
+		}
+		assert.NoError(t, ats.Valid())
+	})
+
+	t.Run("invalid embedded api token", func(t *testing.T) {
+		t.Parallel()
+		badToken := baseToken
+		badToken.Status = TokenStatus("invalid")
+		ats := APITokenWithSecret{
+			APIToken: badToken,
+			Token:    validJWT,
+		}
+		assert.Error(t, ats.Valid())
+	})
+
+	t.Run("invalid jwt token string", func(t *testing.T) {
+		t.Parallel()
+		ats := APITokenWithSecret{
+			APIToken: baseToken,
+			Token:    "not-a-jwt",
+		}
+		assert.Error(t, ats.Valid())
+	})
+}
+
 func TestAPITokenClaimsValid(t *testing.T) {
 	t.Parallel()
 
