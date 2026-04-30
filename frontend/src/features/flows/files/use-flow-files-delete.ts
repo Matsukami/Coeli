@@ -83,9 +83,7 @@ export const useFlowFilesDelete = ({ flowId, refetchFiles }: UseFlowFilesDeleteP
                 return;
             }
 
-            const results = await Promise.allSettled(
-                filesToDelete.map((file) => deleteFileRequest(flowId, file.path)),
-            );
+            const results = await Promise.allSettled(filesToDelete.map((file) => deleteFileRequest(flowId, file.path)));
             const succeededCount = results.filter((result) => result.status === 'fulfilled').length;
             const failedCount = results.length - succeededCount;
 
