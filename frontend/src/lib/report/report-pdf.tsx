@@ -3,8 +3,8 @@ import { marked } from 'marked';
 
 import { Log } from '@/lib/log';
 
-const CJK_RE = /[\u4E00-\u9FFF\u3400-\u4DBF\uF900-\uFAFF\u3000-\u303F\uFF01-\uFF60\uFFE0-\uFFE6]+/gu;
-const HAS_CJK_RE = /[\u4E00-\u9FFF\u3400-\u4DBF\uF900-\uFAFF\u3000-\u303F\uFF01-\uFF60\uFFE0-\uFFE6]/u;
+const CJK_RE = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}\p{Script=Bopomofo}　-〿＀-￯]+/gu;
+const HAS_CJK_RE = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}\p{Script=Bopomofo}　-〿＀-￯]/u;
 
 let hasBaseFonts = false;
 let hasCJKFonts = false;
