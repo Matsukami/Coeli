@@ -43,6 +43,7 @@
         "@radix-ui/react-tooltip": "^1.2.8",
         "@react-pdf/renderer": "^4.5.1",
         "@tanstack/react-table": "^8.21.3",
+        "@tanstack/react-virtual": "^3.13.25",
         "@tiptap/core": "^3.23.4",
         "@tiptap/extensions": "^3.23.4",
         "@tiptap/pm": "^3.23.4",

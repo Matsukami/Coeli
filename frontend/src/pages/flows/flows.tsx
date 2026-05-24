@@ -640,6 +640,7 @@ function Flows() {
                     empty={{ entityName: 'flows' }}
                     filterPlaceholder="Filter flows..."
                     filterValue={filter}
+                    isVirtualized
                     onFilterChange={setFilter}
                     onPageChange={handlePageChange}
                     onRowClick={handleRowClick}

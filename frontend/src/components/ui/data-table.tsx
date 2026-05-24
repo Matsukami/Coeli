@@ -14,6 +14,7 @@ import {
     useReactTable,
     type VisibilityState,
 } from '@tanstack/react-table';
+import { useWindowVirtualizer } from '@tanstack/react-virtual';
 import {
     ArrowDown,
     ArrowUp,
@@ -103,6 +104,15 @@ interface DataTableProps<TData, TValue = unknown> {
     filterValue?: string;
     initialPageSize?: number;
     initialSorting?: SortingState;
+    /**
+     * Render only rows visible in the viewport via `@tanstack/react-virtual`.
+     * Activates only when the rendered row count exceeds the threshold
+     * (50 by default) so short tables stay fully rendered for native
+     * Find-in-page / printing. Not compatible with `renderSubComponent`
+     * (variable-height expanded rows would need per-row remeasurement),
+     * so the flag is silently ignored when one is provided.
+     */
+    isVirtualized?: boolean;
     onColumnVisibilityChange?: (visibility: VisibilityState) => void;
     onFilterChange?: (value: string) => void;
     onPageChange?: (pageIndex: number, options?: { replace?: boolean }) => void;
@@ -241,6 +251,7 @@ function DataTable<TData, TValue = unknown>({
     filterValue: externalFilterValue,
     initialPageSize = 10,
     initialSorting = [],
+    isVirtualized = false,
     onColumnVisibilityChange,
     onFilterChange,
     onPageChange,
@@ -569,6 +580,60 @@ function DataTable<TData, TValue = unknown>({
         [onRowClick],
     );
 
+    const rows = table.getRowModel().rows;
+    const visibleColumnCount = table.getVisibleLeafColumns().length;
+
+    const VIRTUALIZATION_THRESHOLD = 50;
+    const isVirtualizationActive = isVirtualized && !renderSubComponent && rows.length > VIRTUALIZATION_THRESHOLD;
+
+    const tableContainerRef = useRef<HTMLDivElement>(null);
+    const [scrollMargin, setScrollMargin] = useState(0);
+
+    useEffect(() => {
+        if (!isVirtualizationActive) {
+            return;
+        }
+
+        const updateScrollMargin = () => {
+            const element = tableContainerRef.current;
+
+            if (!element) {
+                return;
+            }
+
+            setScrollMargin(element.getBoundingClientRect().top + window.scrollY);
+        };
+
+        updateScrollMargin();
+
+        const resizeObserver = new ResizeObserver(updateScrollMargin);
+
+        if (tableContainerRef.current) {
+            resizeObserver.observe(tableContainerRef.current);
+        }
+
+        window.addEventListener('resize', updateScrollMargin);
+
+        return () => {
+            resizeObserver.disconnect();
+            window.removeEventListener('resize', updateScrollMargin);
+        };
+    }, [isVirtualizationActive]);
+
+    const rowVirtualizer = useWindowVirtualizer({
+        count: isVirtualizationActive ? rows.length : 0,
+        estimateSize: () => 53,
+        overscan: 10,
+        scrollMargin,
+    });
+
+    const virtualItems = isVirtualizationActive ? rowVirtualizer.getVirtualItems() : [];
+    const totalSize = isVirtualizationActive ? rowVirtualizer.getTotalSize() : 0;
+    // useWindowVirtualizer's item.start/.end are in document coordinates.
+    const paddingTop = virtualItems.length > 0 ? virtualItems[0]!.start - scrollMargin : 0;
+    const paddingBottom =
+        virtualItems.length > 0 ? totalSize - (virtualItems[virtualItems.length - 1]!.end - scrollMargin) : 0;
+
     const pageSizeValue = pagination.pageSize >= data.length && data.length > 0 ? 'all' : String(pagination.pageSize);
 
     const totalRows = table.getFilteredRowModel().rows.length;
@@ -703,7 +768,10 @@ function DataTable<TData, TValue = unknown>({
                     </DropdownMenuContent>
                 </DropdownMenu>
             </div>
-            <div className="rounded-md border">
+            <div
+                className="rounded-md border"
+                ref={tableContainerRef}
+            >
                 <Table>
                     <TableHeader>
                         {table.getHeaderGroups().map((headerGroup) => (
@@ -731,74 +799,11 @@ function DataTable<TData, TValue = unknown>({
                         ))}
                     </TableHeader>
                     <TableBody>
-                        {table.getRowModel().rows.length > 0 ? (
-                            table.getRowModel().rows.map((row) => {
-                                const contextMenuContent = renderRowContextMenu?.(row.original);
-
-                                const tableRow = (
-                                    <TableRow
-                                        className={cn(
-                                            'group hover:bg-muted/50 data-[state=open]:bg-muted/50 has-[[data-state=open]]:bg-muted/50',
-                                            isRowInteractive && 'cursor-pointer',
-                                            contextMenuContent &&
-                                                'pointer-coarse:select-none pointer-coarse:[-webkit-touch-callout:none]',
-                                        )}
-                                        {...(row.getIsSelected() ? { 'data-state': 'selected' } : {})}
-                                        onClick={() => handleRowClick(row)}
-                                    >
-                                        {row.getVisibleCells().map((cell) => (
-                                            <TableCell
-                                                className={cell.column.columnDef.meta?.cellClassName}
-                                                key={cell.id}
-                                                onClick={(event) => {
-                                                    if (cell.column.columnDef.meta?.preventRowClick) {
-                                                        event.stopPropagation();
-                                                    }
-                                                }}
-                                                style={
-                                                    cell.column.columnDef.size
-                                                        ? {
-                                                              maxWidth: cell.column.columnDef.size,
-                                                              minWidth: cell.column.columnDef.size,
-                                                              width: cell.column.columnDef.size,
-                                                          }
-                                                        : undefined
-                                                }
-                                            >
-                                                {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                            </TableCell>
-                                        ))}
-                                    </TableRow>
-                                );
-
-                                return (
-                                    <Fragment key={row.id}>
-                                        {contextMenuContent ? (
-                                            <ContextMenu>
-                                                <ContextMenuTrigger asChild>{tableRow}</ContextMenuTrigger>
-                                                <ContextMenuContent>{contextMenuContent}</ContextMenuContent>
-                                            </ContextMenu>
-                                        ) : (
-                                            tableRow
-                                        )}
-                                        {row.getIsExpanded() && renderSubComponent && (
-                                            <TableRow className="cursor-default border-0 hover:bg-transparent">
-                                                <TableCell
-                                                    className="p-0"
-                                                    colSpan={row.getVisibleCells().length}
-                                                >
-                                                    {renderSubComponent({ row })}
-                                                </TableCell>
-                                            </TableRow>
-                                        )}
-                                    </Fragment>
-                                );
-                            })
-                        ) : (
+                        {rows.length === 0 ? (
                             <TableRow>
                                 <TableCell
                                     className={cn('text-center', empty?.entityName ? 'py-12' : 'h-24')}
-                                    colSpan={columns.length}
+                                    colSpan={visibleColumnCount}
                                 >
                                     <DataTableEmptyState
                                         entityName={empty?.entityName}
@@ -806,6 +811,100 @@ function DataTable<TData, TValue = unknown>({
                                     />
                                 </TableCell>
                             </TableRow>
+                        ) : (
+                            <>
+                                {paddingTop > 0 ? (
+                                    <tr aria-hidden>
+                                        <td
+                                            colSpan={visibleColumnCount}
+                                            style={{ height: paddingTop }}
+                                        />
+                                    </tr>
+                                ) : null}
+                                {(isVirtualizationActive
+                                    ? virtualItems.map((virtualItem) => ({
+                                          row: rows[virtualItem.index]!,
+                                          virtualItem,
+                                      }))
+                                    : rows.map((row) => ({ row, virtualItem: null }))
+                                ).map(({ row, virtualItem }) => {
+                                    const contextMenuContent = renderRowContextMenu?.(row.original);
+
+                                    const tableRow = (
+                                        <TableRow
+                                            className={cn(
+                                                'group hover:bg-muted/50 data-[state=open]:bg-muted/50 has-[[data-state=open]]:bg-muted/50',
+                                                isRowInteractive && 'cursor-pointer',
+                                                contextMenuContent &&
+                                                    'pointer-coarse:select-none pointer-coarse:[-webkit-touch-callout:none]',
+                                            )}
+                                            data-index={virtualItem?.index}
+                                            ref={
+                                                virtualItem
+                                                    ? (node: HTMLTableRowElement | null) =>
+                                                          rowVirtualizer.measureElement(node)
+                                                    : undefined
+                                            }
+                                            {...(row.getIsSelected() ? { 'data-state': 'selected' } : {})}
+                                            onClick={() => handleRowClick(row)}
+                                        >
+                                            {row.getVisibleCells().map((cell) => (
+                                                <TableCell
+                                                    className={cell.column.columnDef.meta?.cellClassName}
+                                                    key={cell.id}
+                                                    onClick={(event) => {
+                                                        if (cell.column.columnDef.meta?.preventRowClick) {
+                                                            event.stopPropagation();
+                                                        }
+                                                    }}
+                                                    style={
+                                                        cell.column.columnDef.size
+                                                            ? {
+                                                                  maxWidth: cell.column.columnDef.size,
+                                                                  minWidth: cell.column.columnDef.size,
+                                                                  width: cell.column.columnDef.size,
+                                                              }
+                                                            : undefined
+                                                    }
+                                                >
+                                                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                                                </TableCell>
+                                            ))}
+                                        </TableRow>
+                                    );
+
+                                    return (
+                                        <Fragment key={row.id}>
+                                            {contextMenuContent ? (
+                                                <ContextMenu>
+                                                    <ContextMenuTrigger asChild>{tableRow}</ContextMenuTrigger>
+                                                    <ContextMenuContent>{contextMenuContent}</ContextMenuContent>
+                                                </ContextMenu>
+                                            ) : (
+                                                tableRow
+                                            )}
+                                            {row.getIsExpanded() && renderSubComponent && (
+                                                <TableRow className="cursor-default border-0 hover:bg-transparent">
+                                                    <TableCell
+                                                        className="p-0"
+                                                        colSpan={row.getVisibleCells().length}
+                                                    >
+                                                        {renderSubComponent({ row })}
+                                                    </TableCell>
+                                                </TableRow>
+                                            )}
+                                        </Fragment>
+                                    );
+                                })}
+                                {paddingBottom > 0 ? (
+                                    <tr aria-hidden>
+                                        <td
+                                            colSpan={visibleColumnCount}
+                                            style={{ height: paddingBottom }}
+                                        />
+                                    </tr>
+                                ) : null}
+                            </>
                         )}
                     </TableBody>
                 </Table>
