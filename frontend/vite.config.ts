@@ -77,6 +77,18 @@ export default defineConfig(({ mode }) => {
                         if (/[\\/]@xterm[\\/]/.test(id)) {
                             return 'terminal';
                         }
+                        if (/[\\/]recharts[\\/]/.test(id)) {
+                            return 'charts';
+                        }
+                        if (/[\\/]@react-pdf[\\/]/.test(id)) {
+                            return 'pdf';
+                        }
+                        if (/[\\/](monaco-editor|@monaco-editor[\\/]react)[\\/]/.test(id)) {
+                            return 'monaco';
+                        }
+                        if (/[\\/](@tiptap|tiptap-markdown|prosemirror-[a-z-]+)[\\/]/.test(id)) {
+                            return 'tiptap';
+                        }
                         if (/[\\/](react|react-dom|react-router-dom)[\\/]/.test(id)) {
                             return 'react-vendor';
                         }
