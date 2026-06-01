@@ -258,8 +258,8 @@ the supported path throughout.
 ## Open Questions
 
 - Which executor model should PentAGI target first -- Kubernetes-native
-  Pods/Jobs, a DinD sidecar, or a sandboxed runtime -- and is more than
-  one worth supporting?
+  Pods/Jobs, a DinD sidecar, or a sandboxed runtime -- and is it worth
+  supporting more than one?
 - Should Postgres (and pgvector) run in-cluster as a StatefulSet, or
   should the Kubernetes path assume an external managed database?
 - Should TLS continue to terminate in the backend, or move to an
