@@ -2683,7 +2683,7 @@ To diagnose:
 1. Check PentAGI logs first: `docker logs pentagi`.
 2. Check the logs of your configured LLM backend (the server behind your provider or `LLM_SERVER_URL`).
 3. Verify that the base URL, API key, and model name in [Custom LLM Provider Configuration](#custom-llm-provider-configuration) are correct and reachable from the container.
-4. For custom, OpenAI-compatible, vLLM, or sglang backends, confirm that the model supports tool calling / function calling and that the matching tool-call parser is enabled. A missing or mismatched tool-call parser is a known cause of this failure.
+4. For custom, OpenAI-compatible, vLLM, or SGLang backends, confirm that the model supports tool calling (function calling) and that the matching tool-call parser is enabled. A missing or mismatched tool-call parser is a known cause of this failure.
 
 ## Development
 
