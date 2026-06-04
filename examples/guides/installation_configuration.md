@@ -83,7 +83,7 @@ the agent behaviors PentAGI needs by running `ctester`:
 
 ```bash
 # From a local Go environment (run inside the backend directory)
-go run cmd/ctester/*.go -verbose
+go run ./cmd/ctester -verbose
 
 # Or from the running container
 docker exec -it pentagi /opt/pentagi/bin/ctester -verbose
@@ -108,10 +108,10 @@ Verify embeddings with `etester`:
 
 ```bash
 # Local Go environment
-go run cmd/etester/main.go test -verbose
+go run ./cmd/etester test -verbose
 
 # Running container
-docker exec -it pentagi /opt/pentagi/bin/etester test
+docker exec -it pentagi /opt/pentagi/bin/etester test -verbose
 ```
 
 If you later change the embedding provider or model, flush and reindex the
