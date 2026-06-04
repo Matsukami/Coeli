@@ -45,9 +45,9 @@ maintainer direction first.
 
 ## Current Provider Landscape
 
-PentAGI currently registers ten provider types (`openai`, `anthropic`,
-`gemini`, `bedrock`, `ollama`, `custom`, `deepseek`, `glm`, `kimi`, `qwen`).
-The Google- and Anthropic-relevant options today are:
+PentAGI currently registers the following provider types: `openai`,
+`anthropic`, `gemini`, `bedrock`, `ollama`, `custom`, `deepseek`, `glm`,
+`kimi`, and `qwen`. The Google- and Anthropic-relevant options today are:
 
 - **Google AI Studio (`gemini`)**: API-key auth against
   `https://generativelanguage.googleapis.com`. This is the consumer AI Studio
@@ -94,8 +94,8 @@ shape:
 
 - **ADC (default)**: use Application Default Credentials resolved from the
   environment (for example `GOOGLE_APPLICATION_CREDENTIALS`, a mounted metadata
-  service, or `gcloud` login). Analogous to `BEDROCK_DEFAULT_AUTH` using the AWS
-  default credential chain.
+  service, or `gcloud auth application-default login`). Analogous to
+  `BEDROCK_DEFAULT_AUTH` using the AWS default credential chain.
 - **Explicit service-account file**: a candidate `VERTEX_CREDENTIALS_FILE`
   pointing at a mounted JSON key, used when ADC is not available. Analogous to
   Bedrock static credentials.
@@ -148,10 +148,9 @@ implementation is approved:
   API rejects the type with 422).
 - Candidate config keys in the central config (the `VERTEX_*` names above).
 - A goose migration adding `vertex` to the `PROVIDER_TYPE` enum, following the
-  enum-swap pattern already used by
-  `backend/migrations/sql/20260227_120000_add_cn_providers.sql` (Up: recreate
-  the enum including the new value; Down: remove rows of the new type, then
-  recreate the enum without it).
+  enum-swap pattern used by the existing provider migrations under
+  `backend/migrations/sql/` (Up: recreate the enum including the new value;
+  Down: remove rows of the new type, then recreate the enum without it).
 
 The migration is the least reversible step and the Down path deletes any rows of
 the new provider type, so it warrants explicit review. None of these changes are
@@ -226,5 +225,5 @@ Open Questions Q1 and Q2 is the blocker before any of that work begins.
   natively supported today).
 - #321 - native Vertex AI provider request and implementation outline.
 - `CLAUDE.md` - "Adding a New LLM Provider" checklist.
-- `backend/migrations/sql/20260227_120000_add_cn_providers.sql` - the
-  `PROVIDER_TYPE` enum-swap migration pattern.
+- `backend/migrations/sql/` - existing provider enum-swap migrations that
+  demonstrate the `PROVIDER_TYPE` pattern.
