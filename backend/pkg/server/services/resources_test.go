@@ -1410,8 +1410,8 @@ func TestStreamZipArchive(t *testing.T) {
 		rc, err := zr.File[0].Open()
 		require.NoError(t, err)
 		data, err := io.ReadAll(rc)
-		rc.Close()
 		require.NoError(t, err)
+		require.NoError(t, rc.Close())
 		assert.Equal(t, "hello world", string(data))
 	})
 
@@ -1436,6 +1436,25 @@ func TestStreamZipArchive(t *testing.T) {
 		})
 
 		require.ErrorIs(t, err, sentinel)
+		assert.True(t, c.IsAborted())
+	})
+
+	t.Run("returns structured error when build fails before writing", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		c, _ := gin.CreateTestContext(w)
+		c.Request = httptest.NewRequest(http.MethodGet, "/download", nil)
+
+		sentinel := errors.New("blob open failed before any write")
+		err := streamZipArchive(c, "out.zip", func(zw io.Writer) error {
+			// Fail immediately, before writing any archive bytes.
+			return sentinel
+		})
+
+		require.ErrorIs(t, err, sentinel)
+		// Nothing was streamed, so a normal (non-200, non-zip) error response is
+		// sent instead of a truncated 200.
+		assert.Equal(t, http.StatusInternalServerError, w.Code)
+		assert.NotEqual(t, "application/zip", w.Header().Get("Content-Type"))
 		assert.True(t, c.IsAborted())
 	})
 }

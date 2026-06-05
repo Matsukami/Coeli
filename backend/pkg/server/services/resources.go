@@ -1983,25 +1983,45 @@ func (s *ResourceService) DownloadResource(c *gin.Context) {
 	}
 }
 
-// streamZipArchive streams a ZIP archive to the client as build writes it,
-// instead of buffering the entire archive in memory before sending it. Memory
-// stays proportional to a single file copy buffer rather than the full archive.
+// zipStreamWriter defers committing the ZIP response status and headers until the
+// first byte is written. That lets streamZipArchive turn a build failure that
+// happens before any output into a normal structured error response, while a
+// mid-stream failure (after the 200 status is already on the wire) is aborted.
+type zipStreamWriter struct {
+	c        *gin.Context
+	filename string
+	started  bool
+}
+
+func (zw *zipStreamWriter) Write(p []byte) (int, error) {
+	if !zw.started {
+		zw.started = true
+		zw.c.Header("Content-Type", "application/zip")
+		zw.c.Header("Content-Disposition", mime.FormatMediaType("attachment", map[string]string{
+			"filename": zw.filename,
+		}))
+		zw.c.Status(http.StatusOK)
+	}
+	return zw.c.Writer.Write(p)
+}
+
+// streamZipArchive streams a ZIP archive to the client as build writes it, instead
+// of buffering the entire archive in memory before sending it. Memory stays
+// proportional to a single file copy buffer rather than the full archive size.
 //
-// The status line and headers commit as soon as build writes the first byte, so
-// an error returned by build after streaming has started can no longer change the
-// HTTP status; the request is aborted and the error returned for the caller to
-// log. The client then receives a truncated (invalid) archive, which is preferable
-// to risking an out-of-memory crash. Errors detected before the archive is built
-// (auth, path validation, resource lookup) are handled by the caller and still
-// produce normal error responses.
+// Response headers and the 200 status are committed lazily, on the first byte
+// build writes (see zipStreamWriter). If build fails before writing anything
+// (e.g. a blob that cannot be opened), nothing has been committed and a normal
+// structured error response is returned. If it fails mid-stream the 200 status is
+// already on the wire, so the partial response is aborted; either way the error is
+// returned for the caller to log with its own context.
 func streamZipArchive(c *gin.Context, filename string, build func(w io.Writer) error) error {
-	c.Header("Content-Type", "application/zip")
-	c.Header("Content-Disposition", mime.FormatMediaType("attachment", map[string]string{
-		"filename": filename,
-	}))
-	c.Status(http.StatusOK)
-	if err := build(c.Writer); err != nil {
-		c.Abort()
+	if err := build(&zipStreamWriter{c: c, filename: filename}); err != nil {
+		if c.Writer.Written() {
+			c.Abort()
+		} else {
+			response.Error(c, response.ErrInternal, err)
+		}
 		return err
 	}
 	return nil
