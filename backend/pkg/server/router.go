@@ -249,6 +249,7 @@ func NewRouter(
 	changePasswordGroup.Use(authMiddleware.AuthUserRequired)
 	changePasswordGroup.Use(localUserRequired())
 	changePasswordGroup.PUT("/password", userService.ChangePasswordCurrentUser)
+	changePasswordGroup.PUT("/email", userService.ChangeEmailCurrentUser)
 
 	publicGroup := api.Group("/")
 	publicGroup.Use(authMiddleware.TryAuth)

@@ -15,6 +15,7 @@ import (
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/crypto/bcrypt"
 )
 
 func TestCreateUser_CreatesUserPreferences(t *testing.T) {
@@ -352,3 +353,92 @@ func TestCreateUser_DuplicateEmail(t *testing.T) {
 	db.Model(&models.User{}).Where("mail = ?", "duplicate@test.com").Count(&count)
 	assert.Equal(t, 1, count, "Should have only one user with this email")
 }
+
+func TestChangeEmailCurrentUser(t *testing.T) {
+	db := setupTestDB(t)
+	defer db.Close()
+
+	// Hash password for user 1
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte("SecurePass123!"), bcrypt.DefaultCost)
+	require.NoError(t, err)
+	err = db.Model(&models.User{}).Where("id = 1").Updates(map[string]interface{}{
+		"password": string(hashedPassword),
+		"hash":     "11111111111111111111111111111111",
+	}).Error
+	require.NoError(t, err)
+
+	userCache := auth.NewUserCache(db)
+	service := NewUserService(db, userCache)
+
+	testCases := []struct {
+		name          string
+		requestBody   string
+		uid           uint64
+		expectedCode  int
+		checkResult   func(t *testing.T, db *gorm.DB)
+		errorContains string
+	}{
+		{
+			name:         "successful email change",
+			requestBody:  `{"current_password": "SecurePass123!", "mail": "newemail@test.com"}`,
+			uid:          1,
+			expectedCode: http.StatusOK,
+			checkResult: func(t *testing.T, db *gorm.DB) {
+				var user models.User
+				err := db.Where("id = 1").First(&user).Error
+				require.NoError(t, err)
+				assert.Equal(t, "newemail@test.com", user.Mail)
+			},
+		},
+		{
+			name:          "invalid password",
+			requestBody:  `{"current_password": "WrongPassword!", "mail": "another@test.com"}`,
+			uid:          1,
+			expectedCode: http.StatusForbidden,
+			errorContains: "invalid current password",
+		},
+		{
+			name:          "email already exists",
+			requestBody:  `{"current_password": "SecurePass123!", "mail": "user2@test.com"}`,
+			uid:          1,
+			expectedCode: http.StatusConflict,
+			errorContains: "email already exists",
+		},
+		{
+			name:          "invalid email format",
+			requestBody:  `{"current_password": "SecurePass123!", "mail": "invalid-email"}`,
+			uid:          1,
+			expectedCode: http.StatusBadRequest,
+			errorContains: "failed to validate user email",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			gin.SetMode(gin.TestMode)
+			w := httptest.NewRecorder()
+			c, _ := gin.CreateTestContext(w)
+
+			c.Set("uid", tc.uid)
+			c.Set("rid", uint64(2))
+			c.Set("uhash", "11111111111111111111111111111111")
+			c.Set("prm", []string{})
+
+			c.Request, _ = http.NewRequest("PUT", "/user/email", bytes.NewBufferString(tc.requestBody))
+			c.Request.Header.Set("Content-Type", "application/json")
+
+			service.ChangeEmailCurrentUser(c)
+
+			assert.Equal(t, tc.expectedCode, w.Code)
+
+			if tc.checkResult != nil {
+				tc.checkResult(t, db)
+			}
+
+			if tc.errorContains != "" {
+				assert.Contains(t, w.Body.String(), tc.errorContains)
+			}
+		})
+	}
+}
+
