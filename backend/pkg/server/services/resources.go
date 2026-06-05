@@ -1,10 +1,10 @@
 package services
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"mime"
 	"net/http"
 	"os"
@@ -1930,18 +1930,11 @@ func (s *ResourceService) DownloadResource(c *gin.Context) {
 		}
 
 		dirName := path.Base(e.rec.Path)
-		var buf bytes.Buffer
-		if err := resources.ZipResources(&buf, zipEntries); err != nil {
-			logger.FromContext(c).WithError(err).Error("error creating zip archive for download")
-			response.Error(c, response.ErrInternal, err)
-			return
+		if err := streamZipArchive(c, dirName+".zip", func(w io.Writer) error {
+			return resources.ZipResources(w, zipEntries)
+		}); err != nil {
+			logger.FromContext(c).WithError(err).Error("error streaming zip archive for download")
 		}
-		c.DataFromReader(http.StatusOK, int64(buf.Len()), "application/zip", &buf,
-			map[string]string{
-				"Content-Disposition": mime.FormatMediaType("attachment", map[string]string{
-					"filename": dirName + ".zip",
-				}),
-			})
 		return
 	}
 
@@ -1983,18 +1976,35 @@ func (s *ResourceService) DownloadResource(c *gin.Context) {
 		}
 	}
 
-	var buf bytes.Buffer
-	if err := resources.ZipResources(&buf, zipEntries); err != nil {
-		logger.FromContext(c).WithError(err).Error("error creating zip archive for download")
-		response.Error(c, response.ErrInternal, err)
-		return
+	if err := streamZipArchive(c, "download.zip", func(w io.Writer) error {
+		return resources.ZipResources(w, zipEntries)
+	}); err != nil {
+		logger.FromContext(c).WithError(err).Error("error streaming zip archive for download")
 	}
-	c.DataFromReader(http.StatusOK, int64(buf.Len()), "application/zip", &buf,
-		map[string]string{
-			"Content-Disposition": mime.FormatMediaType("attachment", map[string]string{
-				"filename": "download.zip",
-			}),
-		})
+}
+
+// streamZipArchive streams a ZIP archive to the client as build writes it,
+// instead of buffering the entire archive in memory before sending it. Memory
+// stays proportional to a single file copy buffer rather than the full archive.
+//
+// The status line and headers commit as soon as build writes the first byte, so
+// an error returned by build after streaming has started can no longer change the
+// HTTP status; the request is aborted and the error returned for the caller to
+// log. The client then receives a truncated (invalid) archive, which is preferable
+// to risking an out-of-memory crash. Errors detected before the archive is built
+// (auth, path validation, resource lookup) are handled by the caller and still
+// produce normal error responses.
+func streamZipArchive(c *gin.Context, filename string, build func(w io.Writer) error) error {
+	c.Header("Content-Type", "application/zip")
+	c.Header("Content-Disposition", mime.FormatMediaType("attachment", map[string]string{
+		"filename": filename,
+	}))
+	c.Status(http.StatusOK)
+	if err := build(c.Writer); err != nil {
+		c.Abort()
+		return err
+	}
+	return nil
 }
 
 // ---- helper methods --------------------------------------------------------
