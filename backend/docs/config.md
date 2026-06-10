@@ -563,6 +563,13 @@ These settings control the integration with various Large Language Model (LLM) p
 | AnthropicAPIKey    | `ANTHROPIC_API_KEY`    | *(none)*                       | API key for Anthropic Claude services |
 | AnthropicServerURL | `ANTHROPIC_SERVER_URL` | `https://api.anthropic.com/v1` | Server URL for Anthropic API requests |
 
+**Note on Google Vertex AI**: PentAGI does not currently expose a dedicated Vertex AI configuration path for Anthropic Claude in `.env`. The variables above target the direct Anthropic API. To run Claude through a non-Anthropic-hosted backend, use one of:
+
+- **AWS Bedrock**: see the [AWS Bedrock LLM Provider](#aws-bedrock-llm-provider) section below and configure the `BEDROCK_*` variables.
+- **OpenAI-compatible gateway in front of Vertex AI**: expose Vertex AI through a proxy or gateway that translates requests into the Chat Completions format while preserving the chat and tool-call behavior PentAGI requires, then configure it as a [custom LLM provider](#custom-llm-provider) (`LLM_SERVER_URL`, `LLM_SERVER_KEY`, `LLM_SERVER_MODEL`). Reliability of this path depends on the gateway you choose.
+
+There is no `VERTEX_API_KEY` or `GOOGLE_APPLICATION_CREDENTIALS` variable wired into PentAGI's provider initialization today.
+
 ### Ollama LLM Provider
 
 | Option                        | Environment Variable                | Default Value        | Description                                                       |
@@ -610,7 +617,7 @@ These settings control the integration with various Large Language Model (LLM) p
 | DeepSeekServerURL | `DEEPSEEK_SERVER_URL` | `https://api.deepseek.com` | DeepSeek API endpoint URL                                |
 | DeepSeekProvider  | `DEEPSEEK_PROVIDER`   | *(none)*                   | Provider name prefix for LiteLLM integration (optional)  |
 
-**LiteLLM Integration**: Set `DEEPSEEK_PROVIDER=deepseek` to enable model prefixing (e.g., `deepseek/deepseek-chat`) when using LiteLLM proxy with default PentAGI configs.
+**LiteLLM Integration**: Set `DEEPSEEK_PROVIDER=deepseek` to enable model prefixing (e.g., `deepseek/deepseek-v4-flash`) when using LiteLLM proxy with default PentAGI configs.
 
 ### GLM LLM Provider
 
@@ -1620,6 +1627,8 @@ The SSL settings provide additional security configuration:
 
 ## Graphiti Knowledge Graph Settings
 
+> The Graphiti integration is currently a **beta** feature with notable provider limitations. See [Current Limitations (Beta)](#current-limitations-beta) at the end of this section before enabling it in production.
+
 These settings control the integration with Graphiti, a temporal knowledge graph system powered by Neo4j, for advanced semantic understanding and relationship tracking of AI agent operations.
 
 | Option          | Environment Variable | Default Value           | Description                                            |
@@ -1665,6 +1674,17 @@ These settings enable:
 - Learning from past successful approaches and strategies
 
 The integration is designed to be non-blocking - if Graphiti operations fail, they are logged but don't interrupt the agent workflow.
+
+### Current Limitations (Beta)
+
+The Graphiti integration is currently a beta feature. Operators should plan around the following constraints before enabling it in production:
+
+- **OpenAI-compatible LLM only.** Operators configure the endpoint through PentAGI's `.env` variables `OPEN_AI_KEY` and `OPEN_AI_SERVER_URL` (default `https://api.openai.com/v1`); `docker-compose-graphiti.yml` maps these into the bundled `vxcontrol/graphiti` container as `OPENAI_API_KEY` and `OPENAI_BASE_URL`, which it uses to drive entity extraction. Provider credentials configured elsewhere in PentAGI for Anthropic, Google AI (Gemini), AWS Bedrock, DeepSeek, GLM, Kimi, or Qwen are not consumed by Graphiti.
+- **Single fixed model per deployment.** Graphiti uses one model name (`GRAPHITI_MODEL_NAME`, default `gpt-5-mini`) for all extractions; per-agent or per-flow selection is not supported.
+- **Independent billing.** Graphiti billing is tied to the configured OpenAI-compatible endpoint, even when the main flow runs against a non-OpenAI provider.
+- **No in-app graph explorer yet.** The captured graph is inspected through the Neo4j Browser at `http://localhost:7474` and the Graphiti Swagger UI at `http://localhost:8000/docs`; there is no PentAGI UI surface for it today.
+
+If your deployment cannot reach an OpenAI-compatible endpoint, set `GRAPHITI_ENABLED=false`. The rest of PentAGI continues to function without the knowledge graph.
 
 ## Agent Supervision Settings
 

@@ -24,7 +24,6 @@ import (
 	"pentagi/pkg/providers/pconfig"
 	"pentagi/pkg/providers/provider"
 	"pentagi/pkg/resources"
-	"pentagi/pkg/templates"
 	"pentagi/pkg/tools"
 
 	dockercontainer "github.com/docker/docker/api/types/container"
@@ -181,7 +180,10 @@ func NewFlowWorker(
 	flowSpan := observation.Span(langfuse.WithSpanName("prepare flow worker"))
 	ctx, _ = flowSpan.Observation(ctx)
 
-	prompter := templates.NewDefaultPrompter() // TODO: change to flow prompter by userID from DB
+	prompter, err := newUserPrompter(ctx, fwc.db, fwc.userID)
+	if err != nil {
+		return nil, wrapErrorEndSpan(ctx, flowSpan, "failed to build user prompter", err)
+	}
 	executor, err := tools.NewFlowToolsExecutor(fwc.db, fwc.cfg, fwc.docker, fwc.functions, fwc.userID, flow.ID)
 	if err != nil {
 		return nil, wrapErrorEndSpan(ctx, flowSpan, "failed to create flow tools executor", err)
@@ -352,7 +354,10 @@ func LoadFlowWorker(ctx context.Context, flow database.Flow, fwc flowWorkerCtx) 
 		return nil, wrapErrorEndSpan(ctx, flowSpan, "failed to unmarshal functions", err)
 	}
 
-	prompter := templates.NewDefaultPrompter() // TODO: change to flow prompter by userID from DB
+	prompter, err := newUserPrompter(ctx, fwc.db, flow.UserID)
+	if err != nil {
+		return nil, wrapErrorEndSpan(ctx, flowSpan, "failed to build user prompter", err)
+	}
 	executor, err := tools.NewFlowToolsExecutor(fwc.db, fwc.cfg, fwc.docker, functions, flow.UserID, flow.ID)
 	if err != nil {
 		return nil, wrapErrorEndSpan(ctx, flowSpan, "failed to create flow tools executor", err)
@@ -445,6 +450,7 @@ func LoadFlowWorker(ctx context.Context, flow database.Flow, fwc flowWorkerCtx) 
 	awc := assistantWorkerCtx{
 		userID:        flow.UserID,
 		flowID:        flow.ID,
+		prompter:      prompter,
 		fw:            fw,
 		flowWorkerCtx: fwc,
 	}
@@ -992,18 +998,61 @@ func (fw *flowWorker) processInput(flin flowInput) (TaskWorker, error) {
 	// anyway there need to set flow status to Running to disable user input
 	_ = fw.SetStatus(fw.ctx, database.FlowStatusRunning)
 
-	if task, err := fw.tc.CreateTask(fw.ctx, flin.input, fw); err != nil {
+	// Pre-create the per-task cancellable context BEFORE calling CreateTask.
+	// GenerateSubtasks (an LLM call) runs synchronously inside CreateTask and may take
+	// many seconds. Without this, a concurrent Stop() would invoke a no-op taskST and
+	// find taskWG at zero—reporting success while the generator is still running.
+	fw.taskMX.Lock()
+	fw.taskST()
+	ctx, taskST := context.WithCancel(fw.ctx)
+	fw.taskST = taskST
+	fw.taskMX.Unlock()
+
+	defer taskST()
+
+	fw.taskWG.Add(1)
+	defer fw.taskWG.Done()
+	defer fw.signalTaskComplete()
+
+	task, err := fw.tc.CreateTask(ctx, flin.input, fw)
+	if err != nil {
+		if errors.Is(err, context.Canceled) && fw.ctx.Err() == nil {
+			// CreateTask was cancelled by Stop() — not a fatal flow error.
+			// Keep the worker alive and return the flow to Waiting state.
+			flin.done <- nil
+			_ = fw.SetStatus(fw.ctx, database.FlowStatusWaiting)
+			return nil, nil
+		}
 		err = fmt.Errorf("failed to create task for flow %d: %w", fw.flowCtx.FlowID, err)
 		flin.done <- err
 		return nil, err
-	} else {
-		flin.done <- nil
-		spanName := fmt.Sprintf("perform task %d: %s", task.GetTaskID(), task.GetTitle())
-		return task, fw.runTask(spanName, flin.input, task)
 	}
+
+	flin.done <- nil
+	spanName := fmt.Sprintf("perform task %d: %s", task.GetTaskID(), task.GetTitle())
+	return task, fw.execTask(ctx, spanName, flin.input, task)
 }
 
+// runTask creates a fresh per-task cancellable context and runs an already-created task.
+// Use this for tasks that were previously created and are being resumed (e.g. after waiting).
 func (fw *flowWorker) runTask(spanName, input string, task TaskWorker) error {
+	fw.taskMX.Lock()
+	fw.taskST()
+	ctx, taskST := context.WithCancel(fw.ctx)
+	fw.taskST = taskST
+	fw.taskMX.Unlock()
+
+	defer taskST()
+
+	fw.taskWG.Add(1)
+	defer fw.taskWG.Done()
+	defer fw.signalTaskComplete()
+
+	return fw.execTask(ctx, spanName, input, task)
+}
+
+// execTask executes a task using an already-prepared context and cancel function.
+func (fw *flowWorker) execTask(ctx context.Context, spanName, input string, task TaskWorker) error {
 	_, observation := obs.Observer.NewObservation(fw.ctx)
 	span := observation.Span(
 		langfuse.WithSpanName(spanName),
@@ -1013,18 +1062,7 @@ func (fw *flowWorker) runTask(spanName, input string, task TaskWorker) error {
 		}),
 	)
 
-	fw.taskMX.Lock()
-	fw.taskST()
-	ctx, taskST := context.WithCancel(fw.ctx)
-	fw.taskST = taskST
-	fw.taskMX.Unlock()
-
 	ctx, _ = span.Observation(ctx)
-	defer taskST()
-
-	fw.taskWG.Add(1)
-	defer fw.taskWG.Done()
-	defer fw.signalTaskComplete()
 
 	if err := task.Run(ctx); err != nil {
 		// if task is stopped by user and it's not finished yet
