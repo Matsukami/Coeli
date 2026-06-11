@@ -222,6 +222,7 @@ func init() {
 
 	_, _ = reflect.ValueOf(User{}).Interface().(IValid)
 	_, _ = reflect.ValueOf(Password{}).Interface().(IValid)
+	_, _ = reflect.ValueOf(EmailChange{}).Interface().(IValid)
 
 	_, _ = reflect.ValueOf(Role{}).Interface().(IValid)
 	_, _ = reflect.ValueOf(Prompt{}).Interface().(IValid)
