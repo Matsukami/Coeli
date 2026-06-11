@@ -17,6 +17,7 @@ import ProtectedRoute from '@/components/routes/protected-route';
 import PublicRoute from '@/components/routes/public-route';
 import { DocumentTitle } from '@/components/shared/document-title';
 import PageLoader from '@/components/shared/page-loader';
+import RouteErrorBoundary from '@/components/shared/route-error-boundary';
 import { Toaster } from '@/components/ui/sonner';
 import client from '@/lib/apollo';
 import { routeTitles } from '@/lib/route-titles';
@@ -126,7 +127,10 @@ function RootLayout() {
 
 const router = createBrowserRouter(
     createRoutesFromElements(
-        <Route element={<RootLayout />}>
+        <Route
+            element={<RootLayout />}
+            errorElement={<RouteErrorBoundary />}
+        >
             {/* private routes */}
             <Route element={<ProtectedAppLayout />}>
                 {/* Main layout for chat pages */}
