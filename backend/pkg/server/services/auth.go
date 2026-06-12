@@ -524,12 +524,13 @@ func (s *AuthService) authLoginCallback(c *gin.Context, stateData map[string]str
 	if err = s.db.Take(&user, filterQuery, email, models.UserTypeOAuth).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			user = models.User{
-				Hash:   rdb.MakeUserHash(email),
-				Mail:   email,
-				Name:   username,
-				RoleID: models.RoleUser,
-				Status: "active",
-				Type:   models.UserTypeOAuth,
+				Hash:     rdb.MakeUserHash(email),
+				Mail:     email,
+				Name:     username,
+				RoleID:   models.RoleUser,
+				Status:   "active",
+				Type:     models.UserTypeOAuth,
+				Provider: &provider,
 			}
 
 			tx := s.db.Begin()
@@ -568,6 +569,10 @@ func (s *AuthService) authLoginCallback(c *gin.Context, stateData map[string]str
 		logger.FromContext(c).WithError(err).Errorf("error validating user data '%s'", user.Hash)
 		response.Error(c, response.ErrAuthInvalidUserData, err)
 		return
+	} else if user.Provider == nil || *user.Provider != provider {
+		if err = s.db.Model(&user).Update("provider", provider).Error; err != nil {
+			logger.FromContext(c).WithError(err).Errorf("error updating user provider '%s'", user.Hash)
+		}
 	}
 
 	if user.Status != "active" {

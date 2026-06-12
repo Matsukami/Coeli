@@ -251,6 +251,11 @@ func NewRouter(
 	changePasswordGroup.PUT("/password", userService.ChangePasswordCurrentUser)
 	changePasswordGroup.PUT("/email", userService.ChangeEmailCurrentUser)
 
+	// Unlike password/email, the display name is editable by OAuth users too — no localUserRequired.
+	changeNameGroup := api.Group("/user")
+	changeNameGroup.Use(authMiddleware.AuthUserRequired)
+	changeNameGroup.PUT("/name", userService.ChangeNameCurrentUser)
+
 	publicGroup := api.Group("/")
 	publicGroup.Use(authMiddleware.TryAuth)
 	{

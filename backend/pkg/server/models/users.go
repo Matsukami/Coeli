@@ -326,3 +326,12 @@ func (ec EmailChange) Validate(db *gorm.DB) {
 	}
 }
 
+// NameChange is model to contain user display name to change it
+type NameChange struct {
+	Name string `form:"name" json:"name" validate:"min=1,max=70,required" gorm:"type:TEXT"`
+}
+
+// Valid is function to control input/output data
+func (nc NameChange) Valid() error {
+	return validate.Struct(nc)
+}

@@ -263,6 +263,39 @@ func (s *UserService) ChangeEmailCurrentUser(c *gin.Context) {
 	response.Success(c, http.StatusOK, struct{}{})
 }
 
+// ChangeNameCurrentUser updates the display name of the current authenticated user
+// @Summary Change current account display name
+// @Tags User
+// @Accept json
+// @Produce json
+// @Param json body models.NameChange true "new display name"
+// @Success 200 {object} response.successResp "account name updated successful"
+// @Failure 400 {object} response.errorResp "invalid account name form data"
+// @Failure 500 {object} response.errorResp "internal error on updating account name"
+// @Router /user/name [put]
+func (s *UserService) ChangeNameCurrentUser(c *gin.Context) {
+	var form models.NameChange
+
+	if err := c.ShouldBindJSON(&form); err != nil || form.Valid() != nil {
+		if err == nil {
+			err = form.Valid()
+		}
+		logger.FromContext(c).WithError(err).Errorf("error binding JSON")
+		response.Error(c, response.ErrChangeNameCurrentUserInvalidName, err)
+		return
+	}
+
+	uid := c.GetUint64("uid")
+	if err := s.db.Model(&models.User{}).Where("id = ?", uid).Update("name", form.Name).Error; err != nil {
+		logger.FromContext(c).WithError(err).Errorf("error updating name for current user")
+		response.Error(c, response.ErrInternal, err)
+		return
+	}
+
+	s.userCache.Invalidate(uid)
+
+	response.Success(c, http.StatusOK, struct{}{})
+}
 
 // GetUsers returns users list
 // @Summary Retrieve users list by filters
