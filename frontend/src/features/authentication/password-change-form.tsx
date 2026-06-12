@@ -135,7 +135,7 @@ export function PasswordChangeForm({
                             <FormControl>
                                 <InputPassword
                                     {...field}
-                                    placeholder="Enter new password"
+                                    placeholder="Enter your new password"
                                 />
                             </FormControl>
                             <FormDescription className="text-xs">
@@ -156,7 +156,7 @@ export function PasswordChangeForm({
                             <FormControl>
                                 <InputPassword
                                     {...field}
-                                    placeholder="Confirm new password"
+                                    placeholder="Confirm your new password"
                                 />
                             </FormControl>
                             <FormMessage />
@@ -171,6 +171,7 @@ export function PasswordChangeForm({
                         <Button
                             className="text-muted-foreground"
                             onClick={onSkip}
+                            size="sm"
                             type="button"
                             variant="ghost"
                         >
@@ -180,13 +181,14 @@ export function PasswordChangeForm({
                     {isModal && (
                         <Button
                             onClick={onCancel}
+                            size="sm"
                             type="button"
                             variant="outline"
                         >
                             Cancel
                         </Button>
                     )}
-                    <FormSubmitButton>
+                    <FormSubmitButton size="sm">
                         <span>Update Password</span>
                     </FormSubmitButton>
                 </div>

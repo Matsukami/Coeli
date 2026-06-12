@@ -17,12 +17,10 @@ import {
     SidebarProvider,
     SidebarTrigger,
 } from '@/components/ui/sidebar';
-import { useUser } from '@/providers/user-provider';
 
 export interface MenuItem {
     icon?: React.ReactNode;
     id: string;
-    isLocalOnly?: boolean;
     path: string;
     title: string;
 }
@@ -35,7 +33,6 @@ const menuItems: readonly MenuItem[] = [
     {
         icon: <User className="size-4" />,
         id: 'account',
-        isLocalOnly: true,
         path: '/settings/account',
         title: 'Account',
     },
@@ -116,10 +113,6 @@ function SettingsLayout() {
 }
 
 function SettingsSidebar() {
-    const { authInfo } = useUser();
-    const isLocal = authInfo?.user?.type === 'local';
-    const visibleItems = menuItems.filter((item) => !item.isLocalOnly || isLocal);
-
     return (
         <Sidebar collapsible="icon">
             <SidebarHeader>
@@ -138,7 +131,7 @@ function SettingsSidebar() {
                 <SidebarGroup>
                     <SidebarGroupContent>
                         <SidebarMenu>
-                            {visibleItems.map((item) => (
+                            {menuItems.map((item) => (
                                 <SettingsSidebarMenuItem
                                     item={item}
                                     key={item.id}

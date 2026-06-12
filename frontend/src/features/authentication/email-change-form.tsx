@@ -9,7 +9,6 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { FormSubmitButton } from '@/components/ui/form-submit-button';
 import { Input } from '@/components/ui/input';
 import { InputPassword } from '@/components/ui/input-password';
-import { Label } from '@/components/ui/label';
 import { api, getApiErrorCode, getApiErrorMessage } from '@/lib/axios';
 import { useUser } from '@/providers/user-provider';
 
@@ -40,8 +39,7 @@ type EmailChangeFormValues = z.infer<typeof emailChangeSchema>;
 
 export function EmailChangeForm({ isModal = true, onCancel, onSuccess }: EmailChangeFormProps) {
     const [error, setError] = useState<null | string>(null);
-    const { authInfo, refreshAuthInfo } = useUser();
-    const currentEmail = authInfo?.user?.mail || '';
+    const { refreshAuthInfo } = useUser();
 
     const form = useForm<EmailChangeFormValues>({
         defaultValues: {
@@ -78,14 +76,22 @@ export function EmailChangeForm({ isModal = true, onCancel, onSuccess }: EmailCh
                 className="flex flex-col gap-4"
                 onSubmit={form.handleSubmit(handleSubmit)}
             >
-                <div className="flex flex-col gap-2">
-                    <Label htmlFor="current-email">Current Email</Label>
-                    <Input
-                        disabled
-                        id="current-email"
-                        value={currentEmail}
-                    />
-                </div>
+                <FormField
+                    control={form.control}
+                    name="currentPassword"
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Current Password</FormLabel>
+                            <FormControl>
+                                <InputPassword
+                                    {...field}
+                                    placeholder="Enter your current password"
+                                />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
 
                 <FormField
                     control={form.control}
@@ -96,25 +102,8 @@ export function EmailChangeForm({ isModal = true, onCancel, onSuccess }: EmailCh
                             <FormControl>
                                 <Input
                                     {...field}
-                                    placeholder="Enter new email address"
+                                    placeholder="Enter your new email address"
                                     type="email"
-                                />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                />
-
-                <FormField
-                    control={form.control}
-                    name="currentPassword"
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Current Password</FormLabel>
-                            <FormControl>
-                                <InputPassword
-                                    {...field}
-                                    placeholder="Enter your current password to confirm"
                                 />
                             </FormControl>
                             <FormMessage />
@@ -128,13 +117,14 @@ export function EmailChangeForm({ isModal = true, onCancel, onSuccess }: EmailCh
                     {isModal && (
                         <Button
                             onClick={onCancel}
+                            size="sm"
                             type="button"
                             variant="outline"
                         >
                             Cancel
                         </Button>
                     )}
-                    <FormSubmitButton>
+                    <FormSubmitButton size="sm">
                         <span>Update Email</span>
                     </FormSubmitButton>
                 </div>

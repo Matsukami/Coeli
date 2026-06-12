@@ -358,7 +358,7 @@ export function MainSidebar() {
                                         <DropdownMenuItem asChild>
                                             <Link to="/settings/account">
                                                 <UserIcon className="mr-2 size-4" />
-                                                My Profile
+                                                Profile
                                             </Link>
                                         </DropdownMenuItem>
                                     </>
