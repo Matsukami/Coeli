@@ -352,17 +352,13 @@ export function MainSidebar() {
                                         </TabsList>
                                     </Tabs>
                                 </DropdownMenuItem>
-                                {user?.type === 'local' && (
-                                    <>
-                                        <DropdownMenuSeparator />
-                                        <DropdownMenuItem asChild>
-                                            <Link to="/settings/account">
-                                                <UserIcon className="mr-2 size-4" />
-                                                Profile
-                                            </Link>
-                                        </DropdownMenuItem>
-                                    </>
-                                )}
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem asChild>
+                                    <Link to="/settings/account">
+                                        <UserIcon className="mr-2 size-4" />
+                                        Profile
+                                    </Link>
+                                </DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem onClick={() => logout()}>
                                     <LogOut className="mr-2 size-4" />
