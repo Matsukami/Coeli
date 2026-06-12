@@ -245,5 +245,15 @@ export const getApiErrorStatusCode = (error: unknown): number | undefined => {
     return httpError.statusCode ?? httpError.response?.status;
 };
 
+export const getApiErrorCode = (error: unknown): string | undefined => {
+    if (!error || typeof error !== 'object') {
+        return undefined;
+    }
+
+    const responseData = (error as ApiHttpError).response?.data;
+
+    return responseData && typeof responseData === 'object' ? (responseData as ApiErrorResponse).code : undefined;
+};
+
 export default axios;
 export { axios };

@@ -1,5 +1,4 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Eye, EyeOff } from 'lucide-react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
@@ -8,8 +7,8 @@ import * as z from 'zod';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { FormSubmitButton } from '@/components/ui/form-submit-button';
-import { Input } from '@/components/ui/input';
-import { api, type ApiErrorResponse, type ApiHttpError } from '@/lib/axios';
+import { InputPassword } from '@/components/ui/input-password';
+import { api, getApiErrorCode, getApiErrorMessage } from '@/lib/axios';
 
 const passwordChangeSchema = z
     .object({
@@ -48,6 +47,14 @@ const passwordChangeSchema = z
         path: ['newPassword'],
     });
 
+const ERROR_BY_CODE: Record<string, string> = {
+    AuthRequired: 'Authentication required',
+    'Users.ChangePasswordCurrentUser.InvalidCurrentPassword': 'Current password is incorrect',
+    'Users.ChangePasswordCurrentUser.InvalidNewPassword': 'New password does not meet requirements',
+    'Users.ChangePasswordCurrentUser.InvalidPassword': 'Password validation failed',
+    'Users.NotFound': 'User not found',
+};
+
 interface PasswordChangeFormProps {
     isModal?: boolean;
     onCancel?: () => void;
@@ -66,9 +73,6 @@ export function PasswordChangeForm({
     showSkip = false,
 }: PasswordChangeFormProps) {
     const [error, setError] = useState<null | string>(null);
-    const [showCurrentPassword, setShowCurrentPassword] = useState(false);
-    const [showNewPassword, setShowNewPassword] = useState(false);
-    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     const form = useForm<PasswordChangeFormValues>({
         defaultValues: {
@@ -90,48 +94,12 @@ export function PasswordChangeForm({
             });
 
             form.reset();
-            setShowCurrentPassword(false);
-            setShowNewPassword(false);
-            setShowConfirmPassword(false);
-
             toast.success('Password successfully changed');
 
-            if (onSuccess) {
-                onSuccess();
-            }
+            onSuccess?.();
         } catch (err: unknown) {
-            const error = err as ApiHttpError;
-            const responseData = error.response?.data as ApiErrorResponse | undefined;
-
-            let errorMessage = 'Failed to change password';
-
-            if (responseData?.msg) {
-                errorMessage = responseData.msg;
-            } else if (responseData?.code) {
-                switch (responseData.code) {
-                    case 'AuthRequired':
-                        errorMessage = 'Authentication required';
-                        break;
-                    case 'Users.ChangePasswordCurrentUser.InvalidCurrentPassword':
-                        errorMessage = 'Current password is incorrect';
-                        break;
-                    case 'Users.ChangePasswordCurrentUser.InvalidNewPassword':
-                        errorMessage = 'New password does not meet requirements';
-                        break;
-                    case 'Users.ChangePasswordCurrentUser.InvalidPassword':
-                        errorMessage = 'Password validation failed';
-                        break;
-                    case 'Users.NotFound':
-                        errorMessage = 'User not found';
-                        break;
-                    default:
-                        errorMessage = responseData.msg || error.message || 'Failed to change password';
-                }
-            } else if (error.message) {
-                errorMessage = error.message;
-            }
-
-            setError(errorMessage);
+            const code = getApiErrorCode(err);
+            setError((code && ERROR_BY_CODE[code]) ?? getApiErrorMessage(err, 'Failed to change password'));
         }
     };
 
@@ -148,27 +116,10 @@ export function PasswordChangeForm({
                         <FormItem>
                             <FormLabel>Current Password</FormLabel>
                             <FormControl>
-                                <div className="relative">
-                                    <Input
-                                        {...field}
-                                        placeholder="Enter your current password"
-                                        type={showCurrentPassword ? 'text' : 'password'}
-                                    />
-                                    <Button
-                                        className="absolute top-0 right-0 h-full px-3 py-2 hover:bg-transparent"
-                                        onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                                        size="sm"
-                                        tabIndex={-1}
-                                        type="button"
-                                        variant="ghost"
-                                    >
-                                        {showCurrentPassword ? (
-                                            <EyeOff className="text-muted-foreground size-4" />
-                                        ) : (
-                                            <Eye className="text-muted-foreground size-4" />
-                                        )}
-                                    </Button>
-                                </div>
+                                <InputPassword
+                                    {...field}
+                                    placeholder="Enter your current password"
+                                />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
@@ -182,27 +133,10 @@ export function PasswordChangeForm({
                         <FormItem>
                             <FormLabel>New Password</FormLabel>
                             <FormControl>
-                                <div className="relative">
-                                    <Input
-                                        {...field}
-                                        placeholder="Enter new password"
-                                        type={showNewPassword ? 'text' : 'password'}
-                                    />
-                                    <Button
-                                        className="absolute top-0 right-0 h-full px-3 py-2 hover:bg-transparent"
-                                        onClick={() => setShowNewPassword(!showNewPassword)}
-                                        size="sm"
-                                        tabIndex={-1}
-                                        type="button"
-                                        variant="ghost"
-                                    >
-                                        {showNewPassword ? (
-                                            <EyeOff className="text-muted-foreground size-4" />
-                                        ) : (
-                                            <Eye className="text-muted-foreground size-4" />
-                                        )}
-                                    </Button>
-                                </div>
+                                <InputPassword
+                                    {...field}
+                                    placeholder="Enter new password"
+                                />
                             </FormControl>
                             <FormDescription className="text-xs">
                                 Must be 16+ characters, or 8+ with number, lowercase, uppercase, and special character
@@ -220,27 +154,10 @@ export function PasswordChangeForm({
                         <FormItem>
                             <FormLabel>Confirm New Password</FormLabel>
                             <FormControl>
-                                <div className="relative">
-                                    <Input
-                                        {...field}
-                                        placeholder="Confirm new password"
-                                        type={showConfirmPassword ? 'text' : 'password'}
-                                    />
-                                    <Button
-                                        className="absolute top-0 right-0 h-full px-3 py-2 hover:bg-transparent"
-                                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                        size="sm"
-                                        tabIndex={-1}
-                                        type="button"
-                                        variant="ghost"
-                                    >
-                                        {showConfirmPassword ? (
-                                            <EyeOff className="text-muted-foreground size-4" />
-                                        ) : (
-                                            <Eye className="text-muted-foreground size-4" />
-                                        )}
-                                    </Button>
-                                </div>
+                                <InputPassword
+                                    {...field}
+                                    placeholder="Confirm new password"
+                                />
                             </FormControl>
                             <FormMessage />
                         </FormItem>

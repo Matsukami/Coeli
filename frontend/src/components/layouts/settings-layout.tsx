@@ -1,4 +1,4 @@
-import { ArrowLeft, FileText, Key, Plug, Settings as SettingsIcon } from 'lucide-react';
+import { ArrowLeft, FileText, Key, Plug, Settings as SettingsIcon, User } from 'lucide-react';
 import { useMemo } from 'react';
 import { NavLink, Outlet, useLocation, useParams } from 'react-router-dom';
 
@@ -17,11 +17,12 @@ import {
     SidebarProvider,
     SidebarTrigger,
 } from '@/components/ui/sidebar';
+import { useUser } from '@/providers/user-provider';
 
 export interface MenuItem {
     icon?: React.ReactNode;
     id: string;
-    isActive?: boolean;
+    isLocalOnly?: boolean;
     path: string;
     title: string;
 }
@@ -31,6 +32,13 @@ interface SettingsSidebarMenuItemProps {
 }
 
 const menuItems: readonly MenuItem[] = [
+    {
+        icon: <User className="size-4" />,
+        id: 'account',
+        isLocalOnly: true,
+        path: '/settings/account',
+        title: 'Account',
+    },
     {
         icon: <Plug className="size-4" />,
         id: 'providers',
@@ -108,6 +116,10 @@ function SettingsLayout() {
 }
 
 function SettingsSidebar() {
+    const { authInfo } = useUser();
+    const isLocal = authInfo?.user?.type === 'local';
+    const visibleItems = menuItems.filter((item) => !item.isLocalOnly || isLocal);
+
     return (
         <Sidebar collapsible="icon">
             <SidebarHeader>
@@ -126,7 +138,7 @@ function SettingsSidebar() {
                 <SidebarGroup>
                     <SidebarGroupContent>
                         <SidebarMenu>
-                            {menuItems.map((item) => (
+                            {visibleItems.map((item) => (
                                 <SettingsSidebarMenuItem
                                     item={item}
                                     key={item.id}

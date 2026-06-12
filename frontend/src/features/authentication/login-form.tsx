@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { FormSubmitButton } from '@/components/ui/form-submit-button';
 import { Input } from '@/components/ui/input';
+import { InputPassword } from '@/components/ui/input-password';
 import { useUser } from '@/providers/user-provider';
 
 import { PasswordChangeForm } from './password-change-form';
@@ -233,10 +234,9 @@ function LoginForm({ providers, returnUrl = '/flows/new' }: LoginFormProps) {
                             <FormItem>
                                 <FormLabel>Password</FormLabel>
                                 <FormControl>
-                                    <Input
+                                    <InputPassword
                                         {...field}
                                         placeholder="Enter your password"
-                                        type="password"
                                     />
                                 </FormControl>
                                 <FormMessage />

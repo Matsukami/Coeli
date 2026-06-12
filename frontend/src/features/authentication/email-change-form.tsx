@@ -1,5 +1,4 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Eye, EyeOff } from 'lucide-react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
@@ -9,7 +8,9 @@ import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { FormSubmitButton } from '@/components/ui/form-submit-button';
 import { Input } from '@/components/ui/input';
-import { api, type ApiErrorResponse, type ApiHttpError } from '@/lib/axios';
+import { InputPassword } from '@/components/ui/input-password';
+import { Label } from '@/components/ui/label';
+import { api, getApiErrorCode, getApiErrorMessage } from '@/lib/axios';
 import { useUser } from '@/providers/user-provider';
 
 const emailChangeSchema = z.object({
@@ -21,6 +22,14 @@ const emailChangeSchema = z.object({
         .max(50, { message: 'Email must not exceed 50 characters' }),
 });
 
+const ERROR_BY_CODE: Record<string, string> = {
+    AuthRequired: 'Authentication required',
+    'Users.ChangeEmailCurrentUser.EmailAlreadyExists': 'Email address is already in use',
+    'Users.ChangeEmailCurrentUser.InvalidCurrentPassword': 'Current password is incorrect',
+    'Users.ChangeEmailCurrentUser.InvalidEmail': 'New email does not meet requirements',
+    'Users.NotFound': 'User not found',
+};
+
 interface EmailChangeFormProps {
     isModal?: boolean;
     onCancel?: () => void;
@@ -31,7 +40,6 @@ type EmailChangeFormValues = z.infer<typeof emailChangeSchema>;
 
 export function EmailChangeForm({ isModal = true, onCancel, onSuccess }: EmailChangeFormProps) {
     const [error, setError] = useState<null | string>(null);
-    const [showPassword, setShowPassword] = useState(false);
     const { authInfo, refreshAuthInfo } = useUser();
     const currentEmail = authInfo?.user?.mail || '';
 
@@ -53,49 +61,14 @@ export function EmailChangeForm({ isModal = true, onCancel, onSuccess }: EmailCh
             });
 
             form.reset();
-            setShowPassword(false);
-
             toast.success('Email successfully updated');
 
-            // Refresh user info to update local state/display
             await refreshAuthInfo();
 
-            if (onSuccess) {
-                onSuccess();
-            }
+            onSuccess?.();
         } catch (err: unknown) {
-            const error = err as ApiHttpError;
-            const responseData = error.response?.data as ApiErrorResponse | undefined;
-
-            let errorMessage = 'Failed to update email';
-
-            if (responseData?.msg) {
-                errorMessage = responseData.msg;
-            } else if (responseData?.code) {
-                switch (responseData.code) {
-                    case 'AuthRequired':
-                        errorMessage = 'Authentication required';
-                        break;
-                    case 'Users.ChangeEmailCurrentUser.EmailAlreadyExists':
-                        errorMessage = 'Email address is already in use';
-                        break;
-                    case 'Users.ChangeEmailCurrentUser.InvalidCurrentPassword':
-                        errorMessage = 'Current password is incorrect';
-                        break;
-                    case 'Users.ChangeEmailCurrentUser.InvalidEmail':
-                        errorMessage = 'New email does not meet requirements';
-                        break;
-                    case 'Users.NotFound':
-                        errorMessage = 'User not found';
-                        break;
-                    default:
-                        errorMessage = responseData.msg || error.message || 'Failed to update email';
-                }
-            } else if (error.message) {
-                errorMessage = error.message;
-            }
-
-            setError(errorMessage);
+            const code = getApiErrorCode(err);
+            setError((code && ERROR_BY_CODE[code]) ?? getApiErrorMessage(err, 'Failed to update email'));
         }
     };
 
@@ -105,12 +78,11 @@ export function EmailChangeForm({ isModal = true, onCancel, onSuccess }: EmailCh
                 className="flex flex-col gap-4"
                 onSubmit={form.handleSubmit(handleSubmit)}
             >
-                <div className="space-y-2">
-                    <label className="text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                        Current Email
-                    </label>
+                <div className="flex flex-col gap-2">
+                    <Label htmlFor="current-email">Current Email</Label>
                     <Input
                         disabled
+                        id="current-email"
                         value={currentEmail}
                     />
                 </div>
@@ -140,27 +112,10 @@ export function EmailChangeForm({ isModal = true, onCancel, onSuccess }: EmailCh
                         <FormItem>
                             <FormLabel>Current Password</FormLabel>
                             <FormControl>
-                                <div className="relative">
-                                    <Input
-                                        {...field}
-                                        placeholder="Enter your current password to confirm"
-                                        type={showPassword ? 'text' : 'password'}
-                                    />
-                                    <Button
-                                        className="absolute top-0 right-0 h-full px-3 py-2 hover:bg-transparent"
-                                        onClick={() => setShowPassword(!showPassword)}
-                                        size="sm"
-                                        tabIndex={-1}
-                                        type="button"
-                                        variant="ghost"
-                                    >
-                                        {showPassword ? (
-                                            <EyeOff className="text-muted-foreground size-4" />
-                                        ) : (
-                                            <Eye className="text-muted-foreground size-4" />
-                                        )}
-                                    </Button>
-                                </div>
+                                <InputPassword
+                                    {...field}
+                                    placeholder="Enter your current password to confirm"
+                                />
                             </FormControl>
                             <FormMessage />
                         </FormItem>

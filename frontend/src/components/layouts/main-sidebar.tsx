@@ -17,14 +17,13 @@ import {
     Sun,
     UserIcon,
 } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { Link, useMatch, useParams } from 'react-router-dom';
 
 import type { Flow } from '@/providers/sidebar-flows-provider';
 import type { Theme } from '@/providers/theme-provider';
 
 import Logo from '@/components/icons/logo';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -48,7 +47,6 @@ import {
     SidebarRail,
 } from '@/components/ui/sidebar';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ProfileDialog } from '@/features/authentication/profile-dialog';
 import { useResourcesUpload } from '@/features/resources/use-resources-upload';
 import { useTheme } from '@/hooks/use-theme';
 import { useFavorites } from '@/providers/favorites-provider';
@@ -63,7 +61,6 @@ interface FlowMenuItemProps {
 }
 
 export function MainSidebar() {
-    const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
     const isDashboardActive = useMatch('/dashboard');
     const isFlowsActive = useMatch('/flows/*');
     const isTemplatesActive = useMatch('/templates/*');
@@ -358,9 +355,11 @@ export function MainSidebar() {
                                 {user?.type === 'local' && (
                                     <>
                                         <DropdownMenuSeparator />
-                                        <DropdownMenuItem onClick={() => setIsProfileModalOpen(true)}>
-                                            <UserIcon className="mr-2 size-4" />
-                                            My Profile
+                                        <DropdownMenuItem asChild>
+                                            <Link to="/settings/account">
+                                                <UserIcon className="mr-2 size-4" />
+                                                My Profile
+                                            </Link>
                                         </DropdownMenuItem>
                                     </>
                                 )}
@@ -386,21 +385,6 @@ export function MainSidebar() {
                 type="file"
                 {...resourcesUpload.fileInputProps}
             />
-
-            <Dialog
-                onOpenChange={setIsProfileModalOpen}
-                open={isProfileModalOpen}
-            >
-                <DialogContent className="sm:max-w-[425px]">
-                    <DialogHeader>
-                        <DialogTitle>My Profile</DialogTitle>
-                    </DialogHeader>
-                    <ProfileDialog
-                        onCancel={() => setIsProfileModalOpen(false)}
-                        onSuccess={() => setIsProfileModalOpen(false)}
-                    />
-                </DialogContent>
-            </Dialog>
         </Sidebar>
     );
 }
