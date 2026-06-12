@@ -173,6 +173,11 @@ export function DetailNavigationSheet<T extends { id: string }>({
         }
 
         const id = requestAnimationFrame(() => {
+            // Focus may have returned to the search input since the effect's gate check.
+            if (document.activeElement === searchInputRef.current) {
+                return;
+            }
+
             const node = buttonRefs.current.get(focusedId);
 
             if (!node) {
