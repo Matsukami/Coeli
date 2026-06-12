@@ -367,7 +367,7 @@ export function DashboardAnalytics({ period }: { period: UsageStatsPeriod }) {
                     ) : (
                         <div
                             className={cn(
-                                'space-y-1 transition-opacity',
+                                'flex flex-col gap-1 transition-opacity',
                                 deferredExecutionStats !== executionStats && 'opacity-60',
                             )}
                         >
@@ -433,7 +433,7 @@ const FlowExecutionItem = memo(function FlowExecutionItem({
                 </div>
             </CollapsibleTrigger>
             <CollapsibleContent>
-                <div className="ml-7 space-y-1 border-l pl-3">
+                <div className="ml-7 flex flex-col gap-1 border-l pl-3">
                     {flow.tasks.map((task) => (
                         <TaskExecutionItem
                             key={task.taskId}
@@ -478,7 +478,7 @@ const TaskExecutionItem = memo(function TaskExecutionItem({ task }: { task: Flow
             </CollapsibleTrigger>
             {hasSubtasks && (
                 <CollapsibleContent>
-                    <div className="ml-6 space-y-0.5 border-l pl-3">
+                    <div className="ml-6 flex flex-col gap-0.5 border-l pl-3">
                         {task.subtasks.map((subtask) => (
                             <div
                                 className="text-muted-foreground flex items-center gap-3 px-3 py-1 text-xs"

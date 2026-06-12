@@ -103,7 +103,7 @@ export function FlowDashboardOverview({ flowId }: { flowId: string }) {
     const anyLoading = usageLoading || toolcallsLoading || flowStatsLoading;
 
     return (
-        <div className="space-y-6">
+        <div className="flex flex-col gap-6">
             <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
                 <MetricCard
                     description={`Subtasks: ${flowStats?.totalSubtasksCount ?? 0} · Assistants: ${flowStats?.totalAssistantsCount ?? 0}`}
