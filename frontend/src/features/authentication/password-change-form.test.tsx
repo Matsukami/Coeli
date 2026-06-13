@@ -40,8 +40,8 @@ describe('PasswordChangeForm', () => {
         render(<PasswordChangeForm onSuccess={onSuccess} />);
 
         await user.type(screen.getByPlaceholderText('Enter your current password'), 'Oldpass0!');
-        await user.type(screen.getByPlaceholderText('Enter new password'), 'Abcdef1!gh');
-        await user.type(screen.getByPlaceholderText('Confirm new password'), 'Abcdef1!gh');
+        await user.type(screen.getByPlaceholderText('Enter your new password'), 'Abcdef1!gh');
+        await user.type(screen.getByPlaceholderText('Confirm your new password'), 'Abcdef1!gh');
         await user.click(screen.getByRole('button', { name: 'Update Password' }));
 
         await waitFor(() => expect(onSuccess).toHaveBeenCalledOnce());
@@ -60,8 +60,8 @@ describe('PasswordChangeForm', () => {
         render(<PasswordChangeForm />);
 
         await user.type(screen.getByPlaceholderText('Enter your current password'), 'Oldpass0!');
-        await user.type(screen.getByPlaceholderText('Enter new password'), 'Abcdef1!gh');
-        await user.type(screen.getByPlaceholderText('Confirm new password'), 'Abcdef1!gh');
+        await user.type(screen.getByPlaceholderText('Enter your new password'), 'Abcdef1!gh');
+        await user.type(screen.getByPlaceholderText('Confirm your new password'), 'Abcdef1!gh');
         await user.click(screen.getByRole('button', { name: 'Update Password' }));
 
         expect(await screen.findByText('Current password is incorrect')).toBeInTheDocument();

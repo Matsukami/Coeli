@@ -248,11 +248,18 @@ func (s *UserService) ChangeEmailCurrentUser(c *gin.Context) {
 		return
 	}
 
+	// OAuth logins match accounts by email (authLoginCallback), so a new address unlinks the provider.
 	updates := map[string]any{
-		"mail": form.Mail,
+		"mail":     form.Mail,
+		"provider": nil,
 	}
 
 	if err = s.db.Model(&user).Scopes(scope).Updates(updates).Error; err != nil {
+		if isUniqueViolation(err) {
+			logger.FromContext(c).Warnf("email change rejected: address claimed concurrently")
+			response.Error(c, response.ErrChangeEmailCurrentUserEmailAlreadyExists, errors.New("email already exists"))
+			return
+		}
 		logger.FromContext(c).WithError(err).Errorf("error updating email for current user")
 		response.Error(c, response.ErrInternal, err)
 		return

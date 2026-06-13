@@ -450,7 +450,6 @@ func (s *AuthService) AuthLogout(c *gin.Context) {
 func (s *AuthService) authLoginCallback(c *gin.Context, stateData map[string]string, code string) {
 	var (
 		privs []string
-		role  models.Role
 		user  models.User
 	)
 
@@ -504,24 +503,7 @@ func (s *AuthService) authLoginCallback(c *gin.Context, stateData map[string]str
 		return
 	}
 
-	err = s.db.Take(&role, "id = ?", models.RoleUser).Error
-	if err != nil {
-		logger.FromContext(c).WithError(err).Errorf("error getting user role '%d'", models.RoleUser)
-		response.Error(c, response.ErrAuthInvalidServiceData, err)
-		return
-	}
-
-	err = s.db.Table("privileges").
-		Where("role_id = ?", models.RoleUser).
-		Pluck("name", &privs).Error
-	if err != nil {
-		logger.FromContext(c).WithError(err).Errorf("error getting user privileges list '%s'", user.Hash)
-		response.Error(c, response.ErrAuthInvalidServiceData, err)
-		return
-	}
-
-	filterQuery := "mail = ? AND type = ?"
-	if err = s.db.Take(&user, filterQuery, email, models.UserTypeOAuth).Error; err != nil {
+	if err = s.db.Take(&user, "mail = ?", email).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			user = models.User{
 				Hash:     rdb.MakeUserHash(email),
@@ -542,23 +524,30 @@ func (s *AuthService) authLoginCallback(c *gin.Context, stateData map[string]str
 
 			if err = tx.Create(&user).Error; err != nil {
 				tx.Rollback()
-				logger.FromContext(c).WithError(err).Errorf("error creating user")
-				response.Error(c, response.ErrInternal, err)
-				return
-			}
+				if !isUniqueViolation(err) {
+					logger.FromContext(c).WithError(err).Errorf("error creating user")
+					response.Error(c, response.ErrInternal, err)
+					return
+				}
+				if err = s.db.Take(&user, "mail = ?", email).Error; err != nil {
+					logger.FromContext(c).WithError(err).Errorf("error loading concurrently created user '%s'", email)
+					response.Error(c, response.ErrInternal, err)
+					return
+				}
+			} else {
+				preferences := models.NewUserPreferences(user.ID)
+				if err = tx.Create(preferences).Error; err != nil {
+					tx.Rollback()
+					logger.FromContext(c).WithError(err).Errorf("error creating user preferences")
+					response.Error(c, response.ErrInternal, err)
+					return
+				}
 
-			preferences := models.NewUserPreferences(user.ID)
-			if err = tx.Create(preferences).Error; err != nil {
-				tx.Rollback()
-				logger.FromContext(c).WithError(err).Errorf("error creating user preferences")
-				response.Error(c, response.ErrInternal, err)
-				return
-			}
-
-			if err = tx.Commit().Error; err != nil {
-				logger.FromContext(c).WithError(err).Errorf("error committing transaction")
-				response.Error(c, response.ErrInternal, err)
-				return
+				if err = tx.Commit().Error; err != nil {
+					logger.FromContext(c).WithError(err).Errorf("error committing transaction")
+					response.Error(c, response.ErrInternal, err)
+					return
+				}
 			}
 		} else {
 			logger.FromContext(c).WithError(err).Errorf("error searching user by email '%s'", email)
@@ -578,6 +567,15 @@ func (s *AuthService) authLoginCallback(c *gin.Context, stateData map[string]str
 	if user.Status != "active" {
 		logger.FromContext(c).Errorf("error checking active state for user '%s'", user.Status)
 		response.Error(c, response.ErrAuthInactiveUser, fmt.Errorf("user is inactive"))
+		return
+	}
+
+	err = s.db.Table("privileges").
+		Where("role_id = ?", user.RoleID).
+		Pluck("name", &privs).Error
+	if err != nil {
+		logger.FromContext(c).WithError(err).Errorf("error getting user privileges list '%s'", user.Hash)
+		response.Error(c, response.ErrAuthInvalidServiceData, err)
 		return
 	}
 

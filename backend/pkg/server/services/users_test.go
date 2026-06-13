@@ -3,6 +3,7 @@ package services
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -364,6 +365,7 @@ func TestChangeEmailCurrentUser(t *testing.T) {
 	err = db.Model(&models.User{}).Where("id = 1").Updates(map[string]interface{}{
 		"password": string(hashedPassword),
 		"hash":     "11111111111111111111111111111111",
+		"provider": "github",
 	}).Error
 	require.NoError(t, err)
 
@@ -388,27 +390,28 @@ func TestChangeEmailCurrentUser(t *testing.T) {
 				err := db.Where("id = 1").First(&user).Error
 				require.NoError(t, err)
 				assert.Equal(t, "newemail@test.com", user.Mail)
+				assert.Nil(t, user.Provider, "email change clears the now-stale OAuth provider link")
 			},
 		},
 		{
 			name:          "invalid password",
-			requestBody:  `{"current_password": "WrongPassword!", "mail": "another@test.com"}`,
-			uid:          1,
-			expectedCode: http.StatusForbidden,
+			requestBody:   `{"current_password": "WrongPassword!", "mail": "another@test.com"}`,
+			uid:           1,
+			expectedCode:  http.StatusForbidden,
 			errorContains: "invalid current password",
 		},
 		{
 			name:          "email already exists",
-			requestBody:  `{"current_password": "SecurePass123!", "mail": "user2@test.com"}`,
-			uid:          1,
-			expectedCode: http.StatusConflict,
+			requestBody:   `{"current_password": "SecurePass123!", "mail": "user2@test.com"}`,
+			uid:           1,
+			expectedCode:  http.StatusConflict,
 			errorContains: "email already exists",
 		},
 		{
 			name:          "invalid email format",
-			requestBody:  `{"current_password": "SecurePass123!", "mail": "invalid-email"}`,
-			uid:          1,
-			expectedCode: http.StatusBadRequest,
+			requestBody:   `{"current_password": "SecurePass123!", "mail": "invalid-email"}`,
+			uid:           1,
+			expectedCode:  http.StatusBadRequest,
 			errorContains: "failed to validate user email",
 		},
 	}
@@ -442,3 +445,10 @@ func TestChangeEmailCurrentUser(t *testing.T) {
 	}
 }
 
+func TestIsUniqueViolation(t *testing.T) {
+	assert.True(t, isUniqueViolation(errors.New(`pq: duplicate key value violates unique constraint "users_mail_unique"`)))
+	assert.True(t, isUniqueViolation(errors.New("pq: error 23505")))
+	assert.True(t, isUniqueViolation(errors.New("UNIQUE constraint failed: users.mail")), "sqlite phrasing is matched case-insensitively")
+	assert.False(t, isUniqueViolation(errors.New("connection refused")))
+	assert.False(t, isUniqueViolation(nil))
+}
