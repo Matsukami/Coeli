@@ -35,7 +35,7 @@ describe('EmailChangeForm', () => {
         const onSuccess = vi.fn();
         render(<EmailChangeForm onSuccess={onSuccess} />);
 
-        await user.type(screen.getByPlaceholderText('Enter your new email address'), 'new@example.com');
+        await user.type(screen.getByPlaceholderText('Enter your new email address'), 'New@Example.com');
         await user.type(screen.getByPlaceholderText('Enter your current password'), 'Oldpass0!');
         await user.click(screen.getByRole('button', { name: 'Update Email' }));
 

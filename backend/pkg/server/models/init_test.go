@@ -59,6 +59,8 @@ func TestEmailValidator(t *testing.T) {
 		{"valid email", "test@example.com", false},
 		{"admin special case", "admin", false},
 		{"email with subdomain", "user@mail.example.com", false},
+		{"mixed case", "John.Doe@Example.com", false},
+		{"long tld", "user@example.cloud", false},
 		{"email too short", "a@b", true},
 		{"empty email", "", true},
 		{"no at sign", "testexample.com", true},

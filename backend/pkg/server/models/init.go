@@ -88,7 +88,7 @@ func strongPasswordValidatorString() validator.Func {
 }
 
 func emailValidatorString() validator.Func {
-	emailRegex := regexp.MustCompile(`^[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,4}$`)
+	emailRegex := regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`)
 	return func(fl validator.FieldLevel) bool {
 		field := fl.Field()
 

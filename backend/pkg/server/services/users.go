@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 	"slices"
+	"strings"
 
 	"pentagi/pkg/server/auth"
 	"pentagi/pkg/server/logger"
@@ -209,6 +210,8 @@ func (s *UserService) ChangeEmailCurrentUser(c *gin.Context) {
 		response.Error(c, response.ErrChangeEmailCurrentUserInvalidEmail, err)
 		return
 	}
+
+	form.Mail = strings.ToLower(strings.TrimSpace(form.Mail))
 
 	uid := c.GetUint64("uid")
 	scope := func(db *gorm.DB) *gorm.DB {

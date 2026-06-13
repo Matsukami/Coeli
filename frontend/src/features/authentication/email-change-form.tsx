@@ -16,6 +16,8 @@ const emailChangeSchema = z.object({
     currentPassword: z.string().min(1, { message: 'Current password is required' }),
     newEmail: z
         .string()
+        .trim()
+        .toLowerCase()
         .min(1, { message: 'Email is required' })
         .email({ message: 'Invalid email address' })
         .max(50, { message: 'Email must not exceed 50 characters' }),

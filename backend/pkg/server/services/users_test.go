@@ -394,6 +394,17 @@ func TestChangeEmailCurrentUser(t *testing.T) {
 			},
 		},
 		{
+			name:         "mixed-case email is stored lowercase",
+			requestBody:  `{"current_password": "SecurePass123!", "mail": "Mixed.Case@Example.com"}`,
+			uid:          1,
+			expectedCode: http.StatusOK,
+			checkResult: func(t *testing.T, db *gorm.DB) {
+				var user models.User
+				require.NoError(t, db.Where("id = 1").First(&user).Error)
+				assert.Equal(t, "mixed.case@example.com", user.Mail)
+			},
+		},
+		{
 			name:          "invalid password",
 			requestBody:   `{"current_password": "WrongPassword!", "mail": "another@test.com"}`,
 			uid:           1,
