@@ -1,5 +1,5 @@
 import { Search, X } from 'lucide-react';
-import { type KeyboardEvent, type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { type KeyboardEvent, type ReactNode, useCallback, useMemo, useRef, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '@/components/ui/input-group';
@@ -141,58 +141,24 @@ export function DetailNavigationSheet<T extends { id: string }>({
         setFocusedId(desiredFocusId);
     }
 
-    // After roving focus moves, push the focus into the DOM. `rAF` defers past
-    // Radix's own focus management so we don't fight its open-time focus trap.
-    //
-    // Gate: only auto-focus an option when the user's focus is already
-    // somewhere that *expects* roving (a list option) or has not yet landed
-    // (`document.activeElement === document.body` right after open, before
-    // Radix moves focus into the dialog). Crucially, we must NOT steal focus
-    // when the user is typing in the search input: every keystroke that
-    // flushes the debounce can re-target `focusedId` (when `currentId` falls
-    // out of the filtered subset, render-phase reconciliation snaps focus to
-    // the first survivor). Without this gate, focus jumps out of the input
-    // mid-type and the user can only enter a few characters before losing
-    // their place — exact repro: type "aes" with current flow 837 visible,
-    // focus moves to button 836 at the 150 ms debounce boundary.
-    //
-    // The fix is at the cause, not the symptom: a local input mirror (the
-    // `InputSearch` / `DataTableFilter` pattern) would keep keystrokes from
-    // being dropped during a state round-trip, but it would not stop this
-    // effect from yanking focus away. The two patterns solve different bugs.
-    useEffect(() => {
-        if (!open || focusedId === null) {
-            return;
-        }
+    const handleOpenAutoFocus = useCallback(
+        (event: Event) => {
+            const node = focusedId ? buttonRefs.current.get(focusedId) : null;
+            const target = node ?? searchInputRef.current;
 
-        const activeEl = document.activeElement;
-        const focusIsOnSearchInput = activeEl !== null && activeEl === searchInputRef.current;
-
-        if (focusIsOnSearchInput) {
-            return;
-        }
-
-        const id = requestAnimationFrame(() => {
-            // Focus may have returned to the search input since the effect's gate check.
-            if (document.activeElement === searchInputRef.current) {
+            if (!target) {
                 return;
             }
 
-            const node = buttonRefs.current.get(focusedId);
+            event.preventDefault();
+            target.focus();
 
-            if (!node) {
-                return;
-            }
-
-            node.focus();
-
-            if (focusedId === String(currentId ?? '')) {
+            if (node && focusedId === String(currentId ?? '')) {
                 node.scrollIntoView({ block: 'center' });
             }
-        });
-
-        return () => cancelAnimationFrame(id);
-    }, [open, focusedId, currentId]);
+        },
+        [currentId, focusedId],
+    );
 
     // Translate arrow / Home / End into roving moves over `items`. Using the
     // array index instead of `querySelectorAll` keeps the keyboard model in
@@ -216,7 +182,9 @@ export function DetailNavigationSheet<T extends { id: string }>({
                 const target = items[index];
 
                 if (target) {
-                    setFocusedId(String(getId(target)));
+                    const targetId = String(getId(target));
+                    setFocusedId(targetId);
+                    buttonRefs.current.get(targetId)?.focus();
                 }
             };
 
@@ -343,6 +311,7 @@ export function DetailNavigationSheet<T extends { id: string }>({
                 aria-describedby={undefined}
                 className="flex w-full max-w-sm flex-col gap-0 p-0 sm:max-w-sm"
                 onEscapeKeyDown={handleEscapeKeyDown}
+                onOpenAutoFocus={handleOpenAutoFocus}
                 side="right"
             >
                 <SheetHeader className="gap-3 border-b p-4">
