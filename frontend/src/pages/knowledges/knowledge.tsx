@@ -57,7 +57,7 @@ function Knowledge() {
 
                 return {
                     document: created ?? undefined,
-                    redirectTo: created?.id ? `/knowledges/${created.id}` : '/knowledges',
+                    redirectTo: created?.id ? routes.knowledge(created.id) : routes.knowledges,
                 };
             }
 

@@ -1,9 +1,10 @@
 import { useDetailNavigation } from '@/components/shared/detail-navigation';
+import { routes } from '@/lib/routes';
 import { type Template, useTemplates } from '@/providers/templates-provider';
 
 const getLabel = (item: Template) => item.title;
 const getId = (item: Template) => String(item.id);
-const getHref = (item: Template) => `/templates/${item.id}`;
+const getHref = (item: Template) => routes.template(item.id);
 
 /**
  * Detail-page navigation wired up for templates. Returns a

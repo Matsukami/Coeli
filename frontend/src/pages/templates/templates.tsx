@@ -42,7 +42,7 @@ function Templates() {
 
     const handleTemplateOpen = useCallback(
         (templateId: string) => {
-            navigate(mergeHrefWithSearchParams(`/templates/${templateId}`, new URLSearchParams(location.search)));
+            navigate(mergeHrefWithSearchParams(routes.template(templateId), new URLSearchParams(location.search)));
         },
         [navigate, location.search],
     );

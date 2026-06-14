@@ -79,7 +79,7 @@ function Flows() {
 
     const handleFlowOpen = useCallback(
         (flowId: string) => {
-            navigate(mergeHrefWithSearchParams(`/flows/${flowId}`, new URLSearchParams(location.search)));
+            navigate(mergeHrefWithSearchParams(routes.flow(flowId), new URLSearchParams(location.search)));
         },
         [navigate, location.search],
     );

@@ -215,7 +215,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
     const loginWithOAuth = useCallback(
         async (provider: OAuthProvider): Promise<LoginResult> => {
-            const returnOAuthUri = '/oauth/result';
+            const returnOAuthUri = routes.oauthResult;
             const width = 500;
             const height = 600;
             const left = window.screenX + (window.outerWidth - width) / 2;

@@ -102,7 +102,7 @@ function Knowledges() {
 
     const handleOpen = useCallback(
         (id: string) => {
-            navigate(mergeHrefWithSearchParams(`/knowledges/${id}`, new URLSearchParams(location.search)));
+            navigate(mergeHrefWithSearchParams(routes.knowledge(id), new URLSearchParams(location.search)));
         },
         [navigate, location.search],
     );

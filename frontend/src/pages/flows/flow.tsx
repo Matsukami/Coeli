@@ -481,7 +481,7 @@ function FlowReportDropdown() {
             return;
         }
 
-        const url = `/flows/${flowId}/report?download=true&silent=true`;
+        const url = `${routes.flowReport(flowId)}?download=true&silent=true`;
         window.open(url, '_blank');
     };
 
@@ -490,7 +490,7 @@ function FlowReportDropdown() {
             return;
         }
 
-        const url = `/flows/${flowId}/report`;
+        const url = routes.flowReport(flowId);
         window.open(url, '_blank');
     };
 
