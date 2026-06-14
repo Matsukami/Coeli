@@ -5,7 +5,7 @@ import Axios from 'axios';
 import { AUTH_STORAGE_KEY } from '@/providers/user-provider';
 
 import { Log } from './log';
-import { getReturnUrlParam } from './utils/auth';
+import { routes } from './routes';
 
 // ── shared API protocol types ────────────────────────────────────────────────
 //
@@ -106,9 +106,8 @@ axios.interceptors.response.use(
 
                     const currentPath = window.location.pathname;
 
-                    if (currentPath !== '/login') {
-                        const returnParam = getReturnUrlParam(currentPath);
-                        window.location.href = `/login${returnParam}`;
+                    if (currentPath !== routes.login()) {
+                        window.location.href = routes.login(currentPath);
                     }
 
                     break;
@@ -129,9 +128,8 @@ axios.interceptors.response.use(
 
                         const currentPath = window.location.pathname;
 
-                        if (currentPath !== '/login') {
-                            const returnParam = getReturnUrlParam(currentPath);
-                            window.location.href = `/login${returnParam}`;
+                        if (currentPath !== routes.login()) {
+                            window.location.href = routes.login(currentPath);
                         }
                     } else {
                         Log.warn(err.response?.data);

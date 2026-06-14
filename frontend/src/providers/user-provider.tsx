@@ -8,6 +8,7 @@ import type { AuthInfo } from '@/models/info';
 import type { User } from '@/models/user';
 
 import { api } from '@/lib/axios';
+import { routes } from '@/lib/routes';
 import { getReturnUrlParam } from '@/lib/utils/auth';
 import { baseUrl } from '@/models/api';
 
@@ -147,7 +148,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
     }, [setAuth, clearAuth]);
 
     useEffect(() => {
-        if (location.pathname === '/login' && !isLoading) {
+        if (location.pathname === routes.login() && !isLoading) {
             // eslint-disable-next-line react-hooks/set-state-in-effect -- refreshAuthInfo's setState runs after an async fetch, not synchronously
             refreshAuthInfo();
         }
@@ -165,7 +166,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
                 toast.error('Logout failed, but clearing local session');
             } finally {
                 clearAuth();
-                window.location.href = `/login${finalReturnUrl}`;
+                window.location.href = `${routes.login()}${finalReturnUrl}`;
             }
         },
         [clearAuth, location.pathname],
@@ -328,7 +329,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
     useEffect(() => {
         const updateAuth = async () => {
-            const publicRoutes = ['/login', '/oauth/result'];
+            const publicRoutes = [routes.login(), routes.oauthResult];
 
             if (publicRoutes.includes(location.pathname)) {
                 return;
@@ -350,8 +351,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
                 } else {
                     clearAuth();
                     toast.error('Session expired. Please login again.');
-                    const returnParam = getReturnUrlParam(location.pathname);
-                    navigate(`/login${returnParam}`);
+                    navigate(routes.login(location.pathname));
                 }
             } catch {
                 // A transient /info failure on navigation must not log the user out — a network

@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 import Logo from '@/components/icons/logo';
+import { routes } from '@/lib/routes';
 
 function OAuthResult() {
     const [statusMessage, setStatusMessage] = useState('Authentication in progress...');
@@ -79,7 +80,7 @@ function OAuthResult() {
             }
         } else {
             updateMessage('Authentication window opened directly. Redirecting to login page...');
-            handleRedirect('/login', errorDelay / 2);
+            handleRedirect(routes.login(), errorDelay / 2);
             handleClose(errorDelay);
         }
 

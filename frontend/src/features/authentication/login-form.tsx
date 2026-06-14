@@ -13,6 +13,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { FormSubmitButton } from '@/components/ui/form-submit-button';
 import { Input } from '@/components/ui/input';
 import { InputPassword } from '@/components/ui/input-password';
+import { routes } from '@/lib/routes';
 import { useUser } from '@/providers/user-provider';
 
 import { PasswordChangeForm } from './password-change-form';
@@ -61,7 +62,7 @@ interface LoginFormProps {
     returnUrl?: string;
 }
 
-function LoginForm({ providers, returnUrl = '/flows/new' }: LoginFormProps) {
+function LoginForm({ providers, returnUrl = routes.newFlow }: LoginFormProps) {
     const form = useForm<z.infer<typeof formSchema>>({
         defaultValues: {
             mail: '',
