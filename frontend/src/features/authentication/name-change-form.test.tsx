@@ -2,7 +2,8 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { put, refreshAuthInfo } = vi.hoisted(() => ({
+const { patchUser, put, refreshAuthInfo } = vi.hoisted(() => ({
+    patchUser: vi.fn(),
     put: vi.fn(),
     refreshAuthInfo: vi.fn().mockResolvedValue(undefined),
 }));
@@ -15,7 +16,7 @@ vi.mock('@/lib/axios', async (importOriginal) => {
 });
 
 vi.mock('@/providers/user-provider', () => ({
-    useUser: () => ({ authInfo: { user: { name: 'Old Name' } }, refreshAuthInfo }),
+    useUser: () => ({ authInfo: { user: { name: 'Old Name' } }, patchUser, refreshAuthInfo }),
 }));
 
 vi.mock('sonner', () => ({ toast: { error: vi.fn(), success: vi.fn() } }));
@@ -27,6 +28,7 @@ const apiError = (code: string, msg: string) => ({ response: { data: { code, msg
 beforeEach(() => {
     put.mockReset().mockResolvedValue({ status: 'success' });
     refreshAuthInfo.mockClear();
+    patchUser.mockClear();
 });
 
 describe('NameChangeForm', () => {
@@ -48,6 +50,7 @@ describe('NameChangeForm', () => {
 
         await waitFor(() => expect(onSuccess).toHaveBeenCalledOnce());
         expect(put).toHaveBeenCalledWith('/user/name', { name: 'New Name' });
+        expect(patchUser).toHaveBeenCalledWith({ name: 'New Name' });
         expect(refreshAuthInfo).toHaveBeenCalledOnce();
     });
 

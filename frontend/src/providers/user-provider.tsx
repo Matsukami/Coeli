@@ -5,6 +5,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
 import type { AuthInfo } from '@/models/info';
+import type { User } from '@/models/user';
 
 import { api } from '@/lib/axios';
 import { getReturnUrlParam } from '@/lib/utils/auth';
@@ -31,6 +32,7 @@ interface UserContextType {
     login: (credentials: LoginCredentials) => Promise<LoginResult>;
     loginWithOAuth: (provider: OAuthProvider) => Promise<LoginResult>;
     logout: (returnUrl?: string) => Promise<void>;
+    patchUser: (patch: Partial<User>) => void;
     refreshAuthInfo: () => Promise<void>;
     setAuth: (authInfo: AuthInfo) => void;
 }
@@ -118,6 +120,17 @@ export function UserProvider({ children }: { children: ReactNode }) {
         return expirationDate > now;
     }, [authInfo]);
 
+    const patchUser = useCallback(
+        (patch: Partial<User>) => {
+            if (!authInfo?.user) {
+                return;
+            }
+
+            setAuth({ ...authInfo, user: { ...authInfo.user, ...patch } });
+        },
+        [authInfo, setAuth],
+    );
+
     const refreshAuthInfo = useCallback(async () => {
         try {
             const info = await api.get<AuthInfo>('/info');
@@ -128,7 +141,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
                 clearAuth();
             }
         } catch {
-            clearAuth();
+            // A transient /info failure (network, 5xx, timeout) is not auth loss — the axios
+            // interceptor hard-redirects on a real 401/403. Keep the current session.
         }
     }, [setAuth, clearAuth]);
 
@@ -340,10 +354,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
                     navigate(`/login${returnParam}`);
                 }
             } catch {
-                clearAuth();
-                toast.error('Session expired. Please login again.');
-                const returnParam = getReturnUrlParam(location.pathname);
-                navigate(`/login${returnParam}`);
+                // A transient /info failure on navigation must not log the user out — a network
+                // blip is not session expiry; the interceptor redirects on a real 401/403.
             }
         };
 
@@ -373,6 +385,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
                 login,
                 loginWithOAuth,
                 logout,
+                patchUser,
                 refreshAuthInfo,
                 setAuth,
             }}

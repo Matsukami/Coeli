@@ -41,7 +41,7 @@ type EmailChangeFormValues = z.infer<typeof emailChangeSchema>;
 
 export function EmailChangeForm({ isModal = true, onCancel, onSuccess }: EmailChangeFormProps) {
     const [error, setError] = useState<null | string>(null);
-    const { refreshAuthInfo } = useUser();
+    const { patchUser, refreshAuthInfo } = useUser();
 
     const form = useForm<EmailChangeFormValues>({
         defaultValues: {
@@ -63,6 +63,7 @@ export function EmailChangeForm({ isModal = true, onCancel, onSuccess }: EmailCh
             form.reset();
             toast.success('Email successfully updated');
 
+            patchUser({ mail: values.newEmail });
             await refreshAuthInfo();
 
             onSuccess?.();

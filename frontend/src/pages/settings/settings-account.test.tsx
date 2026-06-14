@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const { authState } = vi.hoisted(() => ({ authState: { value: null as unknown } }));
 
 vi.mock('@/providers/user-provider', () => ({
-    useUser: () => ({ authInfo: authState.value, refreshAuthInfo: vi.fn() }),
+    useUser: () => ({ authInfo: authState.value, patchUser: vi.fn(), refreshAuthInfo: vi.fn() }),
 }));
 
 import SettingsAccount from './settings-account';

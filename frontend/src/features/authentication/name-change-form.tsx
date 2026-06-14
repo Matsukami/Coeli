@@ -35,7 +35,7 @@ type NameChangeFormValues = z.infer<typeof nameChangeSchema>;
 
 export function NameChangeForm({ isModal = true, onCancel, onSuccess }: NameChangeFormProps) {
     const [error, setError] = useState<null | string>(null);
-    const { authInfo, refreshAuthInfo } = useUser();
+    const { authInfo, patchUser, refreshAuthInfo } = useUser();
 
     const form = useForm<NameChangeFormValues>({
         defaultValues: {
@@ -52,6 +52,7 @@ export function NameChangeForm({ isModal = true, onCancel, onSuccess }: NameChan
 
             toast.success('Name successfully updated');
 
+            patchUser({ name: values.name });
             await refreshAuthInfo();
 
             onSuccess?.();
