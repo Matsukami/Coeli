@@ -47,6 +47,7 @@ import {
     useTestProviderMutation,
     useUpdateProviderMutation,
 } from '@/graphql/types';
+import { routes } from '@/lib/routes';
 import { cn } from '@/lib/utils';
 
 interface BaseFieldProps extends ControllerProps {
@@ -1044,7 +1045,7 @@ function SettingsProvider() {
         const provider = providers.userDefined?.find((provider: Provider) => provider.id == providerId);
 
         if (!provider) {
-            navigate('/settings/providers');
+            navigate(routes.settings.providers);
 
             return;
         }
@@ -1083,7 +1084,7 @@ function SettingsProvider() {
                 });
             }
 
-            navigate('/settings/providers');
+            navigate(routes.settings.providers);
         } catch (error) {
             console.error('Submit error:', error);
             setSubmitError(error instanceof Error ? error.message : 'An error occurred while saving');
@@ -1111,7 +1112,7 @@ function SettingsProvider() {
                 variables: { providerId },
             });
 
-            navigate('/settings/providers');
+            navigate(routes.settings.providers);
         } catch (error) {
             console.error('Delete error:', error);
             setSubmitError(error instanceof Error ? error.message : 'An error occurred while deleting');
@@ -1279,7 +1280,7 @@ function SettingsProvider() {
             return;
         }
 
-        navigate('/settings/providers');
+        navigate(routes.settings.providers);
     };
 
     const handleConfirmLeave = () => {
@@ -1292,7 +1293,7 @@ function SettingsProvider() {
             return;
         }
 
-        navigate('/settings/providers');
+        navigate(routes.settings.providers);
     };
 
     const handleLeaveDialogOpenChange = (open: boolean) => {

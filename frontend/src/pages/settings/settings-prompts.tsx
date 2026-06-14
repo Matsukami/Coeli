@@ -36,6 +36,7 @@ import {
 import { StatusCard } from '@/components/ui/status-card';
 import { useDeletePromptMutation, useSettingsPromptsQuery } from '@/graphql/types';
 import { usePageStorageKeys } from '@/hooks/use-page-storage-keys';
+import { routes } from '@/lib/routes';
 
 type AgentPromptTableData = {
     displayName: string;
@@ -92,7 +93,7 @@ function SettingsPrompts() {
     };
 
     const handlePromptEdit = (promptName: string) => {
-        navigate(`/settings/prompts/${promptName}`);
+        navigate(routes.settings.prompt(promptName));
     };
 
     const handleResetDialogOpen = (

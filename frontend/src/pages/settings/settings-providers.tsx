@@ -32,6 +32,7 @@ import {
 import { StatusCard } from '@/components/ui/status-card';
 import { ProviderType, useDeleteProviderMutation, useSettingsProvidersQuery } from '@/graphql/types';
 import { useTableState } from '@/hooks/use-table-state';
+import { routes } from '@/lib/routes';
 import { formatDate } from '@/lib/utils/format';
 type Provider = ProviderConfigFragmentFragment;
 
@@ -96,14 +97,14 @@ function SettingsProviders() {
 
     const handleProviderEdit = useCallback(
         (providerId: string) => {
-            navigate(`/settings/providers/${providerId}`);
+            navigate(routes.settings.provider(providerId));
         },
         [navigate],
     );
 
     const handleProviderClone = useCallback(
         (providerId: string) => {
-            navigate(`/settings/providers/new?id=${providerId}`);
+            navigate(routes.settings.newProvider({ id: providerId }));
         },
         [navigate],
     );
@@ -387,7 +388,7 @@ function SettingsProviders() {
                 <StatusCard
                     action={
                         <Button
-                            onClick={() => navigate('/settings/providers/new')}
+                            onClick={() => navigate(routes.settings.newProvider())}
                             variant="secondary"
                         >
                             <Plus className="size-4" />
@@ -445,7 +446,7 @@ function SettingsProvidersHeader() {
     const navigate = useNavigate();
 
     const handleProviderCreate = (providerType: string) => {
-        navigate(`/settings/providers/new?type=${providerType}`);
+        navigate(routes.settings.newProvider({ type: providerType }));
     };
 
     return (

@@ -37,6 +37,7 @@ import {
     useValidatePromptMutation,
 } from '@/graphql/types';
 import { formatPromptId } from '@/lib/route-titles/format-prompt-id';
+import { routes } from '@/lib/routes';
 import { cn } from '@/lib/utils';
 
 const systemFormSchema = z.object({
@@ -432,7 +433,7 @@ function SettingsPrompt() {
             return;
         }
 
-        navigate('/settings/prompts');
+        navigate(routes.settings.prompts);
     };
 
     const handleConfirmLeave = () => {
@@ -444,7 +445,7 @@ function SettingsPrompt() {
             return;
         }
 
-        navigate('/settings/prompts');
+        navigate(routes.settings.prompts);
     };
 
     const handleLeaveDialogOpenChange = (open: boolean) => {
