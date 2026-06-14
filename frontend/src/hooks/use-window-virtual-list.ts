@@ -45,14 +45,13 @@ import { type RefObject, useLayoutEffect, useRef, useState } from 'react';
  * pay the listener cost.
  *
  * Scroll container — assumes `window`. Layouts with an inner `overflow-auto`
- * container (e.g. settings-layout's `<main>`) need `useVirtualizer` with an
- * explicit scroll element instead; this hook will misposition items there.
+ * container need {@link useElementVirtualList} instead; this hook will
+ * misposition items there.
  *
  * `overscan` defaults to 5 (not react-virtual's default of 1) so the user
  * sees rows materialize ahead of the viewport edge during fast scrolling.
  */
 type UseWindowVirtualListOptions = {
-    /** Number of items in the underlying collection. */
     count: number;
     /**
      * Estimated item size in pixels. Pass a memoized reference (`useCallback`
