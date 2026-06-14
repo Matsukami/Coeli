@@ -14,7 +14,7 @@ import {
     XCircle,
 } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useController, useForm, useFormState, useWatch } from 'react-hook-form';
+import { type Control, type FieldValues, useController, useForm, useFormState, useWatch } from 'react-hook-form';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { z } from 'zod';
 
@@ -50,6 +50,49 @@ import {
 import { routes } from '@/lib/routes';
 import { cn } from '@/lib/utils';
 
+interface ProviderTest {
+    error?: null | string;
+    latency?: null | number;
+    name?: null | string;
+    reasoning?: boolean | null;
+    result?: boolean | null;
+    streaming?: boolean | null;
+    type?: null | string;
+}
+
+type ProviderTestResults = Record<string, null | undefined | { tests?: null | ProviderTest[] }>;
+
+const formatFieldName = (fieldPath: string): string =>
+    fieldPath
+        .split('.')
+        .map((part) => part.charAt(0).toUpperCase() + part.slice(1).replaceAll(/([A-Z])/g, ' $1'))
+        .join(' → ');
+
+const getErrorMessage = (error: unknown): string | undefined =>
+    typeof error === 'object' && error !== null && typeof (error as { message?: unknown }).message === 'string'
+        ? (error as { message: string }).message
+        : undefined;
+
+const formatFormErrors = (errors: Record<string, unknown>, prefix = ''): string =>
+    Object.entries(errors)
+        .flatMap(([field, error]) => {
+            const path = prefix ? `${prefix}.${field}` : field;
+            const message = getErrorMessage(error);
+
+            if (message) {
+                return [`• ${formatFieldName(path)}: ${message}`];
+            }
+
+            if (error && typeof error === 'object') {
+                const nested = formatFormErrors(error as Record<string, unknown>, path);
+
+                return nested ? [nested] : [];
+            }
+
+            return [];
+        })
+        .join('\n');
+
 interface BaseFieldProps extends ControllerProps {
     label: string;
 }
@@ -59,7 +102,7 @@ interface BaseInputProps {
 }
 
 interface ControllerProps {
-    control: any;
+    control: Control<FieldValues>;
     disabled?: boolean;
     name: string;
 }
@@ -646,7 +689,7 @@ const normalizeGraphQLData = (obj: unknown): unknown => {
 interface TestResultsDialogProps {
     handleOpenChange: (isOpen: boolean) => void;
     isOpen: boolean;
-    results: any;
+    results: null | ProviderTestResults;
 }
 
 function TestResultsDialog({ handleOpenChange, isOpen, results }: TestResultsDialogProps) {
@@ -656,7 +699,7 @@ function TestResultsDialog({ handleOpenChange, isOpen, results }: TestResultsDia
 
     const agentResults = Object.entries(results)
         .filter(([key]) => key !== '__typename')
-        .map(([agentType, agentData]: [string, any]) => ({
+        .map(([agentType, agentData]) => ({
             agentType,
             tests: agentData?.tests || [],
         }));
@@ -697,7 +740,7 @@ function TestResultsDialog({ handleOpenChange, isOpen, results }: TestResultsDia
                     >
                         {agentResults.map(({ agentType, tests }) => {
                             const testsCount = tests.length;
-                            const successTestsCount = tests.filter((test: any) => test.result === true).length;
+                            const successTestsCount = tests.filter((test) => test.result === true).length;
 
                             return (
                                 <AccordionItem
@@ -714,7 +757,7 @@ function TestResultsDialog({ handleOpenChange, isOpen, results }: TestResultsDia
                                     </AccordionTrigger>
                                     <AccordionContent>
                                         <div className="flex flex-col gap-3 pt-2">
-                                            {tests.map((test: any, index: number) => (
+                                            {tests.map((test, index) => (
                                                 <div
                                                     className="rounded-lg border p-3"
                                                     key={index}
@@ -815,7 +858,7 @@ function SettingsProvider() {
     const [currentAgentKey, setCurrentAgentKey] = useState<null | string>(null);
     const [submitError, setSubmitError] = useState<null | string>(null);
     const [isTestDialogOpen, setIsTestDialogOpen] = useState(false);
-    const [testResults, setTestResults] = useState<any>(null);
+    const [testResults, setTestResults] = useState<null | ProviderTestResults>(null);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [isLeaveDialogOpen, setIsLeaveDialogOpen] = useState(false);
     const [pendingBrowserBack, setPendingBrowserBack] = useState(false);
@@ -915,7 +958,7 @@ function SettingsProvider() {
         }
 
         return providerModels
-            .map((model: any) => ({
+            .map((model) => ({
                 name: model.name,
                 price: model.price
                     ? {
@@ -1123,55 +1166,9 @@ function SettingsProvider() {
         const isValid = await trigger();
 
         if (!isValid) {
-            const { errors } = formState;
-
-            const formatFieldName = (fieldPath: string): string => {
-                return fieldPath
-                    .split('.')
-                    .map((part) => {
-                        return part.charAt(0).toUpperCase() + part.slice(1).replaceAll(/([A-Z])/g, ' $1');
-                    })
-                    .join(' → ');
-            };
-
-            const errorMessages = Object.entries(errors)
-                .map(([field, error]: [string, any]) => {
-                    if (error?.message) {
-                        return `• ${formatFieldName(field)}: ${error.message}`;
-                    }
-
-                    if (error && typeof error === 'object') {
-                        return Object.entries(error)
-                            .map(([subField, subError]: [string, any]) => {
-                                if (subError?.message) {
-                                    return `• ${formatFieldName(`${field}.${subField}`)}: ${subError.message}`;
-                                }
-
-                                if (subError && typeof subError === 'object') {
-                                    return Object.entries(subError)
-                                        .map(([nestedField, nestedError]: [string, any]) => {
-                                            if (nestedError?.message) {
-                                                return `• ${formatFieldName(`${field}.${subField}.${nestedField}`)}: ${nestedError.message}`;
-                                            }
-
-                                            return null;
-                                        })
-                                        .filter(Boolean)
-                                        .join('\n');
-                                }
-
-                                return null;
-                            })
-                            .filter(Boolean)
-                            .join('\n');
-                    }
-
-                    return null;
-                })
-                .filter(Boolean)
-                .join('\n');
-
-            setSubmitError(`Please fix the following validation errors:\n\n${errorMessages}`);
+            setSubmitError(
+                `Please fix the following validation errors:\n\n${formatFormErrors(formState.errors as Record<string, unknown>)}`,
+            );
 
             return;
         }
@@ -1188,7 +1185,7 @@ function SettingsProvider() {
                 },
             });
 
-            setTestResults(result.data?.testProvider);
+            setTestResults((result.data?.testProvider ?? null) as null | ProviderTestResults);
             setIsTestDialogOpen(true);
         } catch (error) {
             console.error('Test error:', error);
@@ -1200,51 +1197,9 @@ function SettingsProvider() {
         const isValid = await trigger();
 
         if (!isValid) {
-            const { errors } = formState;
-            const formatFieldName = (fieldPath: string): string =>
-                fieldPath
-                    .split('.')
-                    .map((part) => part.charAt(0).toUpperCase() + part.slice(1).replaceAll(/([A-Z])/g, ' $1'))
-                    .join(' → ');
-
-            const errorMessages = Object.entries(errors)
-                .map(([field, error]: [string, any]) => {
-                    if (error?.message) {
-                        return `• ${formatFieldName(field)}: ${error.message}`;
-                    }
-
-                    if (error && typeof error === 'object') {
-                        return Object.entries(error)
-                            .map(([subField, subError]: [string, any]) => {
-                                if (subError?.message) {
-                                    return `• ${formatFieldName(`${field}.${subField}`)}: ${subError.message}`;
-                                }
-
-                                if (subError && typeof subError === 'object') {
-                                    return Object.entries(subError)
-                                        .map(([nestedField, nestedError]: [string, any]) => {
-                                            if (nestedError?.message) {
-                                                return `• ${formatFieldName(`${field}.${subField}.${nestedField}`)}: ${nestedError.message}`;
-                                            }
-
-                                            return null;
-                                        })
-                                        .filter(Boolean)
-                                        .join('\n');
-                                }
-
-                                return null;
-                            })
-                            .filter(Boolean)
-                            .join('\n');
-                    }
-
-                    return null;
-                })
-                .filter(Boolean)
-                .join('\n');
-
-            setSubmitError(`Please fix the following validation errors:\n\n${errorMessages}`);
+            setSubmitError(
+                `Please fix the following validation errors:\n\n${formatFormErrors(formState.errors as Record<string, unknown>)}`,
+            );
 
             return;
         }
@@ -1261,7 +1216,7 @@ function SettingsProvider() {
             const singleResult = await testAgent({
                 variables: { agent, agentType: agentTypesMap[agentKey] ?? AgentConfigType.Simple, type },
             });
-            setTestResults({ [agentKey]: singleResult.data?.testAgent });
+            setTestResults({ [agentKey]: singleResult.data?.testAgent } as ProviderTestResults);
             setIsTestDialogOpen(true);
             setCurrentAgentKey(null);
 
