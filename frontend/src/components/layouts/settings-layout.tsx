@@ -17,6 +17,7 @@ import {
     SidebarProvider,
     SidebarTrigger,
 } from '@/components/ui/sidebar';
+import { routes } from '@/lib/routes';
 import { getSafeReturnUrl } from '@/lib/utils/auth';
 
 export interface MenuItem {
@@ -34,25 +35,25 @@ const menuItems: readonly MenuItem[] = [
     {
         icon: <User className="size-4" />,
         id: 'account',
-        path: '/settings/account',
+        path: routes.settings.account,
         title: 'Account',
     },
     {
         icon: <Plug className="size-4" />,
         id: 'providers',
-        path: '/settings/providers',
+        path: routes.settings.providers,
         title: 'Providers',
     },
     {
         icon: <FileText className="size-4" />,
         id: 'prompts',
-        path: '/settings/prompts',
+        path: routes.settings.prompts,
         title: 'Prompts',
     },
     {
         icon: <Key className="size-4" />,
         id: 'api-tokens',
-        path: '/settings/api-tokens',
+        path: routes.settings.apiTokens,
         title: 'API Tokens',
     },
 ] as const;
@@ -100,7 +101,7 @@ function SettingsHeader() {
 function SettingsLayout() {
     const location = useLocation();
     const [returnUrl] = useState(() =>
-        getSafeReturnUrl((location.state as null | { from?: string })?.from ?? null, '/flows'),
+        getSafeReturnUrl((location.state as null | { from?: string })?.from ?? null, routes.flows),
     );
 
     return (

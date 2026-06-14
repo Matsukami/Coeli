@@ -49,6 +49,7 @@ import {
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useResourcesUpload } from '@/features/resources/use-resources-upload';
 import { useTheme } from '@/hooks/use-theme';
+import { routes } from '@/lib/routes';
 import { useFavorites } from '@/providers/favorites-provider';
 import { useSidebarFlows } from '@/providers/sidebar-flows-provider';
 import { useUser } from '@/providers/user-provider';
@@ -271,7 +272,7 @@ export function MainSidebar() {
                         >
                             <Link
                                 state={{ from: location.pathname }}
-                                to="/settings"
+                                to={routes.settings.root}
                             >
                                 <Settings />
                                 Settings
@@ -360,7 +361,7 @@ export function MainSidebar() {
                                 <DropdownMenuItem asChild>
                                     <Link
                                         state={{ from: location.pathname }}
-                                        to="/settings/account"
+                                        to={routes.settings.account}
                                     >
                                         <UserIcon className="mr-2 size-4" />
                                         Profile

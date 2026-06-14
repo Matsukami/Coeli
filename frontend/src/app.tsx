@@ -21,6 +21,7 @@ import RouteErrorBoundary from '@/components/shared/route-error-boundary';
 import { Toaster } from '@/components/ui/sonner';
 import client from '@/lib/apollo';
 import { routeTitles } from '@/lib/route-titles';
+import { routes } from '@/lib/routes';
 import { FavoritesProvider } from '@/providers/favorites-provider';
 import { FlowProvider } from '@/providers/flow-provider';
 import { KnowledgesProvider } from '@/providers/knowledges-provider';
@@ -201,7 +202,7 @@ const router = createBrowserRouter(
                         element={
                             <Navigate
                                 replace
-                                to="account"
+                                to={routes.settings.account}
                             />
                         }
                         index
@@ -241,7 +242,7 @@ const router = createBrowserRouter(
                         element={
                             <Navigate
                                 replace
-                                to="/settings/account"
+                                to={routes.settings.account}
                             />
                         }
                         path="*"
