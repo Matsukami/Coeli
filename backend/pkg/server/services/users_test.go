@@ -456,6 +456,82 @@ func TestChangeEmailCurrentUser(t *testing.T) {
 	}
 }
 
+func TestChangeNameCurrentUser(t *testing.T) {
+	db := setupTestDB(t)
+	defer db.Close()
+
+	userCache := auth.NewUserCache(db)
+	service := NewUserService(db, userCache)
+
+	testCases := []struct {
+		name          string
+		requestBody   string
+		uid           uint64
+		expectedCode  int
+		checkResult   func(t *testing.T, db *gorm.DB)
+		errorContains string
+	}{
+		{
+			name:         "successful name change",
+			requestBody:  `{"name": "Renamed User"}`,
+			uid:          1,
+			expectedCode: http.StatusOK,
+			checkResult: func(t *testing.T, db *gorm.DB) {
+				var user models.User
+				require.NoError(t, db.Where("id = 1").First(&user).Error)
+				assert.Equal(t, "Renamed User", user.Name)
+			},
+		},
+		{
+			name:          "nonexistent user",
+			requestBody:   `{"name": "Ghost"}`,
+			uid:           999,
+			expectedCode:  http.StatusNotFound,
+			errorContains: "Users.NotFound",
+			checkResult: func(t *testing.T, db *gorm.DB) {
+				var count int
+				require.NoError(t, db.Model(&models.User{}).Where("name = ?", "Ghost").Count(&count).Error)
+				assert.Equal(t, 0, count, "no row is created or touched for a missing user")
+			},
+		},
+		{
+			name:          "empty name",
+			requestBody:   `{"name": ""}`,
+			uid:           1,
+			expectedCode:  http.StatusBadRequest,
+			errorContains: "failed to validate user name",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			gin.SetMode(gin.TestMode)
+			w := httptest.NewRecorder()
+			c, _ := gin.CreateTestContext(w)
+
+			c.Set("uid", tc.uid)
+			c.Set("rid", uint64(2))
+			c.Set("uhash", "11111111111111111111111111111111")
+			c.Set("prm", []string{})
+
+			c.Request, _ = http.NewRequest("PUT", "/user/name", bytes.NewBufferString(tc.requestBody))
+			c.Request.Header.Set("Content-Type", "application/json")
+
+			service.ChangeNameCurrentUser(c)
+
+			assert.Equal(t, tc.expectedCode, w.Code)
+
+			if tc.checkResult != nil {
+				tc.checkResult(t, db)
+			}
+
+			if tc.errorContains != "" {
+				assert.Contains(t, w.Body.String(), tc.errorContains)
+			}
+		})
+	}
+}
+
 func TestIsUniqueViolation(t *testing.T) {
 	assert.True(t, isUniqueViolation(errors.New(`pq: duplicate key value violates unique constraint "users_mail_unique"`)))
 	assert.True(t, isUniqueViolation(errors.New("pq: error 23505")))

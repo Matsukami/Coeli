@@ -281,6 +281,7 @@ func (s *UserService) ChangeEmailCurrentUser(c *gin.Context) {
 // @Param json body models.NameChange true "new display name"
 // @Success 200 {object} response.successResp "account name updated successful"
 // @Failure 400 {object} response.errorResp "invalid account name form data"
+// @Failure 404 {object} response.errorResp "current user not found"
 // @Failure 500 {object} response.errorResp "internal error on updating account name"
 // @Router /user/name [put]
 func (s *UserService) ChangeNameCurrentUser(c *gin.Context) {
@@ -296,9 +297,15 @@ func (s *UserService) ChangeNameCurrentUser(c *gin.Context) {
 	}
 
 	uid := c.GetUint64("uid")
-	if err := s.db.Model(&models.User{}).Where("id = ?", uid).Update("name", form.Name).Error; err != nil {
-		logger.FromContext(c).WithError(err).Errorf("error updating name for current user")
-		response.Error(c, response.ErrInternal, err)
+	result := s.db.Model(&models.User{}).Where("id = ?", uid).Update("name", form.Name)
+	if result.Error != nil {
+		logger.FromContext(c).WithError(result.Error).Errorf("error updating name for current user")
+		response.Error(c, response.ErrInternal, result.Error)
+		return
+	}
+	if result.RowsAffected == 0 {
+		logger.FromContext(c).Errorf("current user not found for name change")
+		response.Error(c, response.ErrUsersNotFound, gorm.ErrRecordNotFound)
 		return
 	}
 
