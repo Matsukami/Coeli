@@ -252,7 +252,7 @@ Per-entry fields:
 - `source_page`: the page the URL was discovered from.
 - `depth`: crawl depth at which the URL was found.
 - `scope_decision`: whether the URL was treated as in scope or out of
-  scope, and why.
+  scope, and why, modeled as a `decision` value plus a short `reason`.
 - `parameters`: query or body parameter names associated with the URL.
 - `forms`: form action, method, and input field names.
 - `js_endpoints`: endpoints referenced from JavaScript for this page.
@@ -268,7 +268,7 @@ An illustrative entry:
   "status_code": 200,
   "source_page": "https://target.example/",
   "depth": 1,
-  "scope_decision": "in_scope",
+  "scope_decision": { "decision": "in_scope", "reason": "same_origin" },
   "parameters": ["redirect", "lang"],
   "forms": [
     {
@@ -339,7 +339,9 @@ change and does not choose the final storage shape.
 ```yaml
 crawler:
   enabled: false # off by default; operator opt-in
-  default_backend: none # candidate values: none, katana, crawlergo, rad
+  default_backend: none # default crawl backend; values: none, katana,
+                        # crawlergo, rad. Passive extractors such as
+                        # jsfinder are not selectable as the default.
   backends:
     katana:
       enabled: false
@@ -355,8 +357,11 @@ crawler:
       modes: [passive] # JavaScript endpoint extraction
   scope:
     follow: same_origin # same_origin | allowlist | scope_entries
-    allowed_hosts:
+    allowed_hosts: # used when follow=allowlist
       - target.example
+    scope_entries: # used when follow=scope_entries; illustrative flow
+      - https://target.example # scope-of-work entries, ideally sourced
+      - target.example/app # from the flow target scope if available
     robots_policy: record_only # honor | ignore | record_only
   limits:
     max_depth: 3
