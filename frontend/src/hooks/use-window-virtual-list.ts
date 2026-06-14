@@ -1,4 +1,4 @@
-import { useWindowVirtualizer, type VirtualItem, type Virtualizer } from '@tanstack/react-virtual';
+import { useWindowVirtualizer, type VirtualItem } from '@tanstack/react-virtual';
 import { type RefObject, useLayoutEffect, useRef, useState } from 'react';
 
 /**
@@ -38,11 +38,9 @@ import { type RefObject, useLayoutEffect, useRef, useState } from 'react';
  * hook owner together with it (the recommended pattern below already does
  * this).
  *
- * Mount the hook owner conditionally. The underlying virtualizer attaches
- * window scroll/resize listeners on every mount — there is no `enabled`
- * option that skips them. Pattern: render `<VirtualizedX/>` only when
- * `count > threshold`, so non-virtualized consumers of the same parent never
- * pay the listener cost.
+ * Mount the hook owner conditionally — render `<VirtualizedX/>` only when
+ * `count > threshold` — so non-virtualized consumers never pay the cost of the
+ * window scroll/resize listeners the virtualizer attaches on mount.
  *
  * Scroll container — assumes `window`. Layouts with an inner `overflow-auto`
  * container need {@link useElementVirtualList} instead; this hook will
@@ -90,8 +88,6 @@ type UseWindowVirtualListResult<T extends Element> = {
     totalSize: number;
     /** Items currently in the render window (visible + overscan). */
     virtualItems: VirtualItem[];
-    /** Escape hatch for callers needing `scrollToIndex`, `scrollToOffset`, … */
-    virtualizer: Virtualizer<Window, Element>;
 };
 
 export function useWindowVirtualList<T extends Element = HTMLDivElement>({
@@ -160,6 +156,5 @@ export function useWindowVirtualList<T extends Element = HTMLDivElement>({
         paddingStart,
         totalSize,
         virtualItems,
-        virtualizer,
     };
 }
