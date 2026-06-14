@@ -201,7 +201,7 @@ const router = createBrowserRouter(
                         element={
                             <Navigate
                                 replace
-                                to="providers"
+                                to="account"
                             />
                         }
                         index
@@ -241,7 +241,7 @@ const router = createBrowserRouter(
                         element={
                             <Navigate
                                 replace
-                                to="/settings/providers"
+                                to="/settings/account"
                             />
                         }
                         path="*"
