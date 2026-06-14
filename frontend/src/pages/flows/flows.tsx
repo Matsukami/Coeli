@@ -30,6 +30,7 @@ import { Toggle } from '@/components/ui/toggle';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { ResultType, StatusType, type TerminalFragmentFragment, useRenameFlowMutation } from '@/graphql/types';
 import { useTableState } from '@/hooks/use-table-state';
+import { routes } from '@/lib/routes';
 import { mergeHrefWithSearchParams } from '@/lib/url-params';
 import { formatDate } from '@/lib/utils/format';
 import { useFavorites } from '@/providers/favorites-provider';
@@ -584,7 +585,7 @@ function Flows() {
                 <HeaderButton
                     icon={<Plus />}
                     label="New Flow"
-                    onClick={() => navigate('/flows/new')}
+                    onClick={() => navigate(routes.newFlow)}
                     variant="secondary"
                 />
             </div>
@@ -614,7 +615,7 @@ function Flows() {
                     <StatusCard
                         action={
                             <Button
-                                onClick={() => navigate('/flows/new')}
+                                onClick={() => navigate(routes.newFlow)}
                                 variant="secondary"
                             >
                                 <Plus />

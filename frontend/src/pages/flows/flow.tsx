@@ -51,6 +51,7 @@ import { useBreakpoint } from '@/hooks/use-breakpoint';
 import { useFlowTabDetection } from '@/hooks/use-flow-tab-detection';
 import { Log } from '@/lib/log';
 import { copyToClipboard, downloadTextFile, generateFileName, generateReport } from '@/lib/report';
+import { routes } from '@/lib/routes';
 import { cn } from '@/lib/utils';
 import { formatName } from '@/lib/utils/format';
 import { useFavorites } from '@/providers/favorites-provider';
@@ -112,7 +113,7 @@ function Flow() {
 
     useEffect(() => {
         if (flowError || (!isFlowLoading && !flowData?.flow)) {
-            navigate('/flows', { replace: true });
+            navigate(routes.flows, { replace: true });
         }
     }, [flowError, flowData, isFlowLoading, navigate]);
 
@@ -176,7 +177,7 @@ function Flow() {
             const success = await deleteFlow(flow);
 
             if (success) {
-                navigate('/flows', { replace: true });
+                navigate(routes.flows, { replace: true });
             }
         } finally {
             setIsDeleting(false);

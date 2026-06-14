@@ -28,6 +28,8 @@ export const routes = {
     knowledges: '/knowledges',
     login: (fromPath?: string) => `/login${fromPath ? getReturnUrlParam(fromPath) : ''}`,
     newFlow: '/flows/new',
+    newKnowledge: '/knowledges/new',
+    newTemplate: '/templates/new',
 
     oauthResult: '/oauth/result',
     resources: '/resources',

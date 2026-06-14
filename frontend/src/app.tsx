@@ -272,11 +272,11 @@ const router = createBrowserRouter(
 
             {/* other routes */}
             <Route
-                element={<Navigate to="/dashboard" />}
+                element={<Navigate to={routes.dashboard} />}
                 path="/"
             />
             <Route
-                element={<Navigate to="/dashboard" />}
+                element={<Navigate to={routes.dashboard} />}
                 path="*"
             />
         </Route>,

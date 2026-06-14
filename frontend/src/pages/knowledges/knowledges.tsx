@@ -28,6 +28,7 @@ import { SidebarTrigger } from '@/components/ui/sidebar';
 import { StatusCard } from '@/components/ui/status-card';
 import { KnowledgeDocType } from '@/graphql/types';
 import { useTableState } from '@/hooks/use-table-state';
+import { routes } from '@/lib/routes';
 import { mergeHrefWithSearchParams, URL_PARAMS } from '@/lib/url-params';
 import { type Knowledge, useKnowledges } from '@/providers/knowledges-provider';
 
@@ -431,7 +432,7 @@ function Knowledges() {
                 <HeaderButton
                     icon={<Plus />}
                     label="New Knowledge"
-                    onClick={() => navigate('/knowledges/new')}
+                    onClick={() => navigate(routes.newKnowledge)}
                     variant="secondary"
                 />
             </div>
@@ -461,7 +462,7 @@ function Knowledges() {
                     <StatusCard
                         action={
                             <Button
-                                onClick={() => navigate('/knowledges/new')}
+                                onClick={() => navigate(routes.newKnowledge)}
                                 variant="secondary"
                             >
                                 <Plus />

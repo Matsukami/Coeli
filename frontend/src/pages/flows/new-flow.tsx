@@ -7,6 +7,7 @@ import { Separator } from '@/components/ui/separator';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { FlowForm, type FlowFormValues } from '@/features/flows/flow-form';
+import { routes } from '@/lib/routes';
 import { useFlows } from '@/providers/flows-provider';
 import { useProviders } from '@/providers/providers-provider';
 import { useSystemSettings } from '@/providers/system-settings-provider';
@@ -36,7 +37,7 @@ function NewFlow() {
             const flowId = flowType === 'automation' ? await createFlow(values) : await createFlowWithAssistant(values);
 
             if (flowId) {
-                navigate(`/flows/${flowId}?tab=${flowType}`);
+                navigate(routes.flow(flowId, { tab: flowType }));
             }
         } finally {
             setIsLoading(false);

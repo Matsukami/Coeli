@@ -30,6 +30,7 @@ import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Spinner } from '@/components/ui/spinner';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useBreakpoint } from '@/hooks/use-breakpoint';
+import { routes } from '@/lib/routes';
 import { cn } from '@/lib/utils';
 import { type Knowledge, useKnowledges } from '@/providers/knowledges-provider';
 
@@ -150,7 +151,7 @@ export function KnowledgeHeader({
         try {
             await deleteKnowledge(knowledgeId);
             onBeforeNavigateAway?.();
-            navigate('/knowledges', { replace: true });
+            navigate(routes.knowledges, { replace: true });
         } catch {
             // Error already handled in provider with toast
         } finally {

@@ -118,7 +118,7 @@ export function MainSidebar() {
                         <SidebarMenu>
                             <SidebarMenuItem className="group-data-[state=expanded]:hidden">
                                 <SidebarMenuButton asChild>
-                                    <Link to="/flows/new">
+                                    <Link to={routes.newFlow}>
                                         <Plus />
                                         New Flow
                                     </Link>
@@ -129,7 +129,7 @@ export function MainSidebar() {
                                     asChild
                                     isActive={!!isDashboardActive}
                                 >
-                                    <Link to="/dashboard">
+                                    <Link to={routes.dashboard}>
                                         <LayoutDashboard />
                                         Dashboard
                                     </Link>
@@ -140,7 +140,7 @@ export function MainSidebar() {
                                     asChild
                                     isActive={!!isFlowsActive}
                                 >
-                                    <Link to="/flows">
+                                    <Link to={routes.flows}>
                                         <GitFork />
                                         Flows
                                     </Link>
@@ -150,7 +150,7 @@ export function MainSidebar() {
                                     className="data-[state=open]:bg-accent rounded-sm"
                                     showOnHover
                                 >
-                                    <Link to="/flows/new">
+                                    <Link to={routes.newFlow}>
                                         <Plus />
                                     </Link>
                                 </SidebarMenuAction>
@@ -160,7 +160,7 @@ export function MainSidebar() {
                                     asChild
                                     isActive={!!isTemplatesActive}
                                 >
-                                    <Link to="/templates">
+                                    <Link to={routes.templates}>
                                         <FileText />
                                         Templates
                                     </Link>
@@ -170,7 +170,7 @@ export function MainSidebar() {
                                     className="data-[state=open]:bg-accent rounded-sm"
                                     showOnHover
                                 >
-                                    <Link to="/templates/new">
+                                    <Link to={routes.newTemplate}>
                                         <Plus />
                                     </Link>
                                 </SidebarMenuAction>
@@ -180,7 +180,7 @@ export function MainSidebar() {
                                     asChild
                                     isActive={!!isResourcesActive}
                                 >
-                                    <Link to="/resources">
+                                    <Link to={routes.resources}>
                                         <Folder />
                                         Resources
                                     </Link>
@@ -200,7 +200,7 @@ export function MainSidebar() {
                                     asChild
                                     isActive={!!isKnowledgesActive}
                                 >
-                                    <Link to="/knowledges">
+                                    <Link to={routes.knowledges}>
                                         <LibraryBig />
                                         Knowledges
                                     </Link>
@@ -210,7 +210,7 @@ export function MainSidebar() {
                                     className="data-[state=open]:bg-accent rounded-sm"
                                     showOnHover
                                 >
-                                    <Link to="/knowledges/new">
+                                    <Link to={routes.newKnowledge}>
                                         <Plus />
                                     </Link>
                                 </SidebarMenuAction>
@@ -400,7 +400,7 @@ function FlowMenuItem({ activeFlowId, flow, isFavorite, onToggleFavorite }: Flow
                 asChild
                 isActive={activeFlowId === Number(flow.id)}
             >
-                <Link to={`/flows/${flow.id}`}>
+                <Link to={routes.flow(flow.id)}>
                     <span className="-mx-2 w-8 shrink-0 text-center text-xs group-data-[state=expanded]:hidden">
                         {flow.id}
                     </span>

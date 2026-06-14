@@ -23,6 +23,7 @@ import { Separator } from '@/components/ui/separator';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { StatusCard } from '@/components/ui/status-card';
 import { useTableState } from '@/hooks/use-table-state';
+import { routes } from '@/lib/routes';
 import { mergeHrefWithSearchParams } from '@/lib/url-params';
 import { type Template, useTemplates } from '@/providers/templates-provider';
 
@@ -264,7 +265,7 @@ function Templates() {
                 <HeaderButton
                     icon={<Plus />}
                     label="New Template"
-                    onClick={() => navigate('/templates/new')}
+                    onClick={() => navigate(routes.newTemplate)}
                     variant="secondary"
                 />
             </div>
@@ -279,7 +280,7 @@ function Templates() {
                     <StatusCard
                         action={
                             <Button
-                                onClick={() => navigate('/templates/new')}
+                                onClick={() => navigate(routes.newTemplate)}
                                 variant="secondary"
                             >
                                 <Plus className="size-4" />

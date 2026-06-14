@@ -49,6 +49,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { useTemplateDetailNavigation } from '@/features/templates/use-template-detail-navigation';
 import { useFlowTemplateQuery } from '@/graphql/types';
 import { useBreakpoint } from '@/hooks/use-breakpoint';
+import { routes } from '@/lib/routes';
 import { cn } from '@/lib/utils';
 import { type Template, useTemplates } from '@/providers/templates-provider';
 
@@ -333,7 +334,7 @@ function Template() {
 
         try {
             await deleteTemplate(templateId);
-            navigate('/templates', { replace: true });
+            navigate(routes.templates, { replace: true });
         } catch {
             // Error already handled in provider with toast
         } finally {
@@ -351,7 +352,7 @@ function Template() {
         try {
             if (isNew) {
                 await createTemplate(values.title, values.text);
-                navigate('/templates');
+                navigate(routes.templates);
             } else if (templateId) {
                 await updateTemplate(templateId, { text: values.text, title: values.title });
                 reset(values, { keepDefaultValues: false });
@@ -672,7 +673,7 @@ function Template() {
                         <CardContent className="flex flex-col items-center gap-4 pt-6 text-center">
                             <h2 className="text-xl font-semibold">Template not found</h2>
                             <p className="text-muted-foreground">The template you are looking for does not exist.</p>
-                            <Button onClick={() => navigate('/templates')}>Back to Templates</Button>
+                            <Button onClick={() => navigate(routes.templates)}>Back to Templates</Button>
                         </CardContent>
                     </Card>
                 </div>
