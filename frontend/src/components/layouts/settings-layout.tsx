@@ -1,5 +1,5 @@
 import { ArrowLeft, FileText, Key, Plug, Settings as SettingsIcon, User } from 'lucide-react';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { NavLink, Outlet, useLocation, useParams } from 'react-router-dom';
 
 import { Separator } from '@/components/ui/separator';
@@ -17,6 +17,7 @@ import {
     SidebarProvider,
     SidebarTrigger,
 } from '@/components/ui/sidebar';
+import { getSafeReturnUrl } from '@/lib/utils/auth';
 
 export interface MenuItem {
     icon?: React.ReactNode;
@@ -97,10 +98,15 @@ function SettingsHeader() {
 }
 
 function SettingsLayout() {
+    const location = useLocation();
+    const [returnUrl] = useState(() =>
+        getSafeReturnUrl((location.state as null | { from?: string })?.from ?? null, '/flows'),
+    );
+
     return (
         <SidebarProvider>
             <div className="flex h-screen w-full overflow-hidden">
-                <SettingsSidebar />
+                <SettingsSidebar returnUrl={returnUrl} />
                 <SidebarInset className="flex flex-1 flex-col">
                     <SettingsHeader />
                     <main className="min-h-0 flex-1 overflow-auto p-4">
@@ -112,7 +118,7 @@ function SettingsLayout() {
     );
 }
 
-function SettingsSidebar() {
+function SettingsSidebar({ returnUrl }: { returnUrl: string }) {
     return (
         <Sidebar collapsible="icon">
             <SidebarHeader>
@@ -143,7 +149,7 @@ function SettingsSidebar() {
             </SidebarContent>
             <SidebarFooter>
                 <SidebarMenuButton asChild>
-                    <NavLink to="/flows">
+                    <NavLink to={returnUrl}>
                         <ArrowLeft className="size-4" />
                         Back to App
                     </NavLink>

@@ -18,7 +18,7 @@ import {
     UserIcon,
 } from 'lucide-react';
 import { useMemo } from 'react';
-import { Link, useMatch, useParams } from 'react-router-dom';
+import { Link, useLocation, useMatch, useParams } from 'react-router-dom';
 
 import type { Flow } from '@/providers/sidebar-flows-provider';
 import type { Theme } from '@/providers/theme-provider';
@@ -61,6 +61,7 @@ interface FlowMenuItemProps {
 }
 
 export function MainSidebar() {
+    const location = useLocation();
     const isDashboardActive = useMatch('/dashboard');
     const isFlowsActive = useMatch('/flows/*');
     const isTemplatesActive = useMatch('/templates/*');
@@ -268,7 +269,10 @@ export function MainSidebar() {
                             asChild
                             isActive={!!isSettingsActive}
                         >
-                            <Link to="/settings">
+                            <Link
+                                state={{ from: location.pathname }}
+                                to="/settings"
+                            >
                                 <Settings />
                                 Settings
                             </Link>
@@ -354,7 +358,10 @@ export function MainSidebar() {
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem asChild>
-                                    <Link to="/settings/account">
+                                    <Link
+                                        state={{ from: location.pathname }}
+                                        to="/settings/account"
+                                    >
                                         <UserIcon className="mr-2 size-4" />
                                         Profile
                                     </Link>
