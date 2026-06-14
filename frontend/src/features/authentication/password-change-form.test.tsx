@@ -52,6 +52,23 @@ describe('PasswordChangeForm', () => {
         });
     });
 
+    it('renders Skip only with onSkip, and puts submit before skip in the vertical layout', () => {
+        const { rerender } = render(<PasswordChangeForm />);
+        expect(screen.queryByRole('button', { name: 'Skip for now' })).not.toBeInTheDocument();
+
+        rerender(
+            <PasswordChangeForm
+                buttonSize="default"
+                layout="vertical"
+                onSkip={vi.fn()}
+            />,
+        );
+
+        const submit = screen.getByRole('button', { name: 'Update Password' });
+        const skip = screen.getByRole('button', { name: 'Skip for now' });
+        expect(submit.compareDocumentPosition(skip) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    });
+
     it('maps a backend error code to friendly copy instead of the raw msg', async () => {
         const user = userEvent.setup();
         put.mockRejectedValueOnce(

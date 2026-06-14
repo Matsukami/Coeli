@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useState } from 'react';
+import { type ComponentProps, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import * as z from 'zod';
@@ -9,6 +9,7 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { FormSubmitButton } from '@/components/ui/form-submit-button';
 import { InputPassword } from '@/components/ui/input-password';
 import { api, resolveApiErrorMessage } from '@/lib/axios';
+import { cn } from '@/lib/utils';
 
 const passwordChangeSchema = z
     .object({
@@ -55,6 +56,8 @@ const ERROR_BY_CODE: Record<string, string> = {
 };
 
 interface PasswordChangeFormProps {
+    buttonSize?: ComponentProps<typeof Button>['size'];
+    layout?: 'horizontal' | 'vertical';
     onCancel?: () => void;
     onSkip?: () => void;
     onSuccess?: () => void;
@@ -62,7 +65,13 @@ interface PasswordChangeFormProps {
 
 type PasswordChangeFormValues = z.infer<typeof passwordChangeSchema>;
 
-export function PasswordChangeForm({ onCancel, onSkip, onSuccess }: PasswordChangeFormProps) {
+export function PasswordChangeForm({
+    buttonSize = 'default',
+    layout = 'horizontal',
+    onCancel,
+    onSkip,
+    onSuccess,
+}: PasswordChangeFormProps) {
     const [error, setError] = useState<null | string>(null);
 
     const form = useForm<PasswordChangeFormValues>({
@@ -92,6 +101,39 @@ export function PasswordChangeForm({ onCancel, onSkip, onSuccess }: PasswordChan
             setError(resolveApiErrorMessage(err, ERROR_BY_CODE, 'Failed to change password'));
         }
     };
+
+    const isVertical = layout === 'vertical';
+
+    const skipButton = onSkip && (
+        <Button
+            className={cn('text-muted-foreground', isVertical && 'w-full')}
+            onClick={onSkip}
+            size={buttonSize}
+            type="button"
+            variant="ghost"
+        >
+            Skip for now
+        </Button>
+    );
+    const cancelButton = onCancel && (
+        <Button
+            className={cn(isVertical && 'w-full')}
+            onClick={onCancel}
+            size={buttonSize}
+            type="button"
+            variant="outline"
+        >
+            Cancel
+        </Button>
+    );
+    const submitButton = (
+        <FormSubmitButton
+            className={cn(isVertical && 'w-full')}
+            size={buttonSize}
+        >
+            <span>Update Password</span>
+        </FormSubmitButton>
+    );
 
     return (
         <Form {...form}>
@@ -156,32 +198,19 @@ export function PasswordChangeForm({ onCancel, onSkip, onSuccess }: PasswordChan
 
                 {error && <div className="text-destructive text-sm">{error}</div>}
 
-                <div className="flex justify-end gap-2 pt-2">
-                    {onSkip && (
-                        <Button
-                            className="text-muted-foreground"
-                            onClick={onSkip}
-                            size="sm"
-                            type="button"
-                            variant="ghost"
-                        >
-                            Skip for now
-                        </Button>
-                    )}
-                    {onCancel && (
-                        <Button
-                            onClick={onCancel}
-                            size="sm"
-                            type="button"
-                            variant="outline"
-                        >
-                            Cancel
-                        </Button>
-                    )}
-                    <FormSubmitButton size="sm">
-                        <span>Update Password</span>
-                    </FormSubmitButton>
-                </div>
+                {isVertical ? (
+                    <div className="flex flex-col gap-2 pt-2">
+                        {submitButton}
+                        {cancelButton}
+                        {skipButton}
+                    </div>
+                ) : (
+                    <div className="flex justify-end gap-2 pt-2">
+                        {skipButton}
+                        {cancelButton}
+                        {submitButton}
+                    </div>
+                )}
             </form>
         </Form>
     );

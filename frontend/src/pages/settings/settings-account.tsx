@@ -140,6 +140,7 @@ function SettingsAccount() {
                     <CardContent>
                         {editing === 'password' ? (
                             <PasswordChangeForm
+                                buttonSize="sm"
                                 onCancel={stopEditing}
                                 onSuccess={stopEditing}
                             />
