@@ -345,6 +345,16 @@ itself is validated only as documentation.
   is unchanged and still the supported default, so the Kubernetes work
   remains additive and opt-in throughout.
 
+## Recommendation and Requested Decision
+
+This RFC is docs-only and additive: it asks maintainers to accept a direction and its boundaries, not to commit to any manifests. Recommended boundaries for v1:
+
+- **Compose stays the supported default** and is unchanged; all Kubernetes work is additive and opt-in at every step.
+- **Docs-first sequencing:** land this design surface (step 1), then settle the executor model (step 2) in a dedicated follow-up RFC before any manifest is written, since flow-worker execution is the hardest and most security-sensitive question. This RFC intentionally does not pre-decide it.
+- **No charts or executor changes** are proposed here; reference manifests and packaging (Helm or an operator) are deferred to later, separately reviewable steps.
+
+Decision requested from the maintainer: accept, reshape, or decline this docs-first direction and the Compose-stays-default boundary. If accepted, the immediate next step is a focused executor-strategy RFC (Kubernetes-native Pods/Jobs vs DinD vs sandboxed runtime), which is the blocker for everything downstream.
+
 ## References
 
 - Issue [#324](https://github.com/vxcontrol/pentagi/issues/324):
