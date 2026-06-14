@@ -74,4 +74,20 @@ describe('SettingsAccount gating', () => {
 
         expect(screen.getByRole('button', { name: 'Update Name' })).toBeInTheDocument();
     });
+
+    it('keeps an open section and its draft when another section is opened', async () => {
+        const user = userEvent.setup();
+        authState.value = { user: localUser };
+        render(<SettingsAccount />);
+
+        await user.click(screen.getAllByRole('button', { name: 'Change' })[0]);
+        const nameInput = screen.getByPlaceholderText('Enter your display name');
+        await user.clear(nameInput);
+        await user.type(nameInput, 'Draft Name');
+
+        await user.click(screen.getAllByRole('button', { name: 'Change' })[0]);
+
+        expect(screen.getByRole('button', { name: 'Update Email' })).toBeInTheDocument();
+        expect(screen.getByPlaceholderText('Enter your display name')).toHaveValue('Draft Name');
+    });
 });

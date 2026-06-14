@@ -11,7 +11,7 @@ import { NameChangeForm } from '@/features/authentication/name-change-form';
 import { PasswordChangeForm } from '@/features/authentication/password-change-form';
 import { useUser } from '@/providers/user-provider';
 
-type EditingSection = 'email' | 'name' | 'password' | null;
+type EditingSection = 'email' | 'name' | 'password';
 
 const PROVIDER_LABELS: Record<string, string> = {
     github: 'GitHub',
@@ -21,14 +21,21 @@ const PROVIDER_LABELS: Record<string, string> = {
 function SettingsAccount() {
     const { authInfo } = useUser();
     const user = authInfo?.user;
-    const [editing, setEditing] = useState<EditingSection>(null);
+    const [editingSections, setEditingSections] = useState<Set<EditingSection>>(new Set());
 
     if (!user) {
         return null;
     }
 
     const isLocal = user.type === 'local';
-    const stopEditing = () => setEditing(null);
+    const startEditing = (section: EditingSection) => setEditingSections((prev) => new Set(prev).add(section));
+    const stopEditing = (section: EditingSection) =>
+        setEditingSections((prev) => {
+            const next = new Set(prev);
+            next.delete(section);
+
+            return next;
+        });
 
     const displayName = user.name?.trim() || user.mail;
     const initial = ([...(displayName || '?')][0] ?? '?').toUpperCase();
@@ -62,9 +69,9 @@ function SettingsAccount() {
                         <CardTitle>Display name</CardTitle>
                         <CardDescription>The name shown across the app.</CardDescription>
                     </div>
-                    {editing !== 'name' && (
+                    {!editingSections.has('name') && (
                         <Button
-                            onClick={() => setEditing('name')}
+                            onClick={() => startEditing('name')}
                             size="sm"
                             variant="outline"
                         >
@@ -73,10 +80,10 @@ function SettingsAccount() {
                     )}
                 </CardHeader>
                 <CardContent>
-                    {editing === 'name' ? (
+                    {editingSections.has('name') ? (
                         <NameChangeForm
-                            onCancel={stopEditing}
-                            onSuccess={stopEditing}
+                            onCancel={() => stopEditing('name')}
+                            onSuccess={() => stopEditing('name')}
                         />
                     ) : (
                         <div className="text-muted-foreground flex items-center gap-2 text-sm">
@@ -95,9 +102,9 @@ function SettingsAccount() {
                             {isLocal ? 'The email you use to sign in.' : `Linked from your ${accountLabel}.`}
                         </CardDescription>
                     </div>
-                    {isLocal && editing !== 'email' && (
+                    {isLocal && !editingSections.has('email') && (
                         <Button
-                            onClick={() => setEditing('email')}
+                            onClick={() => startEditing('email')}
                             size="sm"
                             variant="outline"
                         >
@@ -106,10 +113,10 @@ function SettingsAccount() {
                     )}
                 </CardHeader>
                 <CardContent>
-                    {isLocal && editing === 'email' ? (
+                    {isLocal && editingSections.has('email') ? (
                         <EmailChangeForm
-                            onCancel={stopEditing}
-                            onSuccess={stopEditing}
+                            onCancel={() => stopEditing('email')}
+                            onSuccess={() => stopEditing('email')}
                         />
                     ) : (
                         <div className="text-muted-foreground flex items-center gap-2 text-sm">
@@ -127,9 +134,9 @@ function SettingsAccount() {
                             <CardTitle>Password</CardTitle>
                             <CardDescription>Change your account password.</CardDescription>
                         </div>
-                        {editing !== 'password' && (
+                        {!editingSections.has('password') && (
                             <Button
-                                onClick={() => setEditing('password')}
+                                onClick={() => startEditing('password')}
                                 size="sm"
                                 variant="outline"
                             >
@@ -138,11 +145,11 @@ function SettingsAccount() {
                         )}
                     </CardHeader>
                     <CardContent>
-                        {editing === 'password' ? (
+                        {editingSections.has('password') ? (
                             <PasswordChangeForm
                                 buttonSize="sm"
-                                onCancel={stopEditing}
-                                onSuccess={stopEditing}
+                                onCancel={() => stopEditing('password')}
+                                onSuccess={() => stopEditing('password')}
                             />
                         ) : (
                             <div className="text-muted-foreground flex items-center gap-2 text-sm">
