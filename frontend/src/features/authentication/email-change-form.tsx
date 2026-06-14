@@ -9,7 +9,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { FormSubmitButton } from '@/components/ui/form-submit-button';
 import { Input } from '@/components/ui/input';
 import { InputPassword } from '@/components/ui/input-password';
-import { api, getApiErrorCode, getApiErrorMessage } from '@/lib/axios';
+import { api, resolveApiErrorMessage } from '@/lib/axios';
 import { useUser } from '@/providers/user-provider';
 
 const emailChangeSchema = z.object({
@@ -24,7 +24,6 @@ const emailChangeSchema = z.object({
 });
 
 const ERROR_BY_CODE: Record<string, string> = {
-    AuthRequired: 'Authentication required',
     'Users.ChangeEmailCurrentUser.EmailAlreadyExists': 'Email address is already in use',
     'Users.ChangeEmailCurrentUser.InvalidCurrentPassword': 'Current password is incorrect',
     'Users.ChangeEmailCurrentUser.InvalidEmail': 'New email does not meet requirements',
@@ -68,8 +67,7 @@ export function EmailChangeForm({ isModal = true, onCancel, onSuccess }: EmailCh
 
             onSuccess?.();
         } catch (err: unknown) {
-            const code = getApiErrorCode(err);
-            setError((code && ERROR_BY_CODE[code]) ?? getApiErrorMessage(err, 'Failed to update email'));
+            setError(resolveApiErrorMessage(err, ERROR_BY_CODE, 'Failed to update email'));
         }
     };
 

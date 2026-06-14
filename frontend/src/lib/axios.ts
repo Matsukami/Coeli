@@ -255,5 +255,15 @@ export const getApiErrorCode = (error: unknown): string | undefined => {
     return responseData && typeof responseData === 'object' ? (responseData as ApiErrorResponse).code : undefined;
 };
 
+export const resolveApiErrorMessage = (
+    error: unknown,
+    messagesByCode: Record<string, string>,
+    fallback: string,
+): string => {
+    const code = getApiErrorCode(error);
+
+    return (code && messagesByCode[code]) ?? getApiErrorMessage(error, fallback);
+};
+
 export default axios;
 export { axios };

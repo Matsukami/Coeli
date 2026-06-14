@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const { put } = vi.hoisted(() => ({ put: vi.fn() }));
 
-// Keep the pure helpers (`getApiErrorCode`, `getApiErrorMessage`) real — only the network call is stubbed.
+// Keep the real error-mapping helper (`resolveApiErrorMessage`) — only the network call is stubbed.
 vi.mock('@/lib/axios', async (importOriginal) => {
     const actual = await importOriginal<typeof import('@/lib/axios')>();
 

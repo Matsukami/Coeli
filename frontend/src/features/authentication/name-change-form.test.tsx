@@ -8,7 +8,7 @@ const { patchUser, put, refreshAuthInfo } = vi.hoisted(() => ({
     refreshAuthInfo: vi.fn().mockResolvedValue(undefined),
 }));
 
-// Keep the pure helpers (`getApiErrorCode`, `getApiErrorMessage`) real — only the network call is stubbed.
+// Keep the real error-mapping helper (`resolveApiErrorMessage`) — only the network call is stubbed.
 vi.mock('@/lib/axios', async (importOriginal) => {
     const actual = await importOriginal<typeof import('@/lib/axios')>();
 

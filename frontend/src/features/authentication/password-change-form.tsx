@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { FormSubmitButton } from '@/components/ui/form-submit-button';
 import { InputPassword } from '@/components/ui/input-password';
-import { api, getApiErrorCode, getApiErrorMessage } from '@/lib/axios';
+import { api, resolveApiErrorMessage } from '@/lib/axios';
 
 const passwordChangeSchema = z
     .object({
@@ -48,7 +48,6 @@ const passwordChangeSchema = z
     });
 
 const ERROR_BY_CODE: Record<string, string> = {
-    AuthRequired: 'Authentication required',
     'Users.ChangePasswordCurrentUser.InvalidCurrentPassword': 'Current password is incorrect',
     'Users.ChangePasswordCurrentUser.InvalidNewPassword': 'New password does not meet requirements',
     'Users.ChangePasswordCurrentUser.InvalidPassword': 'Password validation failed',
@@ -98,8 +97,7 @@ export function PasswordChangeForm({
 
             onSuccess?.();
         } catch (err: unknown) {
-            const code = getApiErrorCode(err);
-            setError((code && ERROR_BY_CODE[code]) ?? getApiErrorMessage(err, 'Failed to change password'));
+            setError(resolveApiErrorMessage(err, ERROR_BY_CODE, 'Failed to change password'));
         }
     };
 

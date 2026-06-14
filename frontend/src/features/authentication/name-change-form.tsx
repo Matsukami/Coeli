@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { FormSubmitButton } from '@/components/ui/form-submit-button';
 import { Input } from '@/components/ui/input';
-import { api, getApiErrorCode, getApiErrorMessage } from '@/lib/axios';
+import { api, resolveApiErrorMessage } from '@/lib/axios';
 import { useUser } from '@/providers/user-provider';
 
 const nameChangeSchema = z.object({
@@ -20,7 +20,6 @@ const nameChangeSchema = z.object({
 });
 
 const ERROR_BY_CODE: Record<string, string> = {
-    AuthRequired: 'Authentication required',
     'Users.ChangeNameCurrentUser.InvalidName': 'New name does not meet requirements',
     'Users.NotFound': 'User not found',
 };
@@ -57,8 +56,7 @@ export function NameChangeForm({ isModal = true, onCancel, onSuccess }: NameChan
 
             onSuccess?.();
         } catch (err: unknown) {
-            const code = getApiErrorCode(err);
-            setError((code && ERROR_BY_CODE[code]) ?? getApiErrorMessage(err, 'Failed to update name'));
+            setError(resolveApiErrorMessage(err, ERROR_BY_CODE, 'Failed to update name'));
         }
     };
 
