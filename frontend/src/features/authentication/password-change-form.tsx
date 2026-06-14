@@ -55,22 +55,14 @@ const ERROR_BY_CODE: Record<string, string> = {
 };
 
 interface PasswordChangeFormProps {
-    isModal?: boolean;
     onCancel?: () => void;
     onSkip?: () => void;
     onSuccess?: () => void;
-    showSkip?: boolean;
 }
 
 type PasswordChangeFormValues = z.infer<typeof passwordChangeSchema>;
 
-export function PasswordChangeForm({
-    isModal = true,
-    onCancel,
-    onSkip,
-    onSuccess,
-    showSkip = false,
-}: PasswordChangeFormProps) {
+export function PasswordChangeForm({ onCancel, onSkip, onSuccess }: PasswordChangeFormProps) {
     const [error, setError] = useState<null | string>(null);
 
     const form = useForm<PasswordChangeFormValues>({
@@ -165,7 +157,7 @@ export function PasswordChangeForm({
                 {error && <div className="text-destructive text-sm">{error}</div>}
 
                 <div className="flex justify-end gap-2 pt-2">
-                    {showSkip && (
+                    {onSkip && (
                         <Button
                             className="text-muted-foreground"
                             onClick={onSkip}
@@ -176,7 +168,7 @@ export function PasswordChangeForm({
                             Skip for now
                         </Button>
                     )}
-                    {isModal && (
+                    {onCancel && (
                         <Button
                             onClick={onCancel}
                             size="sm"

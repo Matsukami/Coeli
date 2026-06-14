@@ -31,14 +31,13 @@ const ERROR_BY_CODE: Record<string, string> = {
 };
 
 interface EmailChangeFormProps {
-    isModal?: boolean;
     onCancel?: () => void;
     onSuccess?: () => void;
 }
 
 type EmailChangeFormValues = z.infer<typeof emailChangeSchema>;
 
-export function EmailChangeForm({ isModal = true, onCancel, onSuccess }: EmailChangeFormProps) {
+export function EmailChangeForm({ onCancel, onSuccess }: EmailChangeFormProps) {
     const [error, setError] = useState<null | string>(null);
     const { patchUser, refreshAuthInfo } = useUser();
 
@@ -115,7 +114,7 @@ export function EmailChangeForm({ isModal = true, onCancel, onSuccess }: EmailCh
                 {error && <div className="text-destructive text-sm">{error}</div>}
 
                 <div className="flex justify-end gap-2 pt-2">
-                    {isModal && (
+                    {onCancel && (
                         <Button
                             onClick={onCancel}
                             size="sm"

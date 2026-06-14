@@ -162,10 +162,8 @@ function LoginForm({ providers, returnUrl = routes.newFlow }: LoginFormProps) {
                     You need to change your password before continuing.
                 </p>
                 <PasswordChangeForm
-                    isModal={false}
                     onSkip={handleSkipPasswordChange}
                     onSuccess={handlePasswordChangeSuccess}
-                    showSkip={true}
                 />
             </div>
         );
