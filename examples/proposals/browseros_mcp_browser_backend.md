@@ -404,4 +404,15 @@ Recommended behavior:
    - Keep policy failures fail-closed and do not use fallback to bypass
      scope or approval decisions.
 
+## Recommendation and Requested Decision
+
+This RFC recommends adopting BrowserOS MCP as an optional, disabled-by-default browser backend while the scraper backend remains the default, implemented incrementally (milestones 1-3 first):
+
+- **Default:** the scraper stays the default backend; BrowserOS MCP is opt-in via configuration, so existing deployments are unaffected.
+- **Transport and security:** bind the MCP endpoint to localhost by default and require an auth token (or mTLS) for any remote endpoint; treat the tool identifiers in this RFC as illustrative until validated against a real BrowserOS MCP server.
+- **Scope for the first PR:** read-only browsing (navigation, page and link extraction, snapshots, and screenshots through the existing artifact path). State-mutating interactive actions (click, fill, submit) are deferred to a later, approval-gated milestone.
+- **Isolation and audit:** per-flow session isolation, fail-closed policy checks, and audit logging of every state-mutating action.
+
+Decision requested from the maintainer: approve BrowserOS MCP as an optional, default-off backend with this read-only-first scope, request changes, or decline. Approval unblocks an implementation PR for the read-only backend behind a disabled-by-default flag.
+
 Refs #342
