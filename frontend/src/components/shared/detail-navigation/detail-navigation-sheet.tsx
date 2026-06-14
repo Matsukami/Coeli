@@ -1,5 +1,5 @@
 import { Search, X } from 'lucide-react';
-import { type KeyboardEvent, type ReactNode, useCallback, useMemo, useRef, useState } from 'react';
+import { type KeyboardEvent, type ReactNode, startTransition, useCallback, useMemo, useRef, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '@/components/ui/input-group';
@@ -65,8 +65,10 @@ export function DetailNavigationSheet<T extends { id: string }>({
     const buttonRefs = useRef(new Map<string, HTMLButtonElement>());
     const [focusedId, setFocusedId] = useState<null | string>(null);
 
+    const [localQuery, setLocalQuery] = useState(searchQuery);
+
     const hasEntries = items.length > 0;
-    const trimmedQuery = searchQuery.trim();
+    const trimmedQuery = localQuery.trim();
     const hasClearButton = hasSearch && trimmedQuery.length > 0;
 
     // Build an `id → index` map once per `items`/`getId` change so both the
@@ -249,6 +251,11 @@ export function DetailNavigationSheet<T extends { id: string }>({
         [getId, hasEntries, items],
     );
 
+    const clearSearch = useCallback(() => {
+        setLocalQuery('');
+        startTransition(() => clearSearchQuery());
+    }, [clearSearchQuery]);
+
     // Intercept Esc at the Radix-Content level so we can clear a non-empty
     // search before the dialog's built-in "close on Esc" fires. Once the
     // query is empty, we let Radix close as usual — matches the two-step
@@ -257,23 +264,25 @@ export function DetailNavigationSheet<T extends { id: string }>({
         (event: KeyboardEvent) => {
             if (hasSearch && trimmedQuery.length > 0) {
                 event.preventDefault();
-                clearSearchQuery();
+                clearSearch();
             }
         },
-        [clearSearchQuery, hasSearch, trimmedQuery.length],
+        [clearSearch, hasSearch, trimmedQuery.length],
     );
 
     const handleSearchChange = useCallback(
         (event: React.ChangeEvent<HTMLInputElement>) => {
-            setSearchQuery(event.target.value);
+            const { value } = event.target;
+            setLocalQuery(value);
+            startTransition(() => setSearchQuery(value));
         },
         [setSearchQuery],
     );
 
     const handleSearchClear = useCallback(() => {
-        clearSearchQuery();
+        clearSearch();
         searchInputRef.current?.focus();
-    }, [clearSearchQuery]);
+    }, [clearSearch]);
 
     // One stable callback ref reused for every button. The previous shape —
     // `setButtonRef(id) => (node) => …` — manufactured a new closure per id
@@ -298,6 +307,45 @@ export function DetailNavigationSheet<T extends { id: string }>({
             buttonRefs.current.delete(id);
         };
     }, []);
+
+    const listItems = useMemo(
+        () =>
+            items.map((item) => {
+                const id = String(getId(item));
+                const isCurrent = currentId != null && id === String(currentId);
+                const isFocused = id === focusedId;
+
+                return (
+                    <li
+                        className="min-w-0"
+                        key={id}
+                        role="presentation"
+                    >
+                        <button
+                            aria-selected={isCurrent}
+                            className={cn(
+                                'hover:bg-muted/50 focus-visible:ring-ring flex w-full min-w-0 items-center gap-2 rounded-md px-3 py-2 text-left text-sm focus-visible:ring-2 focus-visible:outline-hidden',
+                                isCurrent && 'bg-muted text-foreground font-medium',
+                            )}
+                            data-item-id={id}
+                            onClick={() => handleItemClick(item)}
+                            onFocus={() => setFocusedId(id)}
+                            ref={setButtonRef}
+                            role="option"
+                            tabIndex={isFocused ? 0 : -1}
+                            type="button"
+                        >
+                            {renderItem ? (
+                                renderItem(item, isCurrent)
+                            ) : (
+                                <span className="min-w-0 flex-1 truncate">{getLabel(item)}</span>
+                            )}
+                        </button>
+                    </li>
+                );
+            }),
+        [currentId, focusedId, getId, getLabel, handleItemClick, items, renderItem, setButtonRef],
+    );
 
     return (
         <Sheet
@@ -341,7 +389,7 @@ export function DetailNavigationSheet<T extends { id: string }>({
                                 placeholder={searchPlaceholder}
                                 ref={searchInputRef}
                                 type="text"
-                                value={searchQuery}
+                                value={localQuery}
                             />
                             {hasClearButton ? (
                                 <InputGroupAddon align="inline-end">
@@ -368,40 +416,7 @@ export function DetailNavigationSheet<T extends { id: string }>({
                             ref={listRef}
                             role="listbox"
                         >
-                            {items.map((item) => {
-                                const id = String(getId(item));
-                                const isCurrent = currentId != null && id === String(currentId);
-                                const isFocused = id === focusedId;
-
-                                return (
-                                    <li
-                                        className="min-w-0"
-                                        key={id}
-                                        role="presentation"
-                                    >
-                                        <button
-                                            aria-selected={isCurrent}
-                                            className={cn(
-                                                'hover:bg-muted/50 focus-visible:ring-ring flex w-full min-w-0 items-center gap-2 rounded-md px-3 py-2 text-left text-sm focus-visible:ring-2 focus-visible:outline-hidden',
-                                                isCurrent && 'bg-muted text-foreground font-medium',
-                                            )}
-                                            data-item-id={id}
-                                            onClick={() => handleItemClick(item)}
-                                            onFocus={() => setFocusedId(id)}
-                                            ref={setButtonRef}
-                                            role="option"
-                                            tabIndex={isFocused ? 0 : -1}
-                                            type="button"
-                                        >
-                                            {renderItem ? (
-                                                renderItem(item, isCurrent)
-                                            ) : (
-                                                <span className="min-w-0 flex-1 truncate">{getLabel(item)}</span>
-                                            )}
-                                        </button>
-                                    </li>
-                                );
-                            })}
+                            {listItems}
                         </ul>
                     </div>
                 ) : (
