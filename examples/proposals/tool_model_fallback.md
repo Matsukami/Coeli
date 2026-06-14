@@ -287,3 +287,16 @@ Key risks:
 6. **Add model fallback.** Retry with a configured fallback provider only after current retries and reflector recovery fail, with clear provider traceability and strict bounds.
 
 This staging keeps the first implementation small and reviewable. It also prevents the fallback feature from becoming an invisible automation layer that is harder to audit than the original failure.
+
+## Recommendation and Requested Decision
+
+For v1, this RFC recommends the smallest safe slice (milestones 1-3) with these defaults, chosen to match the safety model above:
+
+- **Scope:** existing-tool fallback only, via an operator-defined fallback map. No prompt-inferred capability equivalence in v1.
+- **Policy location:** static configuration with an optional per-flow override; no admin UI in v1.
+- **Auto-install:** disabled. Missing-CLI handling classifies the failure and surfaces an install plan but never installs automatically; trusted auto-install is deferred to a later, approval-gated milestone.
+- **Approval when `ASK_USER` is disabled:** do not fall back to install or any unapproved action; surface the original failure instead of acting without consent.
+- **Model fallback:** deferred to a later milestone and triggered only after existing retries and reflector recovery have failed.
+- **Visibility:** every fallback decision and the original failure stay visible in flow output and audit, with bounded attempts, timeouts, and output size.
+
+Decision requested from the maintainer: approve this v1 scope and safety model (milestones 1-3 with the defaults above), request changes, or decline. Approval unblocks an implementation PR limited to existing-tool fallback with strict bounds.
