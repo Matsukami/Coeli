@@ -1039,6 +1039,8 @@ func TestPentesterPromptXSStrikeArgumentGuidance(t *testing.T) {
 		"xsstrike --help",
 		"xsstrike -c",
 		"xsstrike -o",
+		"xsstrike -o /dev/null",
+		"shell redirection",
 		"inventing unsupported output flags",
 	}
 
