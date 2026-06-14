@@ -69,6 +69,9 @@ const eslintConfig = [
                     prev: 'do',
                 },
             ],
+            // Off until React Compiler lands: its compatibility lint flags every RHF
+            // watch() / useReactTable as unactionable noise (see OPEN-ISSUES §3).
+            'react-hooks/incompatible-library': 'off',
             'react/no-unescaped-entities': 'off', // Allow quotes in JSX
             'react/prop-types': 'off', // TypeScript provides type checking
         },

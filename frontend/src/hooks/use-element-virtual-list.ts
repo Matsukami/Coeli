@@ -32,7 +32,6 @@ export function useElementVirtualList({
     overscan = 10,
     padding = 0,
 }: UseElementVirtualListOptions): UseElementVirtualListResult {
-    // eslint-disable-next-line react-hooks/incompatible-library -- react-virtual is not React-Compiler-memoizable; confined to this wrapper so consumers stay compilable
     const virtualizer = useVirtualizer({
         count,
         enabled,
