@@ -32,6 +32,18 @@ describe('SettingsAccount gating', () => {
         expect(screen.getAllByRole('button', { name: 'Change' })).toHaveLength(3);
     });
 
+    it.each([
+        ['😀 Team', '😀'],
+        ['中文 用户', '中'],
+        ['한국 사용자', '한'],
+        ['𠀋 Lin', '𠀋'],
+    ])('uses the first whole code point of %s as the avatar initial', (name, expected) => {
+        authState.value = { user: { mail: 'e@x.com', name, type: 'local' } };
+        render(<SettingsAccount />);
+
+        expect(screen.getByText(expected)).toBeInTheDocument();
+    });
+
     it('hides password and email editing for an OAuth account but keeps the name editable', () => {
         authState.value = { user: githubUser };
         render(<SettingsAccount />);

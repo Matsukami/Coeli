@@ -31,7 +31,7 @@ function SettingsAccount() {
     const stopEditing = () => setEditing(null);
 
     const displayName = user.name?.trim() || user.mail;
-    const initial = (displayName || '?').charAt(0).toUpperCase();
+    const initial = ([...(displayName || '?')][0] ?? '?').toUpperCase();
     const createdAt = user.created_at ? new Date(user.created_at) : null;
     const memberSince =
         createdAt && !Number.isNaN(createdAt.getTime()) ? format(createdAt, 'MMMM yyyy', { locale: enUS }) : null;
