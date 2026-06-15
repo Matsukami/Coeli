@@ -1180,6 +1180,13 @@ export type UpdateKnowledgeDocumentMutationVariables = Exact<{
 
 export type UpdateKnowledgeDocumentMutation = { updateKnowledgeDocument: KnowledgeDocumentFragmentFragment };
 
+export type RenameKnowledgeDocumentMutationVariables = Exact<{
+    id: string;
+    question: string;
+}>;
+
+export type RenameKnowledgeDocumentMutation = { renameKnowledgeDocument: KnowledgeDocumentFragmentFragment };
+
 export type DeleteKnowledgeDocumentMutationVariables = Exact<{
     id: string;
 }>;
@@ -6136,6 +6143,55 @@ export type UpdateKnowledgeDocumentMutationResult = ApolloReactCommon.MutationRe
 export type UpdateKnowledgeDocumentMutationOptions = ApolloReactCommon.BaseMutationOptions<
     UpdateKnowledgeDocumentMutation,
     UpdateKnowledgeDocumentMutationVariables
+>;
+export const RenameKnowledgeDocumentDocument = gql`
+    mutation renameKnowledgeDocument($id: String!, $question: String!) {
+        renameKnowledgeDocument(id: $id, question: $question) {
+            ...knowledgeDocumentFragment
+        }
+    }
+    ${KnowledgeDocumentFragmentFragmentDoc}
+`;
+export type RenameKnowledgeDocumentMutationFn = ApolloReactCommon.MutationFunction<
+    RenameKnowledgeDocumentMutation,
+    RenameKnowledgeDocumentMutationVariables
+>;
+
+/**
+ * __useRenameKnowledgeDocumentMutation__
+ *
+ * To run a mutation, you first call `useRenameKnowledgeDocumentMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useRenameKnowledgeDocumentMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [renameKnowledgeDocumentMutation, { data, loading, error }] = useRenameKnowledgeDocumentMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *      question: // value for 'question'
+ *   },
+ * });
+ */
+export function useRenameKnowledgeDocumentMutation(
+    baseOptions?: ApolloReactHooks.MutationHookOptions<
+        RenameKnowledgeDocumentMutation,
+        RenameKnowledgeDocumentMutationVariables
+    >,
+) {
+    const options = { ...defaultOptions, ...baseOptions };
+    return ApolloReactHooks.useMutation<RenameKnowledgeDocumentMutation, RenameKnowledgeDocumentMutationVariables>(
+        RenameKnowledgeDocumentDocument,
+        options,
+    );
+}
+export type RenameKnowledgeDocumentMutationHookResult = ReturnType<typeof useRenameKnowledgeDocumentMutation>;
+export type RenameKnowledgeDocumentMutationResult = ApolloReactCommon.MutationResult<RenameKnowledgeDocumentMutation>;
+export type RenameKnowledgeDocumentMutationOptions = ApolloReactCommon.BaseMutationOptions<
+    RenameKnowledgeDocumentMutation,
+    RenameKnowledgeDocumentMutationVariables
 >;
 export const DeleteKnowledgeDocumentDocument = gql`
     mutation deleteKnowledgeDocument($id: String!) {

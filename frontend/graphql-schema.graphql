@@ -1174,6 +1174,12 @@ mutation updateKnowledgeDocument($id: String!, $input: UpdateKnowledgeDocumentIn
     }
 }
 
+mutation renameKnowledgeDocument($id: String!, $question: String!) {
+    renameKnowledgeDocument(id: $id, question: $question) {
+        ...knowledgeDocumentFragment
+    }
+}
+
 mutation deleteKnowledgeDocument($id: String!) {
     deleteKnowledgeDocument(id: $id)
 }

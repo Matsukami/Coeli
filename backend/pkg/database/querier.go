@@ -286,6 +286,7 @@ type Querier interface {
 	// embedding must be formatted as a PostgreSQL vector literal: '[f1,f2,...]'
 	// cmetadata must be valid JSON text.
 	UpdateKnowledgeDocument(ctx context.Context, arg UpdateKnowledgeDocumentParams) (UpdateKnowledgeDocumentRow, error)
+	UpdateKnowledgeDocumentMetadata(ctx context.Context, arg UpdateKnowledgeDocumentMetadataParams) (UpdateKnowledgeDocumentMetadataRow, error)
 	UpdateMsgChain(ctx context.Context, arg UpdateMsgChainParams) (Msgchain, error)
 	UpdateMsgChainUsage(ctx context.Context, arg UpdateMsgChainUsageParams) (Msgchain, error)
 	UpdateMsgLogResult(ctx context.Context, arg UpdateMsgLogResultParams) (Msglog, error)

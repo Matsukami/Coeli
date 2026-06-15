@@ -57,7 +57,7 @@ const docTypeSubtype = (k: Knowledge): null | string => {
 function Knowledges() {
     const navigate = useNavigate();
     const location = useLocation();
-    const { deleteKnowledge, isLoading, knowledges, updateKnowledge } = useKnowledges();
+    const { deleteKnowledge, isLoading, knowledges, renameKnowledge } = useKnowledges();
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [deletingKnowledge, setDeletingKnowledge] = useState<Knowledge | null>(null);
     const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set());
@@ -142,12 +142,7 @@ function Knowledges() {
         setIsRenameLoading(true);
 
         try {
-            // Backend requires `content` on update (it always re-embeds), so we
-            // pass it through unchanged from the cached document.
-            await updateKnowledge(editingKnowledgeId, {
-                content: knowledge.content,
-                question: newQuestion,
-            });
+            await renameKnowledge(editingKnowledgeId, newQuestion);
             toast.success('Knowledge renamed successfully');
             setEditingKnowledgeId(null);
         } catch {
@@ -155,7 +150,7 @@ function Knowledges() {
         } finally {
             setIsRenameLoading(false);
         }
-    }, [editingKnowledgeId, knowledges, updateKnowledge]);
+    }, [editingKnowledgeId, knowledges, renameKnowledge]);
 
     const handleDelete = async () => {
         if (!deletingKnowledge) {
@@ -257,29 +252,6 @@ function Knowledges() {
             meta: { columnMenuLabel: 'Question', searchable: true },
             minSize: 180,
             size: 280,
-        },
-        {
-            accessorKey: 'content',
-            cell: ({ row }) => {
-                const content = (row.getValue('content') as string) ?? '';
-
-                return (
-                    <div
-                        className="text-muted-foreground truncate text-sm"
-                        title={content}
-                    >
-                        {content}
-                    </div>
-                );
-            },
-            enableSorting: false,
-            header: () => (
-                <span className="text-muted-foreground inline-flex items-center text-sm font-medium">Preview</span>
-            ),
-            maxSize: 800,
-            meta: { columnMenuLabel: 'Preview', searchable: true },
-            minSize: 160,
-            size: 380,
         },
         {
             cell: ({ row }) => {

@@ -16,6 +16,7 @@ import {
     useKnowledgeDocumentDeletedSubscription,
     useKnowledgeDocumentsQuery,
     useKnowledgeDocumentUpdatedSubscription,
+    useRenameKnowledgeDocumentMutation,
     useSearchKnowledgeQuery,
     useUpdateKnowledgeDocumentMutation,
 } from '@/graphql/types';
@@ -37,6 +38,7 @@ interface KnowledgesContextValue {
     getKnowledge: (id: string) => Knowledge | undefined;
     isLoading: boolean;
     knowledges: Knowledge[];
+    renameKnowledge: (id: string, question: string) => Promise<Knowledge | undefined>;
     updateKnowledge: (id: string, input: UpdateKnowledgeDocumentInput) => Promise<Knowledge | undefined>;
 }
 
@@ -88,7 +90,7 @@ export function KnowledgesProvider({ children }: KnowledgesProviderProps) {
         fetchPolicy: 'cache-and-network',
         nextFetchPolicy: 'cache-and-network',
         skip: !shouldFetch || inSearchMode,
-        variables: { withContent: true },
+        variables: { withContent: false },
     });
 
     // `searchKnowledge` does not honour `withContent` — the backend always
@@ -105,6 +107,7 @@ export function KnowledgesProvider({ children }: KnowledgesProviderProps) {
 
     const [createKnowledgeMutation] = useCreateKnowledgeDocumentMutation();
     const [updateKnowledgeMutation] = useUpdateKnowledgeDocumentMutation();
+    const [renameKnowledgeMutation] = useRenameKnowledgeDocumentMutation();
     const [deleteKnowledgeMutation] = useDeleteKnowledgeDocumentMutation();
 
     // The Apollo subscription link (`createSubscriptionCacheLink` in
@@ -184,6 +187,22 @@ export function KnowledgesProvider({ children }: KnowledgesProviderProps) {
         [updateKnowledgeMutation],
     );
 
+    const renameKnowledge = useCallback(
+        async (id: string, question: string) => {
+            try {
+                const { data: result } = await renameKnowledgeMutation({ variables: { id, question } });
+
+                return result?.renameKnowledgeDocument;
+            } catch (error) {
+                const errorMessage = error instanceof Error ? error.message : 'Failed to rename knowledge document';
+                toast.error('Failed to rename knowledge document', { description: errorMessage });
+                Log.error('Error renaming knowledge document:', error);
+                throw error;
+            }
+        },
+        [renameKnowledgeMutation],
+    );
+
     const deleteKnowledge = useCallback(
         async (id: string) => {
             try {
@@ -205,9 +224,10 @@ export function KnowledgesProvider({ children }: KnowledgesProviderProps) {
             getKnowledge,
             isLoading,
             knowledges,
+            renameKnowledge,
             updateKnowledge,
         }),
-        [createKnowledge, deleteKnowledge, getKnowledge, isLoading, knowledges, updateKnowledge],
+        [createKnowledge, deleteKnowledge, getKnowledge, isLoading, knowledges, renameKnowledge, updateKnowledge],
     );
 
     return <KnowledgesContext.Provider value={value}>{children}</KnowledgesContext.Provider>;

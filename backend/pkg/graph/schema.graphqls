@@ -1049,6 +1049,7 @@ type Mutation {
   # Knowledge (vector store) management
   createKnowledgeDocument(input: CreateKnowledgeDocumentInput!): KnowledgeDocument!
   updateKnowledgeDocument(id: String!, input: UpdateKnowledgeDocumentInput!): KnowledgeDocument!
+  renameKnowledgeDocument(id: String!, question: String!): KnowledgeDocument!
   deleteKnowledgeDocument(id: String!): ResultType!
   anonymizeText(text: String!): String!
 }

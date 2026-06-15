@@ -366,6 +366,7 @@ type ComplexityRoot struct {
 		FinishFlow              func(childComplexity int, flowID int64) int
 		PutUserInput            func(childComplexity int, flowID int64, input string, modelProvider *string, resourceIds []int64) int
 		RenameFlow              func(childComplexity int, flowID int64, title string) int
+		RenameKnowledgeDocument func(childComplexity int, id string, question string) int
 		StopAssistant           func(childComplexity int, flowID int64, assistantID int64) int
 		StopFlow                func(childComplexity int, flowID int64) int
 		TestAgent               func(childComplexity int, typeArg model.ProviderType, agentType model.AgentConfigType, agent model.AgentConfig) int
@@ -764,6 +765,7 @@ type MutationResolver interface {
 	DeleteFlowTemplate(ctx context.Context, templateID int64) (model.ResultType, error)
 	CreateKnowledgeDocument(ctx context.Context, input model.CreateKnowledgeDocumentInput) (*model.KnowledgeDocument, error)
 	UpdateKnowledgeDocument(ctx context.Context, id string, input model.UpdateKnowledgeDocumentInput) (*model.KnowledgeDocument, error)
+	RenameKnowledgeDocument(ctx context.Context, id string, question string) (*model.KnowledgeDocument, error)
 	DeleteKnowledgeDocument(ctx context.Context, id string) (model.ResultType, error)
 	AnonymizeText(ctx context.Context, text string) (string, error)
 }
@@ -2488,6 +2490,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.RenameFlow(childComplexity, args["flowId"].(int64), args["title"].(string)), true
+
+	case "Mutation.renameKnowledgeDocument":
+		if e.complexity.Mutation.RenameKnowledgeDocument == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_renameKnowledgeDocument_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.RenameKnowledgeDocument(childComplexity, args["id"].(string), args["question"].(string)), true
 
 	case "Mutation.stopAssistant":
 		if e.complexity.Mutation.StopAssistant == nil {
@@ -6002,6 +6016,65 @@ func (ec *executionContext) field_Mutation_renameFlow_argsTitle(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("title"))
 	if tmp, ok := rawArgs["title"]; ok {
+		return ec.unmarshalNString2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_renameKnowledgeDocument_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	arg0, err := ec.field_Mutation_renameKnowledgeDocument_argsID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["id"] = arg0
+	arg1, err := ec.field_Mutation_renameKnowledgeDocument_argsQuestion(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["question"] = arg1
+	return args, nil
+}
+func (ec *executionContext) field_Mutation_renameKnowledgeDocument_argsID(
+	ctx context.Context,
+	rawArgs map[string]interface{},
+) (string, error) {
+	// We won't call the directive if the argument is null.
+	// Set call_argument_directives_with_null to true to call directives
+	// even if the argument is null.
+	_, ok := rawArgs["id"]
+	if !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+	if tmp, ok := rawArgs["id"]; ok {
+		return ec.unmarshalNString2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_renameKnowledgeDocument_argsQuestion(
+	ctx context.Context,
+	rawArgs map[string]interface{},
+) (string, error) {
+	// We won't call the directive if the argument is null.
+	// Set call_argument_directives_with_null to true to call directives
+	// even if the argument is null.
+	_, ok := rawArgs["question"]
+	if !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("question"))
+	if tmp, ok := rawArgs["question"]; ok {
 		return ec.unmarshalNString2string(ctx, tmp)
 	}
 
@@ -19553,6 +19626,93 @@ func (ec *executionContext) fieldContext_Mutation_updateKnowledgeDocument(ctx co
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_updateKnowledgeDocument_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_renameKnowledgeDocument(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_renameKnowledgeDocument(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().RenameKnowledgeDocument(rctx, fc.Args["id"].(string), fc.Args["question"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.KnowledgeDocument)
+	fc.Result = res
+	return ec.marshalNKnowledgeDocument2ᚖpentagiᚋpkgᚋgraphᚋmodelᚐKnowledgeDocument(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_renameKnowledgeDocument(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_KnowledgeDocument_id(ctx, field)
+			case "docType":
+				return ec.fieldContext_KnowledgeDocument_docType(ctx, field)
+			case "content":
+				return ec.fieldContext_KnowledgeDocument_content(ctx, field)
+			case "question":
+				return ec.fieldContext_KnowledgeDocument_question(ctx, field)
+			case "description":
+				return ec.fieldContext_KnowledgeDocument_description(ctx, field)
+			case "userId":
+				return ec.fieldContext_KnowledgeDocument_userId(ctx, field)
+			case "flowId":
+				return ec.fieldContext_KnowledgeDocument_flowId(ctx, field)
+			case "taskId":
+				return ec.fieldContext_KnowledgeDocument_taskId(ctx, field)
+			case "subtaskId":
+				return ec.fieldContext_KnowledgeDocument_subtaskId(ctx, field)
+			case "guideType":
+				return ec.fieldContext_KnowledgeDocument_guideType(ctx, field)
+			case "answerType":
+				return ec.fieldContext_KnowledgeDocument_answerType(ctx, field)
+			case "codeLang":
+				return ec.fieldContext_KnowledgeDocument_codeLang(ctx, field)
+			case "partSize":
+				return ec.fieldContext_KnowledgeDocument_partSize(ctx, field)
+			case "totalSize":
+				return ec.fieldContext_KnowledgeDocument_totalSize(ctx, field)
+			case "manual":
+				return ec.fieldContext_KnowledgeDocument_manual(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type KnowledgeDocument", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_renameKnowledgeDocument_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -38758,6 +38918,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "updateKnowledgeDocument":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_updateKnowledgeDocument(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "renameKnowledgeDocument":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_renameKnowledgeDocument(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++

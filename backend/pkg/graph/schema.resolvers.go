@@ -1156,6 +1156,25 @@ func (r *mutationResolver) UpdateKnowledgeDocument(ctx context.Context, id strin
 	return r.Knowledge.UpdateUserDocument(ctx, uid, id, input)
 }
 
+// RenameKnowledgeDocument is the resolver for the renameKnowledgeDocument field.
+func (r *mutationResolver) RenameKnowledgeDocument(ctx context.Context, id string, question string) (*model.KnowledgeDocument, error) {
+	uid, admin, err := validatePermission(ctx, "knowledge.edit")
+	if err != nil {
+		return nil, err
+	}
+
+	r.Logger.WithFields(logrus.Fields{
+		"uid":   uid,
+		"admin": admin,
+		"id":    id,
+	}).Debug("rename knowledge document")
+
+	if admin {
+		return r.Knowledge.RenameDocument(ctx, uid, id, question)
+	}
+	return r.Knowledge.RenameUserDocument(ctx, uid, id, question)
+}
+
 // DeleteKnowledgeDocument is the resolver for the deleteKnowledgeDocument field.
 func (r *mutationResolver) DeleteKnowledgeDocument(ctx context.Context, id string) (model.ResultType, error) {
 	uid, admin, err := validatePermission(ctx, "knowledge.delete")

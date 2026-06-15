@@ -81,7 +81,7 @@ export function KnowledgeHeader({
 }: KnowledgeHeaderProps) {
     const navigate = useNavigate();
     const { isMobile } = useBreakpoint();
-    const { deleteKnowledge, updateKnowledge } = useKnowledges();
+    const { deleteKnowledge, renameKnowledge } = useKnowledges();
     const [isRenaming, setIsRenaming] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -94,7 +94,7 @@ export function KnowledgeHeader({
 
     // Title source-of-truth is the server-side `question`. We intentionally do
     // not read it from the form draft below — the inline rename flow in this
-    // header writes through `updateKnowledge`, which refreshes `knowledge` via
+    // header writes through `renameKnowledge`, which refreshes `knowledge` via
     // the cache, and the form picks up the new value separately.
     const knowledgeName = knowledge?.question ?? null;
     const canShowActions = !isNew && !!knowledge;
@@ -123,15 +123,9 @@ export function KnowledgeHeader({
         setIsRenaming(true);
 
         try {
-            // Backend requires `content` on update (always re-embeds). We pass
-            // the server's current `content` so an inline rename never
-            // accidentally overwrites unsaved edits made in the form below.
-            // The sibling form picks up the new `question` automatically via
-            // `useForm({ values })` — no manual sync needed here.
-            await updateKnowledge(knowledge.id, {
-                content: knowledge.content,
-                question: newQuestion,
-            });
+            // The sibling edit form picks up the new `question` via
+            // `useForm({ values })` once the cache updates — no manual sync here.
+            await renameKnowledge(knowledge.id, newQuestion);
             toast.success('Knowledge renamed successfully');
             handleRenameCancel();
         } catch {
@@ -139,7 +133,7 @@ export function KnowledgeHeader({
         } finally {
             setIsRenaming(false);
         }
-    }, [editingInputRef, handleRenameCancel, knowledge, updateKnowledge]);
+    }, [editingInputRef, handleRenameCancel, knowledge, renameKnowledge]);
 
     const handleDelete = useCallback(async () => {
         if (!knowledgeId) {
