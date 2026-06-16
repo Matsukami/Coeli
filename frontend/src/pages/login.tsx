@@ -13,7 +13,10 @@ function Login() {
     const { authInfo, isLoading } = useUser();
     const authProviders = authInfo?.providers || [];
 
-    const returnUrl = getSafeReturnUrl((location.state?.from as string) || searchParams.get('returnUrl'), routes.newFlow);
+    const returnUrl = getSafeReturnUrl(
+        (location.state?.from as string) || searchParams.get('returnUrl'),
+        routes.newFlow,
+    );
 
     return (
         <div className="flex h-dvh w-full items-center justify-center">

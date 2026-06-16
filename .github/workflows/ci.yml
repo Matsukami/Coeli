@@ -59,12 +59,10 @@ jobs:
       - name: Frontend - Prettier
         working-directory: frontend
         run: pnpm run prettier
-        continue-on-error: true
 
       - name: Frontend - Lint
         working-directory: frontend
         run: pnpm run lint
-        continue-on-error: true
 
       - name: Frontend - Type check
         working-directory: frontend
@@ -73,7 +71,6 @@ jobs:
       - name: Frontend - Test
         working-directory: frontend
         run: pnpm run test
-        continue-on-error: true
 
       # Backend lint and test
       - name: Backend - Download dependencies

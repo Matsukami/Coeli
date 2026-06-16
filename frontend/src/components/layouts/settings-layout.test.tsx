@@ -9,9 +9,18 @@ function renderAt(entry: { pathname: string; state?: unknown }) {
     return render(
         <MemoryRouter initialEntries={[entry]}>
             <Routes>
-                <Route element={<SettingsLayout />} path="/settings">
-                    <Route element={<div>account</div>} path="account" />
-                    <Route element={<div>providers</div>} path="providers" />
+                <Route
+                    element={<SettingsLayout />}
+                    path="/settings"
+                >
+                    <Route
+                        element={<div>account</div>}
+                        path="account"
+                    />
+                    <Route
+                        element={<div>providers</div>}
+                        path="providers"
+                    />
                 </Route>
             </Routes>
         </MemoryRouter>,

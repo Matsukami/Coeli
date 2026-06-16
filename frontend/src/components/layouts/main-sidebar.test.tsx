@@ -4,7 +4,10 @@ import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('@/providers/user-provider', () => ({
-    useUser: () => ({ authInfo: { user: { mail: 'me@example.com', name: 'Test User', type: 'local' } }, logout: vi.fn() }),
+    useUser: () => ({
+        authInfo: { user: { mail: 'me@example.com', name: 'Test User', type: 'local' } },
+        logout: vi.fn(),
+    }),
 }));
 vi.mock('@/hooks/use-theme', () => ({ useTheme: () => ({ setTheme: vi.fn(), theme: 'system' }) }));
 vi.mock('@/providers/favorites-provider', () => ({
@@ -32,9 +35,18 @@ function renderSidebar() {
                 <MainSidebar />
             </SidebarProvider>
             <Routes>
-                <Route element={<div>dashboard</div>} path="/dashboard" />
-                <Route element={<FromProbe />} path="/settings" />
-                <Route element={<FromProbe />} path="/settings/account" />
+                <Route
+                    element={<div>dashboard</div>}
+                    path="/dashboard"
+                />
+                <Route
+                    element={<FromProbe />}
+                    path="/settings"
+                />
+                <Route
+                    element={<FromProbe />}
+                    path="/settings/account"
+                />
             </Routes>
         </MemoryRouter>,
     );
