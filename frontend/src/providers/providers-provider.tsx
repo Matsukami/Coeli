@@ -1,8 +1,9 @@
+import { useQuery } from '@apollo/client/react';
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 
 import type { Provider } from '@/models/provider';
 
-import { useProvidersQuery } from '@/graphql/types';
+import { ProvidersDocument } from '@/graphql/types';
 import { findProviderByName, sortProviders } from '@/models/provider';
 import { useUser } from '@/providers/user-provider';
 
@@ -23,7 +24,7 @@ interface ProvidersProviderProps {
 export function ProvidersProvider({ children }: ProvidersProviderProps) {
     const { isAuthenticated } = useUser();
 
-    const { data: providersData } = useProvidersQuery({
+    const { data: providersData } = useQuery(ProvidersDocument, {
         skip: !isAuthenticated(),
     });
 

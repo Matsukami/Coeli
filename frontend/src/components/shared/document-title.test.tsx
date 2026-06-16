@@ -1,3 +1,5 @@
+import { ApolloClient, ApolloLink, gql, InMemoryCache, type TypedDocumentNode } from '@apollo/client';
+import { ApolloProvider } from '@apollo/client/react';
 import { render, waitFor } from '@testing-library/react';
 import { createMemoryRouter, Outlet, RouterProvider } from 'react-router-dom';
 import { describe, expect, it } from 'vitest';
@@ -103,28 +105,41 @@ describe('DocumentTitle', () => {
     });
 
     it('renders a title component produced by apolloTitle()', async () => {
-        // End-to-end check that the public factory wires the marker correctly
-        // and `DocumentTitle` recognizes it. A stubbed `useQuery` returns
-        // canned data so the test is hermetic.
+        // Cache is pre-populated so the `cache-only` read stays hermetic (no network).
+        const customQuery = gql`
+            query Custom {
+                name
+            }
+        ` as TypedDocumentNode<{ name: string }, Record<string, never>>;
+        const client = new ApolloClient({ cache: new InMemoryCache(), link: ApolloLink.empty() });
+        client.writeQuery({ data: { name: 'thing' }, query: customQuery });
+
         const CustomTitle = apolloTitle<{ name: string }, Record<string, never>>({
+            document: customQuery,
             select: (data, { id }) => `Custom #${id} ${data?.name ?? ''}`.trim(),
-            // Minimal stub — only `data` is read downstream.
-            useQuery: (() => ({ data: { name: 'thing' } })) as never,
             variables: () => ({}),
         });
 
-        renderAt('/items/42', [
-            {
-                children: [{ element: <span>page</span>, handle: { title: CustomTitle }, path: 'items/:id' }],
-                element: (
-                    <>
-                        <DocumentTitle />
-                        <Outlet />
-                    </>
-                ),
-                path: '/',
-            },
-        ]);
+        const router = createMemoryRouter(
+            [
+                {
+                    children: [{ element: <span>page</span>, handle: { title: CustomTitle }, path: 'items/:id' }],
+                    element: (
+                        <>
+                            <DocumentTitle />
+                            <Outlet />
+                        </>
+                    ),
+                    path: '/',
+                },
+            ],
+            { initialEntries: ['/items/42'] },
+        );
+        render(
+            <ApolloProvider client={client}>
+                <RouterProvider router={router} />
+            </ApolloProvider>,
+        );
 
         await waitFor(() => expect(document.title).toBe('Custom #42 thing — PentAGI'));
     });

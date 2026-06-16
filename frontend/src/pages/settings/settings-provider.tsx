@@ -1,3 +1,4 @@
+import { useMutation, useQuery } from '@apollo/client/react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
     AlertCircle,
@@ -39,13 +40,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { StatusCard } from '@/components/ui/status-card';
 import {
     AgentConfigType,
+    CreateProviderDocument,
+    DeleteProviderDocument,
     ReasoningEffort,
-    useCreateProviderMutation,
-    useDeleteProviderMutation,
-    useSettingsProvidersQuery,
-    useTestAgentMutation,
-    useTestProviderMutation,
-    useUpdateProviderMutation,
+    SettingsProvidersDocument,
+    TestAgentDocument,
+    TestProviderDocument,
+    UpdateProviderDocument,
 } from '@/graphql/types';
 import { routes } from '@/lib/routes';
 import { cn } from '@/lib/utils';
@@ -849,12 +850,12 @@ function SettingsProvider() {
     const { providerId } = useParams<{ providerId: string }>();
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
-    const { data, error, loading } = useSettingsProvidersQuery();
-    const [createProvider, { error: createError, loading: isCreateLoading }] = useCreateProviderMutation();
-    const [updateProvider, { error: updateError, loading: isUpdateLoading }] = useUpdateProviderMutation();
-    const [deleteProvider, { error: deleteError, loading: isDeleteLoading }] = useDeleteProviderMutation();
-    const [testProvider, { error: testError, loading: isTestLoading }] = useTestProviderMutation();
-    const [testAgent, { error: agentTestError, loading: isAgentTestLoading }] = useTestAgentMutation();
+    const { data, error, loading } = useQuery(SettingsProvidersDocument);
+    const [createProvider, { error: createError, loading: isCreateLoading }] = useMutation(CreateProviderDocument);
+    const [updateProvider, { error: updateError, loading: isUpdateLoading }] = useMutation(UpdateProviderDocument);
+    const [deleteProvider, { error: deleteError, loading: isDeleteLoading }] = useMutation(DeleteProviderDocument);
+    const [testProvider, { error: testError, loading: isTestLoading }] = useMutation(TestProviderDocument);
+    const [testAgent, { error: agentTestError, loading: isAgentTestLoading }] = useMutation(TestAgentDocument);
     const [currentAgentKey, setCurrentAgentKey] = useState<null | string>(null);
     const [submitError, setSubmitError] = useState<null | string>(null);
     const [isTestDialogOpen, setIsTestDialogOpen] = useState(false);

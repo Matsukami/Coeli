@@ -1,3 +1,4 @@
+import { skipToken, useQuery } from '@apollo/client/react';
 import { useCallback, useEffect, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -14,7 +15,7 @@ import {
     type SubmitResult,
 } from '@/features/knowledges/knowledge-form';
 import { KnowledgeLayout } from '@/features/knowledges/knowledge-layout';
-import { useKnowledgeDocumentQuery } from '@/graphql/types';
+import { KnowledgeDocumentDocument } from '@/graphql/types';
 import { routes } from '@/lib/routes';
 import { useKnowledges } from '@/providers/knowledges-provider';
 
@@ -26,10 +27,10 @@ function Knowledge() {
     const isNew = knowledgeId === 'new';
     const shouldFetch = Boolean(knowledgeId) && !isNew;
 
-    const { data, loading: isLoadingKnowledge } = useKnowledgeDocumentQuery({
-        skip: !shouldFetch,
-        variables: shouldFetch && knowledgeId ? { id: knowledgeId } : undefined,
-    });
+    const { data, loading: isLoadingKnowledge } = useQuery(
+        KnowledgeDocumentDocument,
+        shouldFetch && knowledgeId ? { variables: { id: knowledgeId } } : skipToken,
+    );
 
     const knowledge = data?.knowledgeDocument ?? null;
 

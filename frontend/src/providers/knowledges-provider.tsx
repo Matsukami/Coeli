@@ -1,3 +1,4 @@
+import { useMutation, useQuery, useSubscription } from '@apollo/client/react';
 import { createContext, type ReactNode, useCallback, useContext, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -10,15 +11,15 @@ import type {
 } from '@/graphql/types';
 
 import {
-    useCreateKnowledgeDocumentMutation,
-    useDeleteKnowledgeDocumentMutation,
-    useKnowledgeDocumentCreatedSubscription,
-    useKnowledgeDocumentDeletedSubscription,
-    useKnowledgeDocumentsQuery,
-    useKnowledgeDocumentUpdatedSubscription,
-    useRenameKnowledgeDocumentMutation,
-    useSearchKnowledgeQuery,
-    useUpdateKnowledgeDocumentMutation,
+    CreateKnowledgeDocumentDocument,
+    DeleteKnowledgeDocumentDocument,
+    KnowledgeDocumentCreatedDocument,
+    KnowledgeDocumentDeletedDocument,
+    KnowledgeDocumentsDocument,
+    KnowledgeDocumentUpdatedDocument,
+    RenameKnowledgeDocumentDocument,
+    SearchKnowledgeDocument,
+    UpdateKnowledgeDocumentDocument,
 } from '@/graphql/types';
 import { useLatestRef } from '@/hooks/use-latest-ref';
 import { Log } from '@/lib/log';
@@ -86,7 +87,7 @@ export function KnowledgesProvider({ children }: KnowledgesProviderProps) {
     // That keeps Apollo's cache warm for the inactive branch — when the user
     // toggles `?qs=` on/off, the previous result is shown immediately while
     // the network refetches in the background.
-    const { data: listData, loading: isListLoading } = useKnowledgeDocumentsQuery({
+    const { data: listData, loading: isListLoading } = useQuery(KnowledgeDocumentsDocument, {
         fetchPolicy: 'cache-and-network',
         nextFetchPolicy: 'cache-and-network',
         skip: !shouldFetch || inSearchMode,
@@ -98,17 +99,17 @@ export function KnowledgesProvider({ children }: KnowledgesProviderProps) {
     // `filter` is wired as `null` for now; when facet filtering arrives
     // (`?f.docType=…`), the parsed `KnowledgeFilter` slots in here and into
     // the list query above without any other downstream change.
-    const { data: searchData, loading: isSearchLoading } = useSearchKnowledgeQuery({
+    const { data: searchData, loading: isSearchLoading } = useQuery(SearchKnowledgeDocument, {
         fetchPolicy: 'cache-and-network',
         nextFetchPolicy: 'cache-and-network',
         skip: !shouldFetch || !inSearchMode,
         variables: { filter: null, limit: SEARCH_RESULT_LIMIT, query: debouncedSemanticQuery },
     });
 
-    const [createKnowledgeMutation] = useCreateKnowledgeDocumentMutation();
-    const [updateKnowledgeMutation] = useUpdateKnowledgeDocumentMutation();
-    const [renameKnowledgeMutation] = useRenameKnowledgeDocumentMutation();
-    const [deleteKnowledgeMutation] = useDeleteKnowledgeDocumentMutation();
+    const [createKnowledgeMutation] = useMutation(CreateKnowledgeDocumentDocument);
+    const [updateKnowledgeMutation] = useMutation(UpdateKnowledgeDocumentDocument);
+    const [renameKnowledgeMutation] = useMutation(RenameKnowledgeDocumentDocument);
+    const [deleteKnowledgeMutation] = useMutation(DeleteKnowledgeDocumentDocument);
 
     // The Apollo subscription link (`createSubscriptionCacheLink` in
     // `lib/apollo.ts`) auto-merges each event into the `knowledgeDocuments`
@@ -131,9 +132,9 @@ export function KnowledgesProvider({ children }: KnowledgesProviderProps) {
         [inSearchModeRef],
     );
 
-    useKnowledgeDocumentCreatedSubscription({ onData: refetchSearchOnEvent, skip: !shouldFetch });
-    useKnowledgeDocumentUpdatedSubscription({ onData: refetchSearchOnEvent, skip: !shouldFetch });
-    useKnowledgeDocumentDeletedSubscription({ onData: refetchSearchOnEvent, skip: !shouldFetch });
+    useSubscription(KnowledgeDocumentCreatedDocument, { onData: refetchSearchOnEvent, skip: !shouldFetch });
+    useSubscription(KnowledgeDocumentUpdatedDocument, { onData: refetchSearchOnEvent, skip: !shouldFetch });
+    useSubscription(KnowledgeDocumentDeletedDocument, { onData: refetchSearchOnEvent, skip: !shouldFetch });
 
     const knowledges = useMemo<Knowledge[]>(() => {
         if (inSearchMode) {

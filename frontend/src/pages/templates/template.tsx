@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 
+import { skipToken, useQuery } from '@apollo/client/react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
     ChevronDown,
@@ -47,7 +48,7 @@ import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Spinner } from '@/components/ui/spinner';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useTemplateDetailNavigation } from '@/features/templates/use-template-detail-navigation';
-import { useFlowTemplateQuery } from '@/graphql/types';
+import { FlowTemplateDocument } from '@/graphql/types';
 import { useBreakpoint } from '@/hooks/use-breakpoint';
 import { routes } from '@/lib/routes';
 import { cn } from '@/lib/utils';
@@ -271,10 +272,10 @@ function Template() {
         stopEdit: handleTemplateRenameCancel,
     } = useInlineEdit({ resetKey: templateId });
 
-    const { data: templateData, loading: isLoadingTemplate } = useFlowTemplateQuery({
-        skip: isNew || !templateId,
-        variables: templateId && !isNew ? { templateId } : undefined,
-    });
+    const { data: templateData, loading: isLoadingTemplate } = useQuery(
+        FlowTemplateDocument,
+        templateId && !isNew ? { variables: { templateId } } : skipToken,
+    );
 
     const form = useForm<FormValues>({
         defaultValues: { text: '', title: '' },

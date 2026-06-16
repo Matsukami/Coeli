@@ -1,3 +1,4 @@
+import { useQuery } from '@apollo/client/react';
 import { format } from 'date-fns';
 import { ChevronRight, Clock, Loader2, Wrench } from 'lucide-react';
 import { memo, useDeferredValue, useMemo, useRef, useState } from 'react';
@@ -11,11 +12,11 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
-    useFlowsExecutionStatsByPeriodQuery,
-    useFlowsQuery,
-    useFlowsStatsByPeriodQuery,
-    useToolcallsStatsByPeriodQuery,
-    useUsageStatsByPeriodQuery,
+    FlowsDocument,
+    FlowsExecutionStatsByPeriodDocument,
+    FlowsStatsByPeriodDocument,
+    ToolcallsStatsByPeriodDocument,
+    UsageStatsByPeriodDocument,
 } from '@/graphql/types';
 import { cn } from '@/lib/utils';
 import { formatCost, formatDuration, formatNumber, formatTokenCount } from '@/lib/utils/format';
@@ -59,19 +60,22 @@ type FlowExecution = {
 };
 
 export function DashboardAnalytics({ period }: { period: UsageStatsPeriod }) {
-    const { data: usageByPeriodData, loading: usageByPeriodLoading } = useUsageStatsByPeriodQuery({
+    const { data: usageByPeriodData, loading: usageByPeriodLoading } = useQuery(UsageStatsByPeriodDocument, {
         variables: { period },
     });
-    const { data: toolcallsByPeriodData, loading: toolcallsByPeriodLoading } = useToolcallsStatsByPeriodQuery({
+    const { data: toolcallsByPeriodData, loading: toolcallsByPeriodLoading } = useQuery(
+        ToolcallsStatsByPeriodDocument,
+        {
+            variables: { period },
+        },
+    );
+    const { data: flowsByPeriodData, loading: flowsByPeriodLoading } = useQuery(FlowsStatsByPeriodDocument, {
         variables: { period },
     });
-    const { data: flowsByPeriodData, loading: flowsByPeriodLoading } = useFlowsStatsByPeriodQuery({
+    const { data: executionStatsData, loading: executionStatsLoading } = useQuery(FlowsExecutionStatsByPeriodDocument, {
         variables: { period },
     });
-    const { data: executionStatsData, loading: executionStatsLoading } = useFlowsExecutionStatsByPeriodQuery({
-        variables: { period },
-    });
-    const { data: flowsData } = useFlowsQuery();
+    const { data: flowsData } = useQuery(FlowsDocument);
 
     const flowsTooltip = useChartTooltipAnimation();
     const toolcallsTooltip = useChartTooltipAnimation();

@@ -1,5 +1,6 @@
 import type { ColumnDef } from '@tanstack/react-table';
 
+import { useMutation, useQuery, useSubscription } from '@apollo/client/react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { format } from 'date-fns';
 import { enUS } from 'date-fns/locale';
@@ -44,14 +45,14 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { StatusCard } from '@/components/ui/status-card';
 import {
+    ApiTokenCreatedDocument,
+    ApiTokenDeletedDocument,
+    ApiTokensDocument,
+    ApiTokenUpdatedDocument,
+    CreateApiTokenDocument,
+    DeleteApiTokenDocument,
     TokenStatus as TokenStatusEnum,
-    useApiTokenCreatedSubscription,
-    useApiTokenDeletedSubscription,
-    useApiTokensQuery,
-    useApiTokenUpdatedSubscription,
-    useCreateApiTokenMutation,
-    useDeleteApiTokenMutation,
-    useUpdateApiTokenMutation,
+    UpdateApiTokenDocument,
 } from '@/graphql/types';
 import { useTableState } from '@/hooks/use-table-state';
 import { cn } from '@/lib/utils';
@@ -272,10 +273,10 @@ function EditRowActions({
 }
 
 function SettingsAPITokens() {
-    const { data, error, loading: isLoading } = useApiTokensQuery();
-    const [createAPIToken, { error: createError, loading: isCreateLoading }] = useCreateApiTokenMutation();
-    const [updateAPIToken, { error: updateError, loading: isUpdateLoading }] = useUpdateApiTokenMutation();
-    const [deleteAPIToken, { error: deleteError, loading: isDeleteLoading }] = useDeleteApiTokenMutation();
+    const { data, error, loading: isLoading } = useQuery(ApiTokensDocument);
+    const [createAPIToken, { error: createError, loading: isCreateLoading }] = useMutation(CreateApiTokenDocument);
+    const [updateAPIToken, { error: updateError, loading: isUpdateLoading }] = useMutation(UpdateApiTokenDocument);
+    const [deleteAPIToken, { error: deleteError, loading: isDeleteLoading }] = useMutation(DeleteApiTokenDocument);
 
     const [editingTokenId, setEditingTokenId] = useState<null | string>(null);
     const [creatingToken, setCreatingToken] = useState(false);
@@ -306,19 +307,19 @@ function SettingsAPITokens() {
 
     const { filter, pageIndex: currentPage, setFilter, setPage: handlePageChange } = useTableState();
 
-    useApiTokenCreatedSubscription({
+    useSubscription(ApiTokenCreatedDocument, {
         onData: ({ client }) => {
             client.refetchQueries({ include: ['apiTokens'] });
         },
     });
 
-    useApiTokenUpdatedSubscription({
+    useSubscription(ApiTokenUpdatedDocument, {
         onData: ({ client }) => {
             client.refetchQueries({ include: ['apiTokens'] });
         },
     });
 
-    useApiTokenDeletedSubscription({
+    useSubscription(ApiTokenDeletedDocument, {
         onData: ({ client }) => {
             client.refetchQueries({ include: ['apiTokens'] });
         },

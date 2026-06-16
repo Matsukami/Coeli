@@ -1,3 +1,4 @@
+import { useMutation, useQuery } from '@apollo/client/react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
     AlertCircle,
@@ -14,7 +15,14 @@ import {
 } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import ReactDiffViewer from 'react-diff-viewer-continued';
-import { type Control, type ControllerRenderProps, type FieldValues, useController, useForm, useFormState } from 'react-hook-form';
+import {
+    type Control,
+    type ControllerRenderProps,
+    type FieldValues,
+    useController,
+    useForm,
+    useFormState,
+} from 'react-hook-form';
 import { useNavigate, useParams } from 'react-router-dom';
 import { z } from 'zod';
 
@@ -30,11 +38,11 @@ import { StatusCard } from '@/components/ui/status-card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import {
-    useCreatePromptMutation,
-    useDeletePromptMutation,
-    useSettingsPromptsQuery,
-    useUpdatePromptMutation,
-    useValidatePromptMutation,
+    CreatePromptDocument,
+    DeletePromptDocument,
+    SettingsPromptsDocument,
+    UpdatePromptDocument,
+    ValidatePromptDocument,
 } from '@/graphql/types';
 import { formatPromptId } from '@/lib/route-titles/format-prompt-id';
 import { routes } from '@/lib/routes';
@@ -125,11 +133,11 @@ function SettingsPrompt() {
     const { promptId } = useParams<{ promptId: string }>();
     const navigate = useNavigate();
 
-    const { data, error, loading } = useSettingsPromptsQuery();
-    const [createPrompt, { error: createError, loading: isCreateLoading }] = useCreatePromptMutation();
-    const [updatePrompt, { error: updateError, loading: isUpdateLoading }] = useUpdatePromptMutation();
-    const [deletePrompt, { error: deleteError, loading: isDeleteLoading }] = useDeletePromptMutation();
-    const [validatePrompt, { error: validateError, loading: isValidateLoading }] = useValidatePromptMutation();
+    const { data, error, loading } = useQuery(SettingsPromptsDocument);
+    const [createPrompt, { error: createError, loading: isCreateLoading }] = useMutation(CreatePromptDocument);
+    const [updatePrompt, { error: updateError, loading: isUpdateLoading }] = useMutation(UpdatePromptDocument);
+    const [deletePrompt, { error: deleteError, loading: isDeleteLoading }] = useMutation(DeletePromptDocument);
+    const [validatePrompt, { error: validateError, loading: isValidateLoading }] = useMutation(ValidatePromptDocument);
 
     const [submitError, setSubmitError] = useState<null | string>(null);
     const [activeTab, setActiveTab] = useState<'human' | 'system'>('system');
@@ -144,7 +152,11 @@ function SettingsPrompt() {
 
     const isLoading = isCreateLoading || isUpdateLoading || isDeleteLoading || isValidateLoading;
 
-    const handleVariableClick = (variable: string, field: ControllerRenderProps<FieldValues, string>, formId: string) => {
+    const handleVariableClick = (
+        variable: string,
+        field: ControllerRenderProps<FieldValues, string>,
+        formId: string,
+    ) => {
         const textarea = document.querySelector(`#${formId} textarea`) as HTMLTextAreaElement;
 
         if (textarea) {
