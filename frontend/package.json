@@ -3,7 +3,7 @@
     "type": "module",
     "version": "0.2.0",
     "scripts": {
-        "build": "tsc && vite build",
+        "build": "tsc -b && vite build",
         "commit": "commit",
         "commitlint": "commitlint --edit",
         "dev": "vite",
@@ -15,7 +15,8 @@
         "ssl:generate": "tsx --eval 'import { generateCertificates } from \"./scripts/generate-ssl.ts\"; generateCertificates();'",
         "test": "vitest run",
         "test:coverage": "vitest run --coverage",
-        "test:watch": "vitest"
+        "test:watch": "vitest",
+        "typescript": "tsc -b"
     },
     "dependencies": {
         "@apollo/client": "^4.1.9",
