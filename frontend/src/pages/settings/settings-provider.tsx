@@ -15,16 +15,19 @@ import {
     XCircle,
 } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { type Control, type FieldValues, useController, useForm, useFormState, useWatch } from 'react-hook-form';
+import {
+    type Control,
+    type FieldPath,
+    type FieldValues,
+    useController,
+    useForm,
+    useFormState,
+    useWatch,
+} from 'react-hook-form';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { z } from 'zod';
 
-import type {
-    AgentConfigInput,
-    AgentsConfigInput,
-    ProviderConfigFragmentFragment,
-    ProviderType,
-} from '@/graphql/types';
+import type { AgentConfigInput, AgentsConfigInput, ProviderConfigFragmentFragment } from '@/graphql/types';
 
 import ConfirmationDialog from '@/components/shared/confirmation-dialog';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
@@ -42,6 +45,7 @@ import {
     AgentConfigType,
     CreateProviderDocument,
     DeleteProviderDocument,
+    ProviderType,
     ReasoningEffort,
     SettingsProvidersDocument,
     TestAgentDocument,
@@ -94,7 +98,7 @@ const formatFormErrors = (errors: Record<string, unknown>, prefix = ''): string 
         })
         .join('\n');
 
-interface BaseFieldProps extends ControllerProps {
+interface BaseFieldProps<T extends FieldValues = FieldValues> extends ControllerProps<T> {
     label: string;
 }
 
@@ -102,29 +106,29 @@ interface BaseInputProps {
     placeholder?: string;
 }
 
-interface ControllerProps {
-    control: Control<FieldValues>;
+interface ControllerProps<T extends FieldValues = FieldValues> {
+    control: Control<T>;
     disabled?: boolean;
-    name: string;
+    name: FieldPath<T>;
 }
 
-interface FormComboboxItemProps extends BaseFieldProps, BaseInputProps {
+interface FormComboboxItemProps<T extends FieldValues = FieldValues> extends BaseFieldProps<T>, BaseInputProps {
     allowCustom?: boolean;
     contentClass?: string;
     description?: string;
     options: string[];
 }
 
-interface FormInputNumberItemProps extends BaseFieldProps, NumberInputProps {
+interface FormInputNumberItemProps<T extends FieldValues = FieldValues> extends BaseFieldProps<T>, NumberInputProps {
     description?: string;
     valueType?: 'float' | 'integer';
 }
 
-interface FormInputStringItemProps extends BaseFieldProps, BaseInputProps {
+interface FormInputStringItemProps<T extends FieldValues = FieldValues> extends BaseFieldProps<T>, BaseInputProps {
     description?: string;
 }
 
-interface FormModelComboboxItemProps extends BaseFieldProps, BaseInputProps {
+interface FormModelComboboxItemProps<T extends FieldValues = FieldValues> extends BaseFieldProps<T>, BaseInputProps {
     allowCustom?: boolean;
     contentClass?: string;
     description?: string;
@@ -135,7 +139,7 @@ interface FormModelComboboxItemProps extends BaseFieldProps, BaseInputProps {
 interface ModelOption {
     name: string;
     price?: null | { cacheRead: number; cacheWrite: number; input: number; output: number };
-    thinking?: boolean;
+    thinking?: boolean | null;
 }
 
 interface NumberInputProps extends BaseInputProps {
@@ -146,7 +150,7 @@ interface NumberInputProps extends BaseInputProps {
 
 type Provider = ProviderConfigFragmentFragment;
 
-function FormComboboxItem({
+function FormComboboxItem<T extends FieldValues = FieldValues>({
     allowCustom = true,
     contentClass,
     control,
@@ -156,7 +160,7 @@ function FormComboboxItem({
     name,
     options,
     placeholder,
-}: FormComboboxItemProps) {
+}: FormComboboxItemProps<T>) {
     const { field, fieldState } = useController({
         control,
         defaultValue: undefined,
@@ -256,7 +260,7 @@ function FormComboboxItem({
     );
 }
 
-function FormInputNumberItem({
+function FormInputNumberItem<T extends FieldValues = FieldValues>({
     control,
     description,
     disabled,
@@ -267,7 +271,7 @@ function FormInputNumberItem({
     placeholder,
     step,
     valueType = 'float',
-}: FormInputNumberItemProps) {
+}: FormInputNumberItemProps<T>) {
     const { field, fieldState } = useController({
         control,
         defaultValue: undefined,
@@ -311,7 +315,14 @@ function FormInputNumberItem({
     );
 }
 
-function FormInputStringItem({ control, description, disabled, label, name, placeholder }: FormInputStringItemProps) {
+function FormInputStringItem<T extends FieldValues = FieldValues>({
+    control,
+    description,
+    disabled,
+    label,
+    name,
+    placeholder,
+}: FormInputStringItemProps<T>) {
     const { field, fieldState } = useController({
         control,
         defaultValue: undefined,
@@ -337,7 +348,7 @@ function FormInputStringItem({ control, description, disabled, label, name, plac
     );
 }
 
-function FormModelComboboxItem({
+function FormModelComboboxItem<T extends FieldValues = FieldValues>({
     allowCustom = true,
     contentClass,
     control,
@@ -348,7 +359,7 @@ function FormModelComboboxItem({
     onOptionSelect,
     options,
     placeholder,
-}: FormModelComboboxItemProps) {
+}: FormModelComboboxItemProps<T>) {
     const { field, fieldState } = useController({
         control,
         defaultValue: undefined,
@@ -500,94 +511,57 @@ function FormModelComboboxItem({
     );
 }
 
+const optionalNumber = z.number().nullable().optional();
+
+const requiredString = (message: string) =>
+    z
+        .string()
+        .optional()
+        .transform((value) => value ?? '')
+        .pipe(z.string().min(1, message));
+
 const agentConfigSchema = z
     .object({
-        frequencyPenalty: z.preprocess(
-            (value) => (value === '' || value === undefined ? null : value),
-            z.number().nullable().optional(),
-        ),
-        maxLength: z.preprocess(
-            (value) => (value === '' || value === undefined ? null : value),
-            z.number().nullable().optional(),
-        ),
-        maxTokens: z.preprocess(
-            (value) => (value === '' || value === undefined ? null : value),
-            z.number().nullable().optional(),
-        ),
-        minLength: z.preprocess(
-            (value) => (value === '' || value === undefined ? null : value),
-            z.number().nullable().optional(),
-        ),
-        model: z.preprocess((value) => value || '', z.string().min(1, 'Model is required')),
-        presencePenalty: z.preprocess(
-            (value) => (value === '' || value === undefined ? null : value),
-            z.number().nullable().optional(),
-        ),
+        frequencyPenalty: optionalNumber,
+        maxLength: optionalNumber,
+        maxTokens: optionalNumber,
+        minLength: optionalNumber,
+        model: requiredString('Model is required'),
+        presencePenalty: optionalNumber,
         price: z
             .object({
-                cacheRead: z.preprocess(
-                    (value) => (value === '' || value === undefined ? null : value),
-                    z.number().nullable().optional(),
-                ),
-                cacheWrite: z.preprocess(
-                    (value) => (value === '' || value === undefined ? null : value),
-                    z.number().nullable().optional(),
-                ),
-                input: z.preprocess(
-                    (value) => (value === '' || value === undefined ? null : value),
-                    z.number().nullable().optional(),
-                ),
-                output: z.preprocess(
-                    (value) => (value === '' || value === undefined ? null : value),
-                    z.number().nullable().optional(),
-                ),
+                cacheRead: optionalNumber,
+                cacheWrite: optionalNumber,
+                input: optionalNumber,
+                output: optionalNumber,
             })
             .nullable()
             .optional(),
         reasoning: z
             .object({
-                effort: z.preprocess(
-                    (value) => (value === '' || value === undefined ? null : value),
-                    z.string().nullable().optional(),
-                ),
-                maxTokens: z.preprocess(
-                    (value) => (value === '' || value === undefined ? null : value),
-                    z.number().nullable().optional(),
-                ),
+                effort: z.string().nullable().optional(),
+                maxTokens: optionalNumber,
             })
             .nullable()
             .optional(),
-        repetitionPenalty: z.preprocess(
-            (value) => (value === '' || value === undefined ? null : value),
-            z.number().nullable().optional(),
-        ),
-        temperature: z.preprocess(
-            (value) => (value === '' || value === undefined ? null : value),
-            z.number().nullable().optional(),
-        ),
-        topK: z.preprocess(
-            (value) => (value === '' || value === undefined ? null : value),
-            z.number().nullable().optional(),
-        ),
-        topP: z.preprocess(
-            (value) => (value === '' || value === undefined ? null : value),
-            z.number().nullable().optional(),
-        ),
+        repetitionPenalty: optionalNumber,
+        temperature: optionalNumber,
+        topK: optionalNumber,
+        topP: optionalNumber,
     })
     .optional();
 
 const formSchema = z.object({
     agents: z.record(z.string(), agentConfigSchema).optional(),
-    name: z.preprocess(
-        (value) => value || '',
-        z.string().min(1, 'Provider name is required').max(50, 'Maximum 50 characters allowed'),
-    ),
-    type: z.preprocess((value) => value || '', z.string().min(1, 'Provider type is required')),
+    name: requiredString('Provider name is required').pipe(z.string().max(50, 'Maximum 50 characters allowed')),
+    type: requiredString('Provider type is required'),
 });
 
-type FormAgents = FormData['agents'];
+type FormAgents = FormInput['agents'];
 
-type FormData = z.infer<typeof formSchema>;
+type FormData = z.output<typeof formSchema>;
+
+type FormInput = z.input<typeof formSchema>;
 
 const getName = (key: string): string => key.replaceAll(/([A-Z])/g, ' $1').replace(/^./, (item) => item.toUpperCase());
 
@@ -616,7 +590,7 @@ const getReasoningEffort = (effort: null | string | undefined): null | Reasoning
 };
 
 const transformFormToGraphQL = (
-    formData: FormData,
+    formData: FormInput,
 ): {
     agents: AgentsConfigInput;
     name: string;
@@ -630,7 +604,7 @@ const transformFormToGraphQL = (
                 maxLength: data?.maxLength ?? null,
                 maxTokens: data?.maxTokens ?? null,
                 minLength: data?.minLength ?? null,
-                model: data!.model,
+                model: data?.model ?? '',
                 presencePenalty: data?.presencePenalty ?? null,
                 price:
                     data?.price &&
@@ -662,8 +636,8 @@ const transformFormToGraphQL = (
 
     return {
         agents,
-        name: formData.name,
-        type: formData.type as ProviderType,
+        name: formData.name ?? '',
+        type: z.nativeEnum(ProviderType).parse(formData.type),
     };
 };
 
@@ -705,7 +679,7 @@ function TestResultsDialog({ handleOpenChange, isOpen, results }: TestResultsDia
             tests: agentData?.tests || [],
         }));
 
-    const getStatusIcon = (result: boolean) => {
+    const getStatusIcon = (result: boolean | null | undefined) => {
         if (result === true) {
             return <CheckCircle className="size-4 text-green-500" />;
         } else if (result === false) {
@@ -715,7 +689,7 @@ function TestResultsDialog({ handleOpenChange, isOpen, results }: TestResultsDia
         }
     };
 
-    const getStatusColor = (result: boolean) => {
+    const getStatusColor = (result: boolean | null | undefined) => {
         if (result === true) {
             return 'text-green-600';
         } else if (result === false) {
@@ -869,7 +843,7 @@ function SettingsProvider() {
     const isNew = providerId === 'new';
     const isLoading = isCreateLoading || isUpdateLoading || isDeleteLoading;
 
-    const form = useForm<FormData>({
+    const form = useForm<FormInput, unknown, FormData>({
         defaultValues: {
             agents: {},
             name: undefined,
@@ -1314,10 +1288,10 @@ function SettingsProvider() {
                                 <AlertCircle className="size-4" />
                                 <AlertTitle>Error</AlertTitle>
                                 <AlertDescription>
-                                    {mutationError instanceof Error ? (
-                                        mutationError.message
-                                    ) : (
+                                    {typeof mutationError === 'string' ? (
                                         <div className="whitespace-pre-line">{mutationError}</div>
+                                    ) : (
+                                        mutationError.message
                                     )}
                                 </AlertDescription>
                             </Alert>

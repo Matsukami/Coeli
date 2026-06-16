@@ -481,6 +481,7 @@ export type ProviderTestResultFragmentFragment = {
 
 export type ModelConfigFragmentFragment = {
     name: string;
+    thinking: boolean | null;
     price: { input: number; output: number; cacheRead: number; cacheWrite: number } | null;
 };
 
@@ -2084,6 +2085,7 @@ export const ModelConfigFragmentFragmentDoc = {
                 kind: 'SelectionSet',
                 selections: [
                     { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                    { kind: 'Field', name: { kind: 'Name', value: 'thinking' } },
                     {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'price' },
@@ -4007,6 +4009,7 @@ export const SettingsProvidersDocument = {
                 kind: 'SelectionSet',
                 selections: [
                     { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                    { kind: 'Field', name: { kind: 'Name', value: 'thinking' } },
                     {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'price' },
