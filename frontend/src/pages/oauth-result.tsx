@@ -23,9 +23,9 @@ function OAuthResult() {
         const status = params.get('status');
         const error = params.get('error');
 
-        let redirectTimer: NodeJS.Timeout | null = null;
-        let cleanupTimer: NodeJS.Timeout | null = null;
-        let closeTimer: NodeJS.Timeout | null = null;
+        let redirectTimer: null | ReturnType<typeof setTimeout> = null;
+        let cleanupTimer: null | ReturnType<typeof setTimeout> = null;
+        let closeTimer: null | ReturnType<typeof setTimeout> = null;
 
         const updateMessage = (message: string) => {
             messageRef.current = message;

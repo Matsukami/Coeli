@@ -218,7 +218,7 @@ describe('DataTable — controlled filter projection', () => {
         render(<FilterHost emitted={emitted} />, { wrapper: Wrapper });
 
         const input = screen.getByPlaceholderText('Filter...');
-        await user.type(input, 'bravo', { delay: 5 });
+        await user.type(input, 'bravo');
         // No `waitFor` here — we want the X click to happen mid-debounce,
         // before any emit has reached the parent.
         expect(emitted).toEqual([]);
@@ -258,7 +258,7 @@ describe('DataTable — controlled filter projection', () => {
         );
 
         const input = screen.getByPlaceholderText('Filter...');
-        await user.type(input, 'cha', { delay: 5 });
+        await user.type(input, 'cha');
 
         // While the debounce is still pending, simulate an external write
         // (e.g. back-button popping to a different `?q=`).
@@ -352,7 +352,7 @@ describe('DataTable — controlled filter projection', () => {
 
         const { unmount } = render(<FilterHost emitted={emitted} />, { wrapper: Wrapper });
 
-        await user.type(screen.getByPlaceholderText('Filter...'), 'gone', { delay: 5 });
+        await user.type(screen.getByPlaceholderText('Filter...'), 'gone');
 
         // Unmount before the debounce settles.
         unmount();
@@ -1139,6 +1139,11 @@ describe('DataTable — virtualization', () => {
         // index so the check is independent of which window the virtualizer renders.
         expect(document.querySelector('thead tr')).toHaveAttribute('aria-rowindex', '1');
         const firstDataRow = dataRows()[0];
+
+        if (!firstDataRow) {
+            throw new Error('no row');
+        }
+
         const dataIndex = Number(firstDataRow.getAttribute('data-index'));
         expect(firstDataRow).toHaveAttribute('aria-rowindex', String(dataIndex + 2));
     });

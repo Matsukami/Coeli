@@ -80,12 +80,24 @@ describe('SettingsAccount gating', () => {
         authState.value = { user: localUser };
         render(<SettingsAccount />);
 
-        await user.click(screen.getAllByRole('button', { name: 'Change' })[0]);
+        const [firstChangeButton] = screen.getAllByRole('button', { name: 'Change' });
+
+        if (!firstChangeButton) {
+            throw new Error('expected a Change button');
+        }
+
+        await user.click(firstChangeButton);
         const nameInput = screen.getByPlaceholderText('Enter your display name');
         await user.clear(nameInput);
         await user.type(nameInput, 'Draft Name');
 
-        await user.click(screen.getAllByRole('button', { name: 'Change' })[0]);
+        const [reopenChangeButton] = screen.getAllByRole('button', { name: 'Change' });
+
+        if (!reopenChangeButton) {
+            throw new Error('expected a Change button');
+        }
+
+        await user.click(reopenChangeButton);
 
         expect(screen.getByRole('button', { name: 'Update Email' })).toBeInTheDocument();
         expect(screen.getByPlaceholderText('Enter your display name')).toHaveValue('Draft Name');

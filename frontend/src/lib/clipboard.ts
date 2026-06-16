@@ -21,8 +21,8 @@ export const getCleanTerminalText = (terminalContent: string): Promise<string> =
     return new Promise((resolve) => {
         let hiddenTerminal: null | XTerminal = null;
         let hiddenDiv: HTMLDivElement | null = null;
-        let timeoutId: NodeJS.Timeout | null = null;
-        let safetyTimeoutId: NodeJS.Timeout | null = null;
+        let timeoutId: null | ReturnType<typeof setTimeout> = null;
+        let safetyTimeoutId: null | ReturnType<typeof setTimeout> = null;
         let isResolved = false;
 
         const cleanup = () => {

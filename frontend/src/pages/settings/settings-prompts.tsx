@@ -19,7 +19,10 @@ import {
 import { Fragment, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import type { AgentPrompt, AgentPrompts, DefaultPrompt, PromptType } from '@/graphql/types';
+import type { DefaultPromptFragmentFragment as DefaultPrompt, PromptType } from '@/graphql/types';
+
+type AgentPrompt = AgentPrompts;
+type AgentPrompts = { human?: DefaultPrompt; system: DefaultPrompt };
 
 import ConfirmationDialog from '@/components/shared/confirmation-dialog';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';

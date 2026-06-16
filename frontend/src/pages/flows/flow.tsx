@@ -398,7 +398,7 @@ function Flow() {
                 {isDesktop ? (
                     <ResizablePanelGroup
                         className="w-full"
-                        direction="horizontal"
+                        orientation="horizontal"
                     >
                         <ResizablePanel
                             defaultSize={50}

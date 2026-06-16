@@ -64,10 +64,8 @@ type APIToken = ApiTokenFragmentFragment;
 const tokenNameSchema = z.string().trim().max(255, 'Token name must be 255 characters or less').default('');
 
 const createTokenFormSchema = z.object({
-    // Nullable in the form state (the date picker starts empty) but required
-    // for submission — the refine drives `formState.isValid`, which gates the
-    // Create button without manual checks. Kept as `Date | null` in the
-    // inferred type so `defaultValues` can be `null` without a cast.
+    // Nullable in form input (the date picker starts empty); the refine gates
+    // `formState.isValid` so the Create button stays disabled until a date is set.
     expiresAt: z
         .date()
         .nullable()
@@ -80,11 +78,13 @@ const editTokenFormSchema = z.object({
     status: z.nativeEnum(TokenStatusEnum),
 });
 
-type CreateTokenFormValues = z.infer<typeof createTokenFormSchema>;
-type EditTokenFormValues = z.infer<typeof editTokenFormSchema>;
+type CreateTokenFormInput = z.input<typeof createTokenFormSchema>;
+type CreateTokenFormValues = z.output<typeof createTokenFormSchema>;
+type EditTokenFormInput = z.input<typeof editTokenFormSchema>;
+type EditTokenFormValues = z.output<typeof editTokenFormSchema>;
 
-const CREATE_TOKEN_DEFAULTS: CreateTokenFormValues = { expiresAt: null, name: '' };
-const EDIT_TOKEN_DEFAULTS: EditTokenFormValues = { name: '', status: TokenStatusEnum.Active };
+const CREATE_TOKEN_DEFAULTS: CreateTokenFormInput = { expiresAt: null, name: '' };
+const EDIT_TOKEN_DEFAULTS: EditTokenFormInput = { name: '', status: TokenStatusEnum.Active };
 
 const isTokenExpired = (token: APIToken): boolean => {
     const expiresAt = new Date(token.createdAt);
@@ -202,7 +202,7 @@ function CreateRowActions({
     onCancel,
     onSubmit,
 }: {
-    control: Control<CreateTokenFormValues>;
+    control: Control<CreateTokenFormInput>;
     isLoading: boolean;
     onCancel: () => void;
     onSubmit: () => void;
@@ -240,7 +240,7 @@ function EditRowActions({
     onCancel,
     onSubmit,
 }: {
-    control: Control<EditTokenFormValues>;
+    control: Control<EditTokenFormInput>;
     isLoading: boolean;
     onCancel: () => void;
     onSubmit: () => void;
@@ -294,12 +294,12 @@ function SettingsAPITokens() {
     // Form state lives in the parent so that subscription-driven DataTable
     // re-renders and row remounts cannot drop user input. <Controller> in each
     // cell re-subscribes to this state on remount — no values are lost.
-    const createForm = useForm<CreateTokenFormValues>({
+    const createForm = useForm<CreateTokenFormInput, unknown, CreateTokenFormValues>({
         defaultValues: CREATE_TOKEN_DEFAULTS,
         mode: 'onChange',
         resolver: zodResolver(createTokenFormSchema),
     });
-    const editForm = useForm<EditTokenFormValues>({
+    const editForm = useForm<EditTokenFormInput, unknown, EditTokenFormValues>({
         defaultValues: EDIT_TOKEN_DEFAULTS,
         mode: 'onChange',
         resolver: zodResolver(editTokenFormSchema),
@@ -353,7 +353,7 @@ function SettingsAPITokens() {
                     refetchQueries: ['apiTokens'],
                     variables: {
                         input: {
-                            name: values.name.trim() || null,
+                            name: values.name?.trim() || null,
                             status: values.status,
                         },
                         tokenId,
@@ -398,7 +398,7 @@ function SettingsAPITokens() {
                 refetchQueries: ['apiTokens'],
                 variables: {
                     input: {
-                        name: values.name.trim() || null,
+                        name: values.name?.trim() || null,
                         ttl,
                     },
                 },

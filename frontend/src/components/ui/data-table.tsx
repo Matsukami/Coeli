@@ -1172,7 +1172,7 @@ function VirtualizedTableBody<TData>({
     // follows row identity once the table opts into `getRowId` (today's default
     // ids are positional, making this equivalent to the index). Recreated on
     // every `rows` change so the cache tracks the current row set.
-    const getItemKey = useCallback((index: number) => rows[index].id, [rows]);
+    const getItemKey = useCallback((index: number) => rows[index]?.id ?? index, [rows]);
 
     const { anchorRef, measureItem, paddingEnd, paddingStart, virtualItems } =
         useWindowVirtualList<HTMLTableSectionElement>({
@@ -1191,6 +1191,10 @@ function VirtualizedTableBody<TData>({
             ) : null}
             {virtualItems.map((virtualItem) => {
                 const row = rows[virtualItem.index];
+
+                if (!row) {
+                    return null;
+                }
 
                 return (
                     <DataTableRow

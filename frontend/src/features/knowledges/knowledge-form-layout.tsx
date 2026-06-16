@@ -29,7 +29,7 @@ export function KnowledgeFormLayoutDesktop({ control, isNew, isSaving, knowledge
         <div className="flex min-h-0 w-full max-w-full flex-1 overflow-hidden">
             <ResizablePanelGroup
                 className="w-full"
-                direction="horizontal"
+                orientation="horizontal"
             >
                 <ResizablePanel
                     defaultSize={45}

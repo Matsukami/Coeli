@@ -29,7 +29,13 @@ describe('PasswordChangeForm', () => {
         const current = screen.getByPlaceholderText('Enter your current password') as HTMLInputElement;
         expect(current.type).toBe('password');
 
-        await user.click(screen.getAllByRole('button', { name: 'Show password' })[0]);
+        const [showButton] = screen.getAllByRole('button', { name: 'Show password' });
+
+        if (!showButton) {
+            throw new Error('expected a Show password toggle');
+        }
+
+        await user.click(showButton);
 
         expect(current.type).toBe('text');
     });

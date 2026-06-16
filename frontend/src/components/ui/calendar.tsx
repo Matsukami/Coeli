@@ -19,7 +19,6 @@ function Calendar({ className, classNames, showOutsideDays = true, ...props }: C
                     buttonVariants({ variant: 'outline' }),
                     'absolute top-3 left-3 z-10 h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100',
                 ),
-                caption: 'flex justify-center pt-1 pb-2 relative items-center select-none',
                 caption_label: 'text-sm font-medium select-none',
                 day: cn(
                     buttonVariants({ variant: 'ghost' }),

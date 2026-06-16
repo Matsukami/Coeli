@@ -1,5 +1,5 @@
 import { Search, X } from 'lucide-react';
-import { type KeyboardEvent, type ReactNode, startTransition, useCallback, useMemo, useRef, useState } from 'react';
+import { type ReactNode, startTransition, useCallback, useMemo, useRef, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '@/components/ui/input-group';
@@ -81,7 +81,11 @@ export function DetailNavigationSheet<T extends { id: string }>({
         enabled: shouldVirtualize,
         estimateSize: estimateRowSize,
         gap: 2,
-        getItemKey: (index) => String(getId(items[index])),
+        getItemKey: (index) => {
+            const item = items[index];
+
+            return item ? String(getId(item)) : index;
+        },
         getScrollElement: () => scrollEl,
         overscan: 10,
         padding: 8,
@@ -181,7 +185,7 @@ export function DetailNavigationSheet<T extends { id: string }>({
     );
 
     const handleListKeyDown = useCallback(
-        (event: KeyboardEvent<HTMLUListElement>) => {
+        (event: React.KeyboardEvent<HTMLUListElement>) => {
             if (!hasEntries || focusedId === null) {
                 return;
             }
@@ -426,12 +430,19 @@ export function DetailNavigationSheet<T extends { id: string }>({
                                 {virtualItems.map((virtualRow) => {
                                     const item = items[virtualRow.index];
 
+                                    if (!item) {
+                                        return null;
+                                    }
+
                                     return (
                                         <li
                                             className="absolute inset-x-0 min-w-0 px-2"
                                             key={String(getId(item))}
                                             role="presentation"
-                                            style={{ height: ROW_HEIGHT, transform: `translateY(${virtualRow.start}px)` }}
+                                            style={{
+                                                height: ROW_HEIGHT,
+                                                transform: `translateY(${virtualRow.start}px)`,
+                                            }}
                                         >
                                             {renderOptionButton(item, virtualRow.index)}
                                         </li>

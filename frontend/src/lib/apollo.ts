@@ -1,6 +1,7 @@
 import type { FetchResult, Operation, Reference, StoreObject } from '@apollo/client';
 
 import { ApolloClient, ApolloLink, createHttpLink, InMemoryCache, Observable, split } from '@apollo/client';
+import { CombinedGraphQLErrors, ServerError } from '@apollo/client/errors';
 import { onError } from '@apollo/client/link/error';
 import { GraphQLWsLink } from '@apollo/client/link/subscriptions';
 import { getMainDefinition } from '@apollo/client/utilities';
@@ -420,9 +421,9 @@ const createApolloClient = () => {
 
     const transportLink = split(isSubscriptionOperation, wsLink, httpLink);
 
-    const errorLink = onError(({ graphQLErrors, networkError, operation }) => {
-        if (graphQLErrors) {
-            for (const { extensions, locations, message, path } of graphQLErrors) {
+    const errorLink = onError(({ error, operation }) => {
+        if (CombinedGraphQLErrors.is(error)) {
+            for (const { extensions, locations, message, path } of error.errors) {
                 Log.error(`[GraphQL Error] ${message}`, {
                     locations,
                     operation: operation.operationName,
@@ -442,18 +443,12 @@ const createApolloClient = () => {
                     window.dispatchEvent(new Event('auth:refresh'));
                 }
             }
-        }
+        } else if (error) {
+            Log.error(`[Network Error] ${error.message}`, error);
 
-        if (networkError) {
-            Log.error(`[Network Error] ${networkError.message}`, networkError);
-
-            if ('statusCode' in networkError) {
-                const statusCode = (networkError as { statusCode?: number }).statusCode;
-
-                if (statusCode === 401 || statusCode === 403) {
-                    Log.warn('Network authorization error detected, refreshing auth info');
-                    window.dispatchEvent(new Event('auth:refresh'));
-                }
+            if (ServerError.is(error) && (error.statusCode === 401 || error.statusCode === 403)) {
+                Log.warn('Network authorization error detected, refreshing auth info');
+                window.dispatchEvent(new Event('auth:refresh'));
             }
         }
     });

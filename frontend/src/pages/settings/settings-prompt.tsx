@@ -17,7 +17,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import ReactDiffViewer from 'react-diff-viewer-continued';
 import {
     type Control,
-    type ControllerRenderProps,
+    type FieldPathByValue,
     type FieldValues,
     useController,
     useForm,
@@ -26,7 +26,14 @@ import {
 import { useNavigate, useParams } from 'react-router-dom';
 import { z } from 'zod';
 
-import type { AgentPrompt, AgentPrompts, DefaultPrompt, PromptType, ValidatePromptMutation } from '@/graphql/types';
+import type {
+    DefaultPromptFragmentFragment as DefaultPrompt,
+    PromptType,
+    ValidatePromptMutation,
+} from '@/graphql/types';
+
+type AgentPrompt = AgentPrompts;
+type AgentPrompts = { human?: DefaultPrompt; system: DefaultPrompt };
 
 import ConfirmationDialog from '@/components/shared/confirmation-dialog';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -56,7 +63,7 @@ const humanFormSchema = z.object({
     template: z.string().min(1, 'Human template is required'),
 });
 
-interface BaseFieldProps extends ControllerProps {
+interface BaseFieldProps<T extends FieldValues> extends ControllerProps<T> {
     label?: string;
 }
 interface BaseTextareaProps {
@@ -64,13 +71,13 @@ interface BaseTextareaProps {
     placeholder?: string;
 }
 
-interface ControllerProps {
-    control: Control<FieldValues>;
+interface ControllerProps<T extends FieldValues> {
+    control: Control<T>;
     disabled?: boolean;
-    name: string;
+    name: FieldPathByValue<T, string>;
 }
 
-interface FormTextareaItemProps extends BaseFieldProps, BaseTextareaProps {
+interface FormTextareaItemProps<T extends FieldValues> extends BaseFieldProps<T>, BaseTextareaProps {
     description?: string;
 }
 
@@ -78,10 +85,16 @@ type HumanFormData = z.infer<typeof humanFormSchema>;
 
 type SystemFormData = z.infer<typeof systemFormSchema>;
 
-function FormTextareaItem({ className, control, disabled, label, name, placeholder }: FormTextareaItemProps) {
+function FormTextareaItem<T extends FieldValues>({
+    className,
+    control,
+    disabled,
+    label,
+    name,
+    placeholder,
+}: FormTextareaItemProps<T>) {
     const { field, fieldState } = useController({
         control,
-        defaultValue: '',
         disabled,
         name,
     });
@@ -154,7 +167,7 @@ function SettingsPrompt() {
 
     const handleVariableClick = (
         variable: string,
-        field: ControllerRenderProps<FieldValues, string>,
+        field: { onChange: (value: string) => void; value: string },
         formId: string,
     ) => {
         const textarea = document.querySelector(`#${formId} textarea`) as HTMLTextAreaElement;
@@ -262,7 +275,7 @@ function SettingsPrompt() {
                 },
             });
 
-            setValidationResult(result.data?.validatePrompt);
+            setValidationResult(result.data?.validatePrompt ?? null);
             setValidationDialogOpen(true);
         } catch (error) {
             console.error('Validation error:', error);
@@ -743,7 +756,7 @@ function SettingsPrompt() {
                                     <AlertCircle className="size-4" />
                                     <AlertTitle>Error</AlertTitle>
                                     <AlertDescription>
-                                        {mutationError instanceof Error ? (
+                                        {typeof mutationError !== 'string' ? (
                                             mutationError.message
                                         ) : (
                                             <div className="whitespace-pre-line">{mutationError}</div>
@@ -784,7 +797,7 @@ function SettingsPrompt() {
                                         <AlertCircle className="size-4" />
                                         <AlertTitle>Error</AlertTitle>
                                         <AlertDescription>
-                                            {mutationError instanceof Error ? (
+                                            {typeof mutationError !== 'string' ? (
                                                 mutationError.message
                                             ) : (
                                                 <div className="whitespace-pre-line">{mutationError}</div>

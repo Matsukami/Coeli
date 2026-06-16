@@ -66,8 +66,8 @@ export function useResourcesDelete({ onAfterDelete }: UseResourcesDeleteParams =
                 await deleteResourcesRequest(filesToDelete.map((file) => file.path));
 
                 if (filesToDelete.length === 1) {
-                    const single = filesToDelete[0];
-                    toast.success(single.isDir ? 'Directory deleted' : 'Resource deleted');
+                    const [single] = filesToDelete;
+                    toast.success(single?.isDir ? 'Directory deleted' : 'Resource deleted');
                 } else {
                     toast.success(`${filesToDelete.length} ${pluralizeItems(filesToDelete.length)} deleted`);
                 }
