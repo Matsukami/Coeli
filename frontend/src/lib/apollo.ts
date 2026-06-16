@@ -463,6 +463,17 @@ const createApolloClient = () => {
             APIToken: {
                 keyFields: ['tokenId'],
             },
+            KnowledgeDocument: {
+                fields: {
+                    // `content` arrives empty from the list query (withContent:false,
+                    // to save bandwidth) but full from the detail query — both
+                    // normalize to this shared entity. Never let an empty incoming
+                    // blank out a body the detail already loaded.
+                    content: {
+                        merge: (existing: string | undefined, incoming: string) => incoming || existing || '',
+                    },
+                },
+            },
             ProviderConfig: {
                 keyFields: (object) => {
                     if (object.id === 0 || object.id === '0') {
