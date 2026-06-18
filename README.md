@@ -2678,7 +2678,6 @@ See the official Docker documentation for [registry mirrors](https://docs.docker
 - nodejs
 - docker
 - postgres
-- commitlint
 
 ### Environment Setup
 

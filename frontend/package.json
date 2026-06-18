@@ -4,8 +4,6 @@
     "version": "0.2.0",
     "scripts": {
         "build": "tsc -b && vite build",
-        "commit": "commit",
-        "commitlint": "commitlint --edit",
         "dev": "vite",
         "graphql:generate": "graphql-codegen --config graphql-codegen.ts",
         "lint": "eslint \"src/**/*.{ts,tsx,js,jsx}\"",
@@ -93,8 +91,6 @@
         "zod": "^4.4.3"
     },
     "devDependencies": {
-        "@commitlint/cli": "^21.0.2",
-        "@commitlint/config-conventional": "^21.0.2",
         "@eslint/eslintrc": "^3.3.5",
         "@eslint/js": "^9.39.4",
         "@graphql-codegen/cli": "^7.1.3",
