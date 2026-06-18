@@ -1403,7 +1403,6 @@ Typical symptoms:
 - Backend or proxy errors such as `Failed to parse tool call arguments as JSON` (often surfaced through a LiteLLM proxy as an HTTP 500), or other unexpected 5xx/4xx responses from the LLM endpoint.
 - A flow that runs for a few steps and then stops responding to new input in the UI.
 - Repeated or looping tool calls that never converge.
-- A flow that fails right at the start with `failed to select primary docker image via llm call`, because the first action in a flow is an LLM tool call to choose the container image; a backend that cannot return a valid tool call fails at this step too.
 
 How to investigate:
 
