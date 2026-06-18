@@ -140,13 +140,7 @@
         "vite-tsconfig-paths": "^6.1.1",
         "vitest": "^4.1.6"
     },
-    "packageManager": "pnpm@10.32.1",
-    "pnpm": {
-        "onlyBuiltDependencies": [
-            "@swc/core",
-            "esbuild"
-        ]
-    },
+    "packageManager": "pnpm@11.8.0",
     "eslintConfig": {
         "extends": [
             "plugin:storybook/recommended"

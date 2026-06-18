@@ -3,7 +3,7 @@
 # ========================================
 # Stage 1: Frontend Application Build
 # ========================================
-FROM node:23-slim AS frontend-compiler
+FROM node:24.17.0-slim AS frontend-compiler
 
 # Production build configuration
 ENV NODE_ENV=production
@@ -22,7 +22,7 @@ RUN apt-get update && apt-get install -y \
     g++ \
     make \
     git \
-    && corepack enable && corepack prepare pnpm@latest --activate
+    && corepack enable
 
 # GraphQL schema for code generation
 COPY ./backend/pkg/graph/schema.graphqls ../backend/pkg/graph/
