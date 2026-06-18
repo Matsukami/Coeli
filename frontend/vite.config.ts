@@ -68,7 +68,7 @@ export default defineConfig(({ mode }) => {
                         if (/[\\/]@apollo[\\/]client|[\\/]graphql[\\/]|[\\/]graphql-ws[\\/]/.test(id)) {
                             return 'apollo-client';
                         }
-                        if (/[\\/](react-markdown|rehype-highlight|rehype-raw|rehype-slug|remark-gfm)[\\/]/.test(id)) {
+                        if (/[\\/](react-markdown|rehype-highlight|rehype-slug|remark-gfm)[\\/]/.test(id)) {
                             return 'markdown';
                         }
                         if (/[\\/]@radix-ui[\\/]/.test(id)) {
