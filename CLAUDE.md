@@ -5,11 +5,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Core Interaction Rules
 
 1. **Always use English** for all interactions, responses, explanations, and questions with users.
-2. **Password Complexity Requirements**: For all password-related development (registration, password reset, API token generation, etc.), the following rules must be enforced:
-   - Minimum 12 characters
-   - Must contain at least 1 uppercase letter, 1 lowercase letter, 1 number, and 1 special character
-   - Common weak passwords (e.g., `password`, `123456`) are prohibited
-   - Both backend and frontend validation must be implemented; do not rely on frontend validation alone
+2. **Password Complexity Requirements**: For all password-related development (registration, password reset, API token generation, etc.), enforce the same policy in **both** backend and frontend — never rely on frontend validation alone. Source of truth, keep the two in sync: `backend/pkg/server/models/init.go` → `strongPasswordValidatorString` and `frontend/src/features/authentication/password-change-form.tsx` (zod schema). The policy:
+   - Length 8–100 characters.
+   - A password is valid if it is **either** 16+ characters (any composition), **or** 8–15 characters containing at least 1 lowercase letter, 1 uppercase letter, 1 number, and 1 special character from `!@#$&*`.
 
 ## Project Overview
 
