@@ -312,11 +312,12 @@ type ModelAgentsUsageStats struct {
 }
 
 type ModelConfig struct {
-	Name        string      `json:"name"`
-	Description *string     `json:"description,omitempty"`
-	ReleaseDate *time.Time  `json:"releaseDate,omitempty"`
-	Thinking    *bool       `json:"thinking,omitempty"`
-	Price       *ModelPrice `json:"price,omitempty"`
+	Name        string              `json:"name"`
+	Description *string             `json:"description,omitempty"`
+	ReleaseDate *time.Time          `json:"releaseDate,omitempty"`
+	Thinking    *bool               `json:"thinking,omitempty"`
+	Reasoning   *ModelReasoningInfo `json:"reasoning,omitempty"`
+	Price       *ModelPrice         `json:"price,omitempty"`
 }
 
 type ModelPrice struct {
@@ -324,6 +325,11 @@ type ModelPrice struct {
 	Output     float64 `json:"output"`
 	CacheRead  float64 `json:"cacheRead"`
 	CacheWrite float64 `json:"cacheWrite"`
+}
+
+type ModelReasoningInfo struct {
+	Mode    *ModelReasoningMode `json:"mode,omitempty"`
+	Efforts []ReasoningEffort   `json:"efforts,omitempty"`
 }
 
 type ModelUsageStats struct {
@@ -955,6 +961,49 @@ func (e *MessageLogType) UnmarshalGQL(v interface{}) error {
 }
 
 func (e MessageLogType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type ModelReasoningMode string
+
+const (
+	ModelReasoningModeBudget       ModelReasoningMode = "budget"
+	ModelReasoningModeAdaptive     ModelReasoningMode = "adaptive"
+	ModelReasoningModeAdaptiveOnly ModelReasoningMode = "adaptive_only"
+)
+
+var AllModelReasoningMode = []ModelReasoningMode{
+	ModelReasoningModeBudget,
+	ModelReasoningModeAdaptive,
+	ModelReasoningModeAdaptiveOnly,
+}
+
+func (e ModelReasoningMode) IsValid() bool {
+	switch e {
+	case ModelReasoningModeBudget, ModelReasoningModeAdaptive, ModelReasoningModeAdaptiveOnly:
+		return true
+	}
+	return false
+}
+
+func (e ModelReasoningMode) String() string {
+	return string(e)
+}
+
+func (e *ModelReasoningMode) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = ModelReasoningMode(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid ModelReasoningMode", str)
+	}
+	return nil
+}
+
+func (e ModelReasoningMode) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 

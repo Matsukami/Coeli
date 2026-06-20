@@ -562,11 +562,35 @@ func ConvertModels(models pconfig.ModelsConfig) []*model.ModelConfig {
 		if m.Thinking != nil {
 			modelConfig.Thinking = m.Thinking
 		}
+		if m.Reasoning != nil {
+			reasoning := &model.ModelReasoningInfo{}
+			if m.Reasoning.Mode != pconfig.ModelReasoningNone {
+				mode := convertModelReasoningMode(m.Reasoning.Mode)
+				reasoning.Mode = &mode
+			}
+			for _, effort := range m.Reasoning.Efforts {
+				reasoning.Efforts = append(reasoning.Efforts, model.ReasoningEffort(effort))
+			}
+			modelConfig.Reasoning = reasoning
+		}
 
 		gmodels = append(gmodels, modelConfig)
 	}
 
 	return gmodels
+}
+
+// convertModelReasoningMode maps a pconfig model reasoning capability to its GraphQL
+// enum value (only adaptive-only differs in spelling: hyphen vs underscore).
+func convertModelReasoningMode(m pconfig.ModelReasoningMode) model.ModelReasoningMode {
+	switch m {
+	case pconfig.ModelReasoningAdaptiveOnly:
+		return model.ModelReasoningModeAdaptiveOnly
+	case pconfig.ModelReasoningAdaptive:
+		return model.ModelReasoningModeAdaptive
+	default:
+		return model.ModelReasoningModeBudget
+	}
 }
 
 func ConvertProvider(prv database.Provider, cfg *pconfig.ProviderConfig) *model.ProviderConfig {

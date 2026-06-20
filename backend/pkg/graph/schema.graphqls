@@ -38,6 +38,21 @@ enum ReasoningMode {
   budget
 }
 
+# A model's reasoning capability — distinct from the per-agent ReasoningMode
+# choice; adaptive_only models reject budget thinking (e.g. Claude Opus 4.7/4.8).
+enum ModelReasoningMode {
+  budget
+  adaptive
+  adaptive_only
+}
+
+# Declares how a model supports extended thinking so the UI can offer a valid
+# mode/effort without hardcoding model names.
+type ModelReasoningInfo {
+  mode: ModelReasoningMode
+  efforts: [ReasoningEffort!]
+}
+
 # Template types for AI agent prompts and system operations
 enum PromptType {
   primary_agent
@@ -694,6 +709,7 @@ type ModelConfig {
   description: String
   releaseDate: Time
   thinking: Boolean
+  reasoning: ModelReasoningInfo
   price: ModelPrice
 }
 
