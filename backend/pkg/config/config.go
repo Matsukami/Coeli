@@ -117,6 +117,8 @@ type Config struct {
 	BedrockSecretKey    string `env:"BEDROCK_SECRET_ACCESS_KEY"`
 	BedrockSessionToken string `env:"BEDROCK_SESSION_TOKEN"`
 	BedrockServerURL    string `env:"BEDROCK_SERVER_URL"`
+	BedrockConfig       string `env:"BEDROCK_CONFIG_PATH"`
+	BedrockModels       string `env:"BEDROCK_MODELS_PATH"`
 
 	// === LLM Provider: DeepSeek ===
 	DeepSeekAPIKey    string `env:"DEEPSEEK_API_KEY"`

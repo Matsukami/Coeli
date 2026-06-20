@@ -1878,6 +1878,8 @@ PentAGI integrates with Amazon Bedrock, offering access to 20+ foundation models
 | `BEDROCK_SECRET_ACCESS_KEY` |             | AWS secret access key for static credentials                                                        |
 | `BEDROCK_SESSION_TOKEN`     |             | AWS session token for temporary credentials (optional, used with static credentials)                |
 | `BEDROCK_SERVER_URL`        |             | Custom Bedrock endpoint (VPC endpoints, local testing)                                              |
+| `BEDROCK_CONFIG_PATH`       |             | Path to a YAML config that replaces the built-in per-agent model/price config                       |
+| `BEDROCK_MODELS_PATH`       |             | Path to a YAML model catalog merged onto the built-in models (adds/overrides the UI model list)     |
 
 **Authentication Priority**: `BEDROCK_DEFAULT_AUTH` → `BEDROCK_BEARER_TOKEN` → `BEDROCK_ACCESS_KEY_ID`+`BEDROCK_SECRET_ACCESS_KEY`
 
@@ -1902,6 +1904,26 @@ BEDROCK_REGION=us-east-1
 BEDROCK_DEFAULT_AUTH=true
 BEDROCK_SERVER_URL=https://bedrock-runtime.us-east-1.vpce-xxx.amazonaws.com
 PROXY_URL=http://your-proxy:8080
+```
+
+#### Custom Provider Config and Models (advanced)
+
+By default the Bedrock provider uses a per-agent config and model catalog compiled into the binary. Two optional paths override them without rebuilding:
+
+- `BEDROCK_CONFIG_PATH` — a YAML file (same shape as the other provider configs) that **replaces** the built-in per-agent model/price assignments. See [`examples/configs/bedrock-glm-flash.provider.yml`](examples/configs/bedrock-glm-flash.provider.yml).
+- `BEDROCK_MODELS_PATH` — a YAML model catalog that is **merged** onto the built-in models: new model ids are added and become selectable under Settings → Providers, while a matching id overrides the built-in entry. See [`examples/configs/bedrock-glm-flash.models.yml`](examples/configs/bedrock-glm-flash.models.yml).
+
+This is useful to expose a Bedrock model newer than the compiled-in catalog — for example Z.AI's `zai.glm-4.7-flash`. Use the exact Model ID from the model's AWS Bedrock detail page; add a `us.`/`eu.`/`apac.` inference-profile prefix only when that page marks the model as requiring cross-region inference (`zai.glm-4.7-flash` is In-Region, so it is used as-is, with no prefix).
+
+With Docker Compose, set the host-side mount source and the in-container path together:
+
+```bash
+# host files mounted into the container
+PENTAGI_BEDROCK_CONFIG_PATH=./examples/configs/bedrock-glm-flash.provider.yml
+PENTAGI_BEDROCK_MODELS_PATH=./examples/configs/bedrock-glm-flash.models.yml
+# tell the backend to read the mounted files
+BEDROCK_CONFIG_PATH=/opt/pentagi/conf/bedrock.provider.yml
+BEDROCK_MODELS_PATH=/opt/pentagi/conf/bedrock.models.yml
 ```
 
 #### Supported Models

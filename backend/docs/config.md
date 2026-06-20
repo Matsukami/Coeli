@@ -118,7 +118,7 @@ These web-console features do not replace the environment variables in this guid
 
 The environment variables documented below remain the source of truth for configuration that is not currently editable from the web console:
 
-- **LLM credentials and connection settings**: API keys, base URLs, auth modes, and provider-specific connection settings for OpenAI, Anthropic, Bedrock, Ollama, custom providers, and similar backends; config-path settings apply only where supported, such as `OLLAMA_SERVER_CONFIG_PATH` and `LLM_SERVER_CONFIG_PATH`.
+- **LLM credentials and connection settings**: API keys, base URLs, auth modes, and provider-specific connection settings for OpenAI, Anthropic, Bedrock, Ollama, custom providers, and similar backends; config-path settings apply only where supported, such as `OLLAMA_SERVER_CONFIG_PATH`, `LLM_SERVER_CONFIG_PATH`, and `BEDROCK_CONFIG_PATH`/`BEDROCK_MODELS_PATH`.
 - **Search provider credentials and options**: DuckDuckGo, Google, Tavily, Traversaal, Perplexity, Searxng, Sploitus, and related search configuration.
 - **Third-party integrations**: Langfuse, Graphiti, and other external observability or knowledge services.
 - **MCP server management**: MCP settings are not currently exposed as a live web-console feature.
@@ -607,6 +607,8 @@ There is no `VERTEX_API_KEY` or `GOOGLE_APPLICATION_CREDENTIALS` variable wired 
 | BedrockSecretKey    | `BEDROCK_SECRET_ACCESS_KEY` | *(none)*      | AWS secret access key for static credentials authentication                                                              |
 | BedrockSessionToken | `BEDROCK_SESSION_TOKEN`     | *(none)*      | AWS session token for temporary credentials (optional, used with static credentials for STS/assumed roles)               |
 | BedrockServerURL    | `BEDROCK_SERVER_URL`        | *(none)*      | Optional custom endpoint URL for Bedrock service (VPC endpoints, local testing)                                          |
+| BedrockConfig       | `BEDROCK_CONFIG_PATH`       | *(none)*      | Path to a custom YAML config that replaces the built-in Bedrock per-agent config (model assignments, prices)             |
+| BedrockModels       | `BEDROCK_MODELS_PATH`       | *(none)*      | Path to a custom YAML model catalog merged onto the built-in Bedrock models (adds new ids; matching names override)      |
 
 **Authentication Priority**: `BedrockDefaultAuth` (highest) → `BedrockBearerToken` → `BedrockAccessKey`+`BedrockSecretKey` (lowest)
 

@@ -2074,7 +2074,7 @@ func (r *queryResolver) SettingsProviders(ctx context.Context) (*model.Providers
 			}
 		case provider.ProviderBedrock:
 			config.Default.Bedrock = mpcfg
-			if models, err := bedrock.DefaultModels(); err == nil {
+			if models, err := bedrock.DefaultModels(r.Config); err == nil {
 				config.Models.Bedrock = converter.ConvertModels(models)
 			}
 		case provider.ProviderOllama:

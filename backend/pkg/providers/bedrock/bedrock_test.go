@@ -2,6 +2,8 @@ package bedrock
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 	"sort"
 	"testing"
 
@@ -21,7 +23,7 @@ func TestConfigLoading(t *testing.T) {
 		BedrockSecretKey: "test-key",
 	}
 
-	providerConfig, err := DefaultProviderConfig()
+	providerConfig, err := DefaultProviderConfig(&config.Config{})
 	if err != nil {
 		t.Fatalf("Failed to create provider config: %v", err)
 	}
@@ -68,7 +70,7 @@ func TestProviderType(t *testing.T) {
 		BedrockSecretKey: "test-key",
 	}
 
-	providerConfig, err := DefaultProviderConfig()
+	providerConfig, err := DefaultProviderConfig(&config.Config{})
 	if err != nil {
 		t.Fatalf("Failed to create provider config: %v", err)
 	}
@@ -84,7 +86,7 @@ func TestProviderType(t *testing.T) {
 }
 
 func TestModelsLoading(t *testing.T) {
-	models, err := DefaultModels()
+	models, err := DefaultModels(&config.Config{})
 	if err != nil {
 		t.Fatalf("Failed to load models: %v", err)
 	}
@@ -113,8 +115,72 @@ func TestModelsLoading(t *testing.T) {
 	}
 }
 
+func TestBedrockProviderConfigPathOverride(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "bedrock.provider.yml")
+	external := "simple:\n  model: zai.glm-4.7-flash\n  temperature: 0.5\n  n: 1\n  max_tokens: 1000\n  price:\n    input: 0.15\n    output: 0.6\n"
+	if err := os.WriteFile(path, []byte(external), 0o600); err != nil {
+		t.Fatalf("Failed to write external config: %v", err)
+	}
+
+	cfg := &config.Config{
+		BedrockRegion:    "us-east-1",
+		BedrockAccessKey: "test-key",
+		BedrockSecretKey: "test-key",
+		BedrockConfig:    path,
+	}
+
+	providerConfig, err := DefaultProviderConfig(cfg)
+	if err != nil {
+		t.Fatalf("Failed to load external provider config: %v", err)
+	}
+
+	prov, err := New(cfg, provider.DefaultProviderNameBedrock, providerConfig)
+	if err != nil {
+		t.Fatalf("Failed to create provider: %v", err)
+	}
+
+	if got := prov.Model(pconfig.OptionsTypeSimple); got != "zai.glm-4.7-flash" {
+		t.Errorf("simple agent model = %q, want zai.glm-4.7-flash (external override)", got)
+	}
+}
+
+func TestBedrockModelsPathMerge(t *testing.T) {
+	embedded, err := DefaultModels(&config.Config{})
+	if err != nil {
+		t.Fatalf("Failed to load embedded models: %v", err)
+	}
+
+	dir := t.TempDir()
+	path := filepath.Join(dir, "bedrock.models.yml")
+	external := "- name: zai.glm-4.7-flash\n  description: GLM 4.7 Flash on Bedrock\n  thinking: false\n  price:\n    input: 0.15\n    output: 0.6\n"
+	if err := os.WriteFile(path, []byte(external), 0o600); err != nil {
+		t.Fatalf("Failed to write external models: %v", err)
+	}
+
+	merged, err := DefaultModels(&config.Config{BedrockModels: path})
+	if err != nil {
+		t.Fatalf("Failed to load merged models: %v", err)
+	}
+
+	if len(merged) != len(embedded)+1 {
+		t.Errorf("merged models = %d, want %d (embedded + 1 external)", len(merged), len(embedded)+1)
+	}
+
+	found := false
+	for _, m := range merged {
+		if m.Name == "zai.glm-4.7-flash" {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Error("external model zai.glm-4.7-flash not found in merged catalog")
+	}
+}
+
 func TestBedrockSpecificFeatures(t *testing.T) {
-	models, err := DefaultModels()
+	models, err := DefaultModels(&config.Config{})
 	if err != nil {
 		t.Fatalf("Failed to load models: %v", err)
 	}
@@ -154,7 +220,7 @@ func TestGetUsage(t *testing.T) {
 		BedrockSecretKey: "test-key",
 	}
 
-	providerConfig, err := DefaultProviderConfig()
+	providerConfig, err := DefaultProviderConfig(&config.Config{})
 	if err != nil {
 		t.Fatalf("Failed to create provider config: %v", err)
 	}
@@ -877,7 +943,7 @@ func TestExtractToolsFromOptions(t *testing.T) {
 
 // TestAuthenticationStrategies verifies all supported authentication methods.
 func TestAuthenticationStrategies(t *testing.T) {
-	providerConfig, err := DefaultProviderConfig()
+	providerConfig, err := DefaultProviderConfig(&config.Config{})
 	if err != nil {
 		t.Fatalf("Failed to create provider config: %v", err)
 	}
@@ -1020,7 +1086,7 @@ func TestAuthenticationStrategies(t *testing.T) {
 
 // TestAuthenticationErrors verifies error handling for invalid configurations.
 func TestAuthenticationErrors(t *testing.T) {
-	providerConfig, err := DefaultProviderConfig()
+	providerConfig, err := DefaultProviderConfig(&config.Config{})
 	if err != nil {
 		t.Fatalf("Failed to create provider config: %v", err)
 	}

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"os"
 	"reflect"
 	"sync"
 
@@ -48,8 +49,17 @@ func BuildProviderConfig(configData []byte) (*pconfig.ProviderConfig, error) {
 	return providerConfig, nil
 }
 
-func DefaultProviderConfig() (*pconfig.ProviderConfig, error) {
-	configData, err := configFS.ReadFile("config.yml")
+func DefaultProviderConfig(cfg *config.Config) (*pconfig.ProviderConfig, error) {
+	var (
+		configData []byte
+		err        error
+	)
+
+	if cfg.BedrockConfig == "" {
+		configData, err = configFS.ReadFile("config.yml")
+	} else {
+		configData, err = os.ReadFile(cfg.BedrockConfig)
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -57,13 +67,53 @@ func DefaultProviderConfig() (*pconfig.ProviderConfig, error) {
 	return BuildProviderConfig(configData)
 }
 
-func DefaultModels() (pconfig.ModelsConfig, error) {
+func DefaultModels(cfg *config.Config) (pconfig.ModelsConfig, error) {
 	configData, err := configFS.ReadFile("models.yml")
 	if err != nil {
 		return nil, err
 	}
 
-	return pconfig.LoadModelsConfigData(configData)
+	models, err := pconfig.LoadModelsConfigData(configData)
+	if err != nil {
+		return nil, err
+	}
+
+	if cfg.BedrockModels == "" {
+		return models, nil
+	}
+
+	externalData, err := os.ReadFile(cfg.BedrockModels)
+	if err != nil {
+		return nil, err
+	}
+
+	externalModels, err := pconfig.LoadModelsConfigData(externalData)
+	if err != nil {
+		return nil, err
+	}
+
+	return mergeModels(models, externalModels), nil
+}
+
+// mergeModels returns base plus override; on a name collision the override entry wins.
+func mergeModels(base, override pconfig.ModelsConfig) pconfig.ModelsConfig {
+	indexByName := make(map[string]int, len(base))
+	merged := make(pconfig.ModelsConfig, len(base))
+	for i, m := range base {
+		indexByName[m.Name] = i
+		merged[i] = m
+	}
+
+	for _, m := range override {
+		if i, ok := indexByName[m.Name]; ok {
+			merged[i] = m
+		} else {
+			indexByName[m.Name] = len(merged)
+			merged = append(merged, m)
+		}
+	}
+
+	return merged
 }
 
 type bedrockProvider struct {
@@ -129,7 +179,7 @@ func New(
 
 	bclient := bedrockruntime.NewFromConfig(bcfg)
 
-	models, err := DefaultModels()
+	models, err := DefaultModels(cfg)
 	if err != nil {
 		return nil, err
 	}
