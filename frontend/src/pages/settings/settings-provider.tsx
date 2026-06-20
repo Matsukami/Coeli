@@ -1546,6 +1546,16 @@ function SettingsProvider() {
                                                             `agents.${agentKey}.price.cacheWrite` as const,
                                                             price?.cacheWrite ?? null,
                                                         );
+
+                                                        // Reset reasoning on model change: adaptive-only models lock
+                                                        // to adaptive, others clear the now-stale mode/effort.
+                                                        setValue(
+                                                            `agents.${agentKey}.reasoning.mode` as const,
+                                                            option?.reasoning?.mode === ModelReasoningMode.AdaptiveOnly
+                                                                ? ReasoningMode.Adaptive
+                                                                : null,
+                                                        );
+                                                        setValue(`agents.${agentKey}.reasoning.effort` as const, null);
                                                     }}
                                                     options={availableModels}
                                                     placeholder="Select or enter model name"
