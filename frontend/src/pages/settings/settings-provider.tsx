@@ -637,7 +637,7 @@ function ReasoningFields({
     models,
 }: {
     agentKey: string;
-    control: Control<FormData>;
+    control: Control<FormInput>;
     isLoading: boolean;
     models: ModelOption[];
 }) {
