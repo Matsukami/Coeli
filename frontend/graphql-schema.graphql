@@ -237,6 +237,10 @@ fragment providerTestResultFragment on ProviderTestResult {
 fragment modelConfigFragment on ModelConfig {
     name
     thinking
+    reasoning {
+        mode
+        efforts
+    }
     price {
         input
         output

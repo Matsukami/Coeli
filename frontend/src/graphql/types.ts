@@ -141,6 +141,12 @@ export type ModelPriceInput = {
     output: number;
 };
 
+export enum ModelReasoningMode {
+    Adaptive = 'adaptive',
+    AdaptiveOnly = 'adaptive_only',
+    Budget = 'budget',
+}
+
 export enum PromptType {
     Adviser = 'adviser',
     Assistant = 'assistant',
@@ -208,12 +214,20 @@ export enum ProviderType {
 export type ReasoningConfigInput = {
     effort?: ReasoningEffort | null | undefined;
     maxTokens?: number | null | undefined;
+    mode?: ReasoningMode | null | undefined;
 };
 
 export enum ReasoningEffort {
     High = 'high',
     Low = 'low',
+    Max = 'max',
     Medium = 'medium',
+    Xhigh = 'xhigh',
+}
+
+export enum ReasoningMode {
+    Adaptive = 'adaptive',
+    Budget = 'budget',
 }
 
 export enum ResultFormat {
@@ -482,6 +496,7 @@ export type ProviderTestResultFragmentFragment = {
 export type ModelConfigFragmentFragment = {
     name: string;
     thinking: boolean | null;
+    reasoning: { mode: ModelReasoningMode | null; efforts: Array<ReasoningEffort> | null } | null;
     price: { input: number; output: number; cacheRead: number; cacheWrite: number } | null;
 };
 
@@ -523,7 +538,7 @@ export type AgentConfigFragmentFragment = {
     repetitionPenalty: number | null;
     frequencyPenalty: number | null;
     presencePenalty: number | null;
-    reasoning: { effort: ReasoningEffort | null; maxTokens: number | null } | null;
+    reasoning: { mode: ReasoningMode | null; effort: ReasoningEffort | null; maxTokens: number | null } | null;
     price: { input: number; output: number; cacheRead: number; cacheWrite: number } | null;
 };
 
@@ -2088,6 +2103,17 @@ export const ModelConfigFragmentFragmentDoc = {
                     { kind: 'Field', name: { kind: 'Name', value: 'thinking' } },
                     {
                         kind: 'Field',
+                        name: { kind: 'Name', value: 'reasoning' },
+                        selectionSet: {
+                            kind: 'SelectionSet',
+                            selections: [
+                                { kind: 'Field', name: { kind: 'Name', value: 'mode' } },
+                                { kind: 'Field', name: { kind: 'Name', value: 'efforts' } },
+                            ],
+                        },
+                    },
+                    {
+                        kind: 'Field',
                         name: { kind: 'Name', value: 'price' },
                         selectionSet: {
                             kind: 'SelectionSet',
@@ -2130,6 +2156,7 @@ export const AgentConfigFragmentFragmentDoc = {
                         selectionSet: {
                             kind: 'SelectionSet',
                             selections: [
+                                { kind: 'Field', name: { kind: 'Name', value: 'mode' } },
                                 { kind: 'Field', name: { kind: 'Name', value: 'effort' } },
                                 { kind: 'Field', name: { kind: 'Name', value: 'maxTokens' } },
                             ],
@@ -2319,6 +2346,7 @@ export const AgentsConfigFragmentFragmentDoc = {
                         selectionSet: {
                             kind: 'SelectionSet',
                             selections: [
+                                { kind: 'Field', name: { kind: 'Name', value: 'mode' } },
                                 { kind: 'Field', name: { kind: 'Name', value: 'effort' } },
                                 { kind: 'Field', name: { kind: 'Name', value: 'maxTokens' } },
                             ],
@@ -2393,6 +2421,7 @@ export const ProviderConfigFragmentFragmentDoc = {
                         selectionSet: {
                             kind: 'SelectionSet',
                             selections: [
+                                { kind: 'Field', name: { kind: 'Name', value: 'mode' } },
                                 { kind: 'Field', name: { kind: 'Name', value: 'effort' } },
                                 { kind: 'Field', name: { kind: 'Name', value: 'maxTokens' } },
                             ],
@@ -3815,6 +3844,7 @@ export const SettingsProvidersDocument = {
                         selectionSet: {
                             kind: 'SelectionSet',
                             selections: [
+                                { kind: 'Field', name: { kind: 'Name', value: 'mode' } },
                                 { kind: 'Field', name: { kind: 'Name', value: 'effort' } },
                                 { kind: 'Field', name: { kind: 'Name', value: 'maxTokens' } },
                             ],
@@ -4010,6 +4040,17 @@ export const SettingsProvidersDocument = {
                 selections: [
                     { kind: 'Field', name: { kind: 'Name', value: 'name' } },
                     { kind: 'Field', name: { kind: 'Name', value: 'thinking' } },
+                    {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'reasoning' },
+                        selectionSet: {
+                            kind: 'SelectionSet',
+                            selections: [
+                                { kind: 'Field', name: { kind: 'Name', value: 'mode' } },
+                                { kind: 'Field', name: { kind: 'Name', value: 'efforts' } },
+                            ],
+                        },
+                    },
                     {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'price' },
@@ -8704,6 +8745,7 @@ export const CreateProviderDocument = {
                         selectionSet: {
                             kind: 'SelectionSet',
                             selections: [
+                                { kind: 'Field', name: { kind: 'Name', value: 'mode' } },
                                 { kind: 'Field', name: { kind: 'Name', value: 'effort' } },
                                 { kind: 'Field', name: { kind: 'Name', value: 'maxTokens' } },
                             ],
@@ -8975,6 +9017,7 @@ export const UpdateProviderDocument = {
                         selectionSet: {
                             kind: 'SelectionSet',
                             selections: [
+                                { kind: 'Field', name: { kind: 'Name', value: 'mode' } },
                                 { kind: 'Field', name: { kind: 'Name', value: 'effort' } },
                                 { kind: 'Field', name: { kind: 'Name', value: 'maxTokens' } },
                             ],
@@ -11202,6 +11245,7 @@ export const ProviderCreatedDocument = {
                         selectionSet: {
                             kind: 'SelectionSet',
                             selections: [
+                                { kind: 'Field', name: { kind: 'Name', value: 'mode' } },
                                 { kind: 'Field', name: { kind: 'Name', value: 'effort' } },
                                 { kind: 'Field', name: { kind: 'Name', value: 'maxTokens' } },
                             ],
@@ -11436,6 +11480,7 @@ export const ProviderUpdatedDocument = {
                         selectionSet: {
                             kind: 'SelectionSet',
                             selections: [
+                                { kind: 'Field', name: { kind: 'Name', value: 'mode' } },
                                 { kind: 'Field', name: { kind: 'Name', value: 'effort' } },
                                 { kind: 'Field', name: { kind: 'Name', value: 'maxTokens' } },
                             ],
@@ -11670,6 +11715,7 @@ export const ProviderDeletedDocument = {
                         selectionSet: {
                             kind: 'SelectionSet',
                             selections: [
+                                { kind: 'Field', name: { kind: 'Name', value: 'mode' } },
                                 { kind: 'Field', name: { kind: 'Name', value: 'effort' } },
                                 { kind: 'Field', name: { kind: 'Name', value: 'maxTokens' } },
                             ],
