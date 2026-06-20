@@ -1909,3 +1909,23 @@ func TestModelConfig_MarshalYAML(t *testing.T) {
 		})
 	}
 }
+
+// TestModelConfigReasoningCapability guards the custom ModelConfig (un)marshalers:
+// the model reasoning capability descriptor must survive YAML and JSON round-trips,
+// because providers rely on it to force adaptive thinking for adaptive-only models.
+func TestModelConfigReasoningCapability(t *testing.T) {
+	yamlData := []byte("- name: m1\n  reasoning:\n    mode: adaptive-only\n    efforts: [low, high, xhigh]\n")
+	models, err := LoadModelsConfigData(yamlData)
+	require.NoError(t, err)
+	require.Len(t, models, 1)
+	require.NotNil(t, models[0].Reasoning, "reasoning must parse from YAML")
+	assert.Equal(t, ModelReasoningAdaptiveOnly, models[0].Reasoning.Mode)
+	assert.Equal(t, []llms.ReasoningEffort{"low", "high", "xhigh"}, models[0].Reasoning.Efforts)
+
+	jsonBytes, err := json.Marshal(models[0])
+	require.NoError(t, err)
+	var back ModelConfig
+	require.NoError(t, json.Unmarshal(jsonBytes, &back))
+	require.NotNil(t, back.Reasoning, "reasoning must survive JSON round-trip")
+	assert.Equal(t, ModelReasoningAdaptiveOnly, back.Reasoning.Mode)
+}

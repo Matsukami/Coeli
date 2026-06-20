@@ -394,6 +394,18 @@ func (mc *ModelConfig) UnmarshalJSON(data []byte) error {
 		mc.Price = &price
 	}
 
+	if reasoningData, ok := raw["reasoning"]; ok && reasoningData != nil {
+		reasoningBytes, err := json.Marshal(reasoningData)
+		if err != nil {
+			return err
+		}
+		var reasoning ModelReasoningInfo
+		if err := json.Unmarshal(reasoningBytes, &reasoning); err != nil {
+			return err
+		}
+		mc.Reasoning = &reasoning
+	}
+
 	return nil
 }
 
@@ -446,6 +458,18 @@ func (mc *ModelConfig) UnmarshalYAML(value *yaml.Node) error {
 		mc.Price = &price
 	}
 
+	if reasoningData, ok := raw["reasoning"]; ok && reasoningData != nil {
+		reasoningBytes, err := yaml.Marshal(reasoningData)
+		if err != nil {
+			return err
+		}
+		var reasoning ModelReasoningInfo
+		if err := yaml.Unmarshal(reasoningBytes, &reasoning); err != nil {
+			return err
+		}
+		mc.Reasoning = &reasoning
+	}
+
 	return nil
 }
 
@@ -467,6 +491,9 @@ func (mc ModelConfig) MarshalJSON() ([]byte, error) {
 	}
 	if mc.Price != nil {
 		aux["price"] = mc.Price
+	}
+	if mc.Reasoning != nil {
+		aux["reasoning"] = mc.Reasoning
 	}
 
 	return json.Marshal(aux)
@@ -490,6 +517,9 @@ func (mc ModelConfig) MarshalYAML() (any, error) {
 	}
 	if mc.Price != nil {
 		aux["price"] = mc.Price
+	}
+	if mc.Reasoning != nil {
+		aux["reasoning"] = mc.Reasoning
 	}
 
 	return aux, nil
