@@ -661,9 +661,9 @@ function ReasoningFields({
                                 <FormItem>
                                     <FormLabel>Reasoning Mode</FormLabel>
                                     <Select
-                                        defaultValue={field.value ?? (isAdaptiveOnly ? ReasoningMode.Adaptive : 'none')}
                                         disabled={isLoading || isAdaptiveOnly}
                                         onValueChange={(value) => field.onChange(value !== 'none' ? value : null)}
+                                        value={field.value ?? (isAdaptiveOnly ? ReasoningMode.Adaptive : 'none')}
                                     >
                                         <FormControl>
                                             <SelectTrigger>
@@ -696,9 +696,9 @@ function ReasoningFields({
                             <FormItem>
                                 <FormLabel>Reasoning Effort</FormLabel>
                                 <Select
-                                    defaultValue={field.value ?? 'none'}
                                     disabled={isLoading}
                                     onValueChange={(value) => field.onChange(value !== 'none' ? value : null)}
+                                    value={field.value ?? 'none'}
                                 >
                                     <FormControl>
                                         <SelectTrigger>
@@ -1524,10 +1524,6 @@ function SettingsProvider() {
                                                     label="Model"
                                                     name={`agents.${agentKey}.model`}
                                                     onOptionSelect={(option) => {
-                                                        {
-                                                            /* Update price fields */
-                                                        }
-
                                                         const price = option?.price;
 
                                                         setValue(
