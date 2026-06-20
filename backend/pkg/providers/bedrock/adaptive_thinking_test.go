@@ -1,11 +1,16 @@
 package bedrock
 
 import (
+	"context"
 	"encoding/json"
 	"testing"
 
+	"pentagi/pkg/config"
+	"pentagi/pkg/providers/pconfig"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/vxcontrol/langchaingo/llms"
 )
 
 func TestRewriteAdaptiveThinkingBody(t *testing.T) {
@@ -69,4 +74,46 @@ func TestRewriteAdaptiveThinkingBodyStripsSamplingAndSetsDisplay(t *testing.T) {
 
 	// Opus 4.7+ reject sampling params; only maxTokens must survive in inferenceConfig.
 	assert.Equal(t, map[string]any{"maxTokens": float64(16384)}, payload["inferenceConfig"])
+}
+
+// TestBackstopForcesAdaptiveForAdaptiveOnlyModel verifies that an adaptive-only
+// model (from models.yml) forces adaptive thinking via prepareCallOptions even
+// when the agent config carries no reasoning block.
+func TestBackstopForcesAdaptiveForAdaptiveOnlyModel(t *testing.T) {
+	models, err := DefaultModels(&config.Config{})
+	require.NoError(t, err)
+
+	pc, err := BuildProviderConfig([]byte("simple:\n  model: us.anthropic.claude-opus-4-8\n  temperature: 1.0\n  n: 1\n  max_tokens: 4000\n"))
+	require.NoError(t, err)
+
+	p := &bedrockProvider{providerConfig: pc, models: models}
+
+	assert.Equal(t, pconfig.ModelReasoningAdaptiveOnly, p.modelReasoningMode(pconfig.OptionsTypeSimple))
+	assert.True(t, p.usesAdaptiveThinking(pconfig.OptionsTypeSimple),
+		"adaptive-only model must force adaptive even without an agent reasoning block")
+
+	ctx, options := p.prepareCallOptions(context.Background(), pconfig.OptionsTypeSimple, nil)
+	effort, ok := adaptiveThinkingEffortFromContext(ctx)
+	assert.True(t, ok, "effort must be installed in context for the middleware")
+	assert.Equal(t, string(llms.ReasoningHigh), effort)
+	assert.NotEmpty(t, options, "WithReasoning must be appended so langchaingo emits a thinking block")
+}
+
+func TestBackstopLeavesNonReasoningModelUntouched(t *testing.T) {
+	models, err := DefaultModels(&config.Config{})
+	require.NoError(t, err)
+
+	// gpt-oss has no adaptive-only descriptor; with no agent reasoning block it must not force adaptive.
+	pc, err := BuildProviderConfig([]byte("simple:\n  model: openai.gpt-oss-120b-1:0\n  temperature: 0.5\n  n: 1\n  max_tokens: 4000\n"))
+	require.NoError(t, err)
+
+	p := &bedrockProvider{providerConfig: pc, models: models}
+
+	assert.NotEqual(t, pconfig.ModelReasoningAdaptiveOnly, p.modelReasoningMode(pconfig.OptionsTypeSimple))
+	assert.False(t, p.usesAdaptiveThinking(pconfig.OptionsTypeSimple))
+
+	ctx, options := p.prepareCallOptions(context.Background(), pconfig.OptionsTypeSimple, nil)
+	_, ok := adaptiveThinkingEffortFromContext(ctx)
+	assert.False(t, ok, "no adaptive effort should be set for a non-adaptive model")
+	assert.Empty(t, options)
 }

@@ -1929,3 +1929,30 @@ func TestModelConfigReasoningCapability(t *testing.T) {
 	require.NotNil(t, back.Reasoning, "reasoning must survive JSON round-trip")
 	assert.Equal(t, ModelReasoningAdaptiveOnly, back.Reasoning.Mode)
 }
+
+func TestReasoningConfig_EffectiveMode(t *testing.T) {
+	tests := []struct {
+		name string
+		rc   ReasoningConfig
+		want ReasoningMode
+	}{
+		{"empty -> default", ReasoningConfig{}, ReasoningModeDefault},
+		{"explicit adaptive", ReasoningConfig{Mode: ReasoningModeAdaptive}, ReasoningModeAdaptive},
+		{"explicit budget", ReasoningConfig{Mode: ReasoningModeBudget}, ReasoningModeBudget},
+		{"effort only, no mode/tokens -> default", ReasoningConfig{Effort: llms.ReasoningHigh}, ReasoningModeDefault},
+		{"max_tokens, no effort -> budget", ReasoningConfig{MaxTokens: 5000}, ReasoningModeBudget},
+		{"max_tokens + none effort -> budget", ReasoningConfig{Effort: llms.ReasoningNone, MaxTokens: 5000}, ReasoningModeBudget},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.want, tt.rc.EffectiveMode())
+		})
+	}
+}
+
+func TestReasoningConfig_IsZero(t *testing.T) {
+	assert.True(t, ReasoningConfig{}.IsZero())
+	assert.False(t, ReasoningConfig{Mode: ReasoningModeAdaptive}.IsZero())
+	assert.False(t, ReasoningConfig{Effort: llms.ReasoningLow}.IsZero())
+	assert.False(t, ReasoningConfig{MaxTokens: 1}.IsZero())
+}

@@ -2,6 +2,13 @@ package converter
 
 import (
 	"testing"
+
+	"pentagi/pkg/graph/model"
+	"pentagi/pkg/providers/pconfig"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"github.com/vxcontrol/langchaingo/llms"
 )
 
 func TestIsAgentTool(t *testing.T) {
@@ -55,4 +62,33 @@ func TestIsAgentTool(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestConvertModelsReasoning(t *testing.T) {
+	models := pconfig.ModelsConfig{
+		{Name: "ao", Reasoning: &pconfig.ModelReasoningInfo{
+			Mode:    pconfig.ModelReasoningAdaptiveOnly,
+			Efforts: []llms.ReasoningEffort{llms.ReasoningLow, llms.ReasoningEffort("xhigh")},
+		}},
+		{Name: "ad", Reasoning: &pconfig.ModelReasoningInfo{Mode: pconfig.ModelReasoningAdaptive}},
+		{Name: "bd", Reasoning: &pconfig.ModelReasoningInfo{Mode: pconfig.ModelReasoningBudget}},
+		{Name: "none"},
+	}
+
+	byName := make(map[string]*model.ModelConfig)
+	for _, m := range ConvertModels(models) {
+		byName[m.Name] = m
+	}
+
+	require.NotNil(t, byName["ao"].Reasoning)
+	require.NotNil(t, byName["ao"].Reasoning.Mode)
+	assert.Equal(t, model.ModelReasoningModeAdaptiveOnly, *byName["ao"].Reasoning.Mode, "hyphenated pconfig value must map to the GraphQL underscore enum")
+	assert.Equal(t, []model.ReasoningEffort{model.ReasoningEffort("low"), model.ReasoningEffort("xhigh")}, byName["ao"].Reasoning.Efforts)
+
+	require.NotNil(t, byName["ad"].Reasoning.Mode)
+	assert.Equal(t, model.ModelReasoningModeAdaptive, *byName["ad"].Reasoning.Mode)
+	require.NotNil(t, byName["bd"].Reasoning.Mode)
+	assert.Equal(t, model.ModelReasoningModeBudget, *byName["bd"].Reasoning.Mode)
+
+	assert.Nil(t, byName["none"].Reasoning, "model without a reasoning descriptor maps to nil")
 }
