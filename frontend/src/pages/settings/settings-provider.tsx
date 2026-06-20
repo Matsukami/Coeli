@@ -45,8 +45,10 @@ import {
     AgentConfigType,
     CreateProviderDocument,
     DeleteProviderDocument,
+    ModelReasoningMode,
     ProviderType,
     ReasoningEffort,
+    ReasoningMode,
     SettingsProvidersDocument,
     TestAgentDocument,
     TestProviderDocument,
@@ -139,6 +141,7 @@ interface FormModelComboboxItemProps<T extends FieldValues = FieldValues> extend
 interface ModelOption {
     name: string;
     price?: null | { cacheRead: number; cacheWrite: number; input: number; output: number };
+    reasoning?: null | { efforts?: null | ReasoningEffort[]; mode?: ModelReasoningMode | null };
     thinking?: boolean | null;
 }
 
@@ -541,6 +544,7 @@ const agentConfigSchema = z
             .object({
                 effort: z.string().nullable().optional(),
                 maxTokens: optionalNumber,
+                mode: z.string().nullable().optional(),
             })
             .nullable()
             .optional(),
@@ -579,8 +583,16 @@ const getReasoningEffort = (effort: null | string | undefined): null | Reasoning
             return ReasoningEffort.Low;
         }
 
+        case 'max': {
+            return ReasoningEffort.Max;
+        }
+
         case 'medium': {
             return ReasoningEffort.Medium;
+        }
+
+        case 'xhigh': {
+            return ReasoningEffort.Xhigh;
         }
 
         default: {
@@ -588,6 +600,142 @@ const getReasoningEffort = (effort: null | string | undefined): null | Reasoning
         }
     }
 };
+
+const getReasoningMode = (mode: null | string | undefined): null | ReasoningMode => {
+    switch (mode) {
+        case ReasoningMode.Adaptive: {
+            return ReasoningMode.Adaptive;
+        }
+
+        case ReasoningMode.Budget: {
+            return ReasoningMode.Budget;
+        }
+
+        default: {
+            return null;
+        }
+    }
+};
+
+const reasoningEffortLabel: Record<ReasoningEffort, string> = {
+    [ReasoningEffort.High]: 'High',
+    [ReasoningEffort.Low]: 'Low',
+    [ReasoningEffort.Max]: 'Max',
+    [ReasoningEffort.Medium]: 'Medium',
+    [ReasoningEffort.Xhigh]: 'Extra High',
+};
+
+const defaultReasoningEfforts: ReasoningEffort[] = [ReasoningEffort.Low, ReasoningEffort.Medium, ReasoningEffort.High];
+
+// ReasoningFields renders the per-agent reasoning controls, gated by the selected
+// model's declared capability (models.yml) instead of a model-name allowlist:
+// adaptive-only models lock to adaptive, and the effort options follow the model.
+function ReasoningFields({
+    agentKey,
+    control,
+    isLoading,
+    models,
+}: {
+    agentKey: string;
+    control: Control<FormData>;
+    isLoading: boolean;
+    models: ModelOption[];
+}) {
+    const selectedModel = useWatch({ control, name: `agents.${agentKey}.model` });
+    const capability = models.find((model) => model.name === selectedModel)?.reasoning ?? null;
+    const isAdaptiveOnly = capability?.mode === ModelReasoningMode.AdaptiveOnly;
+    const supportsAdaptive = isAdaptiveOnly || capability?.mode === ModelReasoningMode.Adaptive;
+    const allowedEfforts =
+        capability?.efforts && capability.efforts.length > 0 ? capability.efforts : defaultReasoningEfforts;
+
+    return (
+        <div className="col-span-full p-px">
+            <div className="mt-6 flex flex-col gap-4">
+                <h4 className="text-sm font-medium">Reasoning Configuration</h4>
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    {supportsAdaptive && (
+                        <FormField
+                            control={control}
+                            name={`agents.${agentKey}.reasoning.mode`}
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Reasoning Mode</FormLabel>
+                                    <Select
+                                        defaultValue={field.value ?? (isAdaptiveOnly ? ReasoningMode.Adaptive : 'none')}
+                                        disabled={isLoading || isAdaptiveOnly}
+                                        onValueChange={(value) => field.onChange(value !== 'none' ? value : null)}
+                                    >
+                                        <FormControl>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Select reasoning mode" />
+                                            </SelectTrigger>
+                                        </FormControl>
+                                        <SelectContent>
+                                            {!isAdaptiveOnly && <SelectItem value="none">Not selected</SelectItem>}
+                                            <SelectItem value={ReasoningMode.Adaptive}>Adaptive</SelectItem>
+                                            {!isAdaptiveOnly && (
+                                                <SelectItem value={ReasoningMode.Budget}>Budget</SelectItem>
+                                            )}
+                                        </SelectContent>
+                                    </Select>
+                                    <FormDescription>
+                                        {isAdaptiveOnly
+                                            ? 'This model supports only adaptive thinking.'
+                                            : 'Adaptive lets the model decide how much to think; budget uses a fixed token budget.'}
+                                    </FormDescription>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    )}
+
+                    <FormField
+                        control={control}
+                        name={`agents.${agentKey}.reasoning.effort`}
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Reasoning Effort</FormLabel>
+                                <Select
+                                    defaultValue={field.value ?? 'none'}
+                                    disabled={isLoading}
+                                    onValueChange={(value) => field.onChange(value !== 'none' ? value : null)}
+                                >
+                                    <FormControl>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Select effort level (optional)" />
+                                        </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                        <SelectItem value="none">Not selected</SelectItem>
+                                        {allowedEfforts.map((effort) => (
+                                            <SelectItem
+                                                key={effort}
+                                                value={effort}
+                                            >
+                                                {reasoningEffortLabel[effort]}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+
+                    <FormInputNumberItem
+                        control={control}
+                        disabled={isLoading}
+                        label="Reasoning Max Tokens"
+                        min="1"
+                        name={`agents.${agentKey}.reasoning.maxTokens`}
+                        placeholder="1000"
+                        valueType="integer"
+                    />
+                </div>
+            </div>
+        </div>
+    );
+}
 
 const transformFormToGraphQL = (
     formData: FormInput,
@@ -623,6 +771,7 @@ const transformFormToGraphQL = (
                     ? {
                           effort: getReasoningEffort(data?.reasoning.effort),
                           maxTokens: data?.reasoning.maxTokens ?? null,
+                          mode: getReasoningMode(data?.reasoning.mode),
                       }
                     : null,
                 repetitionPenalty: data?.repetitionPenalty ?? null,
@@ -943,6 +1092,7 @@ function SettingsProvider() {
                           output: model.price.output ?? 0,
                       }
                     : null,
+                reasoning: model.reasoning ?? null,
                 thinking: model.thinking,
             }))
             .filter((model) => model.name)
@@ -1506,65 +1656,12 @@ function SettingsProvider() {
                                                 />
                                             </div>
 
-                                            {/* Reasoning Configuration */}
-                                            <div className="col-span-full p-px">
-                                                <div className="mt-6 flex flex-col gap-4">
-                                                    <h4 className="text-sm font-medium">Reasoning Configuration</h4>
-                                                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                                        {/* Reasoning Effort field */}
-                                                        <FormField
-                                                            control={control}
-                                                            name={`agents.${agentKey}.reasoning.effort`}
-                                                            render={({ field }) => (
-                                                                <FormItem>
-                                                                    <FormLabel>Reasoning Effort</FormLabel>
-                                                                    <Select
-                                                                        defaultValue={field.value ?? 'none'}
-                                                                        disabled={isLoading}
-                                                                        onValueChange={(value) =>
-                                                                            field.onChange(
-                                                                                value !== 'none' ? value : null,
-                                                                            )
-                                                                        }
-                                                                    >
-                                                                        <FormControl>
-                                                                            <SelectTrigger>
-                                                                                <SelectValue placeholder="Select effort level (optional)" />
-                                                                            </SelectTrigger>
-                                                                        </FormControl>
-                                                                        <SelectContent>
-                                                                            <SelectItem value="none">
-                                                                                Not selected
-                                                                            </SelectItem>
-                                                                            <SelectItem value={ReasoningEffort.Low}>
-                                                                                Low
-                                                                            </SelectItem>
-                                                                            <SelectItem value={ReasoningEffort.Medium}>
-                                                                                Medium
-                                                                            </SelectItem>
-                                                                            <SelectItem value={ReasoningEffort.High}>
-                                                                                High
-                                                                            </SelectItem>
-                                                                        </SelectContent>
-                                                                    </Select>
-                                                                    <FormMessage />
-                                                                </FormItem>
-                                                            )}
-                                                        />
-
-                                                        {/* Reasoning Max Tokens field */}
-                                                        <FormInputNumberItem
-                                                            control={control}
-                                                            disabled={isLoading}
-                                                            label="Reasoning Max Tokens"
-                                                            min="1"
-                                                            name={`agents.${agentKey}.reasoning.maxTokens`}
-                                                            placeholder="1000"
-                                                            valueType="integer"
-                                                        />
-                                                    </div>
-                                                </div>
-                                            </div>
+                                            <ReasoningFields
+                                                agentKey={agentKey}
+                                                control={control}
+                                                isLoading={isLoading}
+                                                models={availableModels}
+                                            />
 
                                             {/* Price Configuration */}
                                             <div className="col-span-full p-px">
