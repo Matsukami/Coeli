@@ -12,6 +12,9 @@
 - name: claude-sonnet-4-6
   description: Best combination of speed and intelligence with adaptive thinking support. Exceptional for balanced penetration testing workflows requiring both rapid execution and sophisticated reasoning. Optimized for multi-phase security assessments, intelligent vulnerability analysis, and real-time threat hunting with advanced tool coordination.
   thinking: true
+  reasoning:
+    mode: adaptive
+    efforts: [low, medium, high, max]
   release_date: 2026-02-17
   price:
     input: 3.0
@@ -22,7 +25,36 @@
 - name: claude-opus-4-6
   description: The most intelligent model for building autonomous agents and advanced coding. Unmatched capabilities in complex exploit development, sophisticated penetration testing automation, multi-stage attack simulation, and intelligent security research. Features extended and adaptive thinking for maximum reasoning depth in critical security operations.
   thinking: true
+  reasoning:
+    mode: adaptive
+    efforts: [low, medium, high, max]
   release_date: 2026-02-05
+  price:
+    input: 5.0
+    output: 25.0
+    cache_read: 0.5
+    cache_write: 6.25
+
+- name: claude-opus-4-8
+  description: Anthropic Opus 4.8 - flagship model for coding, agents, and deep reasoning in enterprise security workflows. Adaptive thinking only (manual budget thinking is rejected); sampling parameters are not supported.
+  thinking: true
+  reasoning:
+    mode: adaptive-only
+    efforts: [low, medium, high, xhigh, max]
+  release_date: 2026-05-28
+  price:
+    input: 5.0
+    output: 25.0
+    cache_read: 0.5
+    cache_write: 6.25
+
+- name: claude-opus-4-7
+  description: Anthropic Opus 4.7 for advanced software engineering, long-running agentic tasks, and rigorous security analysis. Adaptive thinking only (manual budget thinking is rejected); sampling parameters are not supported.
+  thinking: true
+  reasoning:
+    mode: adaptive-only
+    efforts: [low, medium, high, xhigh, max]
+  release_date: 2026-04-16
   price:
     input: 5.0
     output: 25.0
