@@ -20,6 +20,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockruntime"
 	smithybearer "github.com/aws/smithy-go/auth/bearer"
+	"github.com/aws/smithy-go/middleware"
 	"github.com/invopop/jsonschema"
 	"github.com/vxcontrol/langchaingo/llms"
 	"github.com/vxcontrol/langchaingo/llms/bedrock"
@@ -134,6 +135,9 @@ func New(
 ) (provider.Provider, error) {
 	opts := []func(*bconfig.LoadOptions) error{
 		bconfig.WithRegion(cfg.BedrockRegion),
+		bconfig.WithAPIOptions([]func(*middleware.Stack) error{
+			addAdaptiveThinkingMiddleware,
+		}),
 	}
 
 	// Choose authentication strategy based on configuration
@@ -245,9 +249,10 @@ func (p *bedrockProvider) Call(
 	opt pconfig.ProviderOptionsType,
 	prompt string,
 ) (string, error) {
+	ctx, options := p.prepareCallOptions(ctx, opt, p.providerConfig.GetOptionsForType(opt))
+
 	return provider.WrapGenerateFromSinglePrompt(
-		ctx, p, opt, p.llm, prompt,
-		p.providerConfig.GetOptionsForType(opt)...,
+		ctx, p, opt, p.llm, prompt, options...,
 	)
 }
 
@@ -273,10 +278,11 @@ func (p *bedrockProvider) CallEx(
 	// Clean tools from $schema field
 	tools = cleanToolSchemas(tools)
 
-	// Build final options: streaming + config + cleaned tools LAST (to override any dirty tools from config)
+	// Put cleaned tools after config to override any dirty tools restored from config.
 	options := []llms.CallOption{llms.WithStreamingFunc(streamCb)}
 	options = append(options, configOptions...)
 	options = append(options, llms.WithTools(tools))
+	ctx, options = p.prepareCallOptions(ctx, opt, options)
 
 	return provider.WrapGenerateContent(ctx, p, opt, p.llm.GenerateContent, chain, options...)
 }
@@ -299,8 +305,9 @@ func (p *bedrockProvider) CallWithTools(
 
 	configOptions := p.providerConfig.GetOptionsForType(opt)
 
-	// Build final options: config + streaming + cleaned tools LAST (to override any dirty tools from config)
+	// Put cleaned tools after config to override any dirty tools restored from config.
 	options := append(configOptions, llms.WithStreamingFunc(streamCb), llms.WithTools(tools))
+	ctx, options = p.prepareCallOptions(ctx, opt, options)
 
 	return provider.WrapGenerateContent(ctx, p, opt, p.llm.GenerateContent, chain, options...)
 }
