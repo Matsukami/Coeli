@@ -43,7 +43,23 @@
 - name: us.anthropic.claude-opus-4-7
   description: Most capable Opus model for advanced software engineering, long-running agentic tasks, professional work, and rigorous security analysis with adaptive thinking
   thinking: true
+  reasoning:
+    mode: adaptive-only
+    efforts: [low, medium, high, xhigh, max]
   release_date: 2026-04-16
+  price:
+    input: 5.0
+    output: 25.0
+    cache_read: 0.5
+    cache_write: 6.25
+
+- name: us.anthropic.claude-opus-4-8
+  description: Anthropic Opus 4.8 - flagship model for coding, agents, and deep reasoning in enterprise security workflows, with adaptive thinking only
+  thinking: true
+  reasoning:
+    mode: adaptive-only
+    efforts: [low, medium, high, xhigh, max]
+  release_date: 2026-05-28
   price:
     input: 5.0
     output: 25.0
@@ -54,6 +70,9 @@
 - name: us.anthropic.claude-opus-4-6-v1
   description: World's best model for coding, enterprise agents, and professional work with industry-leading reliability for agentic workflows and security analysis
   thinking: true
+  reasoning:
+    mode: adaptive
+    efforts: [low, medium, high, max]
   release_date: 2026-02-05
   price:
     input: 5.0
@@ -64,6 +83,9 @@
 - name: us.anthropic.claude-sonnet-4-6
   description: Frontier intelligence at scale built for coding, agents, and enterprise workflows with sustained reasoning and adaptive decision-making
   thinking: true
+  reasoning:
+    mode: adaptive
+    efforts: [low, medium, high, max]
   release_date: 2026-02-17
   price:
     input: 3.0

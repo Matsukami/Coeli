@@ -169,11 +169,31 @@ var AllAgentTypes = []ProviderOptionsType{
 }
 
 type ModelConfig struct {
-	Name        string     `json:"name,omitempty" yaml:"name,omitempty"`
-	Description *string    `json:"description,omitempty" yaml:"description,omitempty"`
-	ReleaseDate *time.Time `json:"release_date,omitempty" yaml:"release_date,omitempty"`
-	Thinking    *bool      `json:"thinking,omitempty" yaml:"thinking,omitempty"`
-	Price       *PriceInfo `json:"price,omitempty" yaml:"price,omitempty"`
+	Name        string              `json:"name,omitempty" yaml:"name,omitempty"`
+	Description *string             `json:"description,omitempty" yaml:"description,omitempty"`
+	ReleaseDate *time.Time          `json:"release_date,omitempty" yaml:"release_date,omitempty"`
+	Thinking    *bool               `json:"thinking,omitempty" yaml:"thinking,omitempty"`
+	Reasoning   *ModelReasoningInfo `json:"reasoning,omitempty" yaml:"reasoning,omitempty"`
+	Price       *PriceInfo          `json:"price,omitempty" yaml:"price,omitempty"`
+}
+
+// ModelReasoningMode declares a model's reasoning capability. It is distinct from
+// the per-agent ReasoningConfig.Mode (the chosen mode): it is the source of truth
+// that lets a provider force the correct mode for models that require it.
+type ModelReasoningMode string
+
+const (
+	ModelReasoningNone         ModelReasoningMode = ""              // no extended thinking
+	ModelReasoningBudget       ModelReasoningMode = "budget"        // budget thinking only (older Claude)
+	ModelReasoningAdaptive     ModelReasoningMode = "adaptive"      // budget or adaptive (Opus 4.6, Sonnet 4.6)
+	ModelReasoningAdaptiveOnly ModelReasoningMode = "adaptive-only" // adaptive required; budget returns 400 (Opus 4.7/4.8)
+)
+
+// ModelReasoningInfo describes how a model supports extended thinking, so the
+// provider and UI can pick a valid mode/effort without hardcoding model names.
+type ModelReasoningInfo struct {
+	Mode    ModelReasoningMode     `json:"mode,omitempty" yaml:"mode,omitempty"`
+	Efforts []llms.ReasoningEffort `json:"efforts,omitempty" yaml:"efforts,omitempty"`
 }
 
 type ModelsConfig []ModelConfig

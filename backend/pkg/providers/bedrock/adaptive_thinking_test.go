@@ -44,3 +44,29 @@ func TestRewriteAdaptiveThinkingBodyWithoutThinking(t *testing.T) {
 	require.NoError(t, err)
 	assert.JSONEq(t, string(body), string(updatedBody))
 }
+
+func TestRewriteAdaptiveThinkingBodyStripsSamplingAndSetsDisplay(t *testing.T) {
+	body := []byte(`{
+		"additionalModelRequestFields": {
+			"thinking": {"type": "enabled", "budget_tokens": 4096}
+		},
+		"inferenceConfig": {
+			"maxTokens": 16384,
+			"temperature": 1.0,
+			"topP": 0.95
+		}
+	}`)
+
+	updatedBody, err := rewriteAdaptiveThinkingBody(body, "high")
+	require.NoError(t, err)
+
+	var payload map[string]any
+	require.NoError(t, json.Unmarshal(updatedBody, &payload))
+
+	thinking := payload["additionalModelRequestFields"].(map[string]any)["thinking"].(map[string]any)
+	assert.Equal(t, "adaptive", thinking["type"])
+	assert.Equal(t, "summarized", thinking["display"])
+
+	// Opus 4.7+ reject sampling params; only maxTokens must survive in inferenceConfig.
+	assert.Equal(t, map[string]any{"maxTokens": float64(16384)}, payload["inferenceConfig"])
+}
