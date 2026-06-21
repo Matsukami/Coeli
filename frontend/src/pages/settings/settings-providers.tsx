@@ -14,6 +14,7 @@ import DeepSeek from '@/components/icons/deepseek';
 import Gemini from '@/components/icons/gemini';
 import GLM from '@/components/icons/glm';
 import Kimi from '@/components/icons/kimi';
+import MiniMax from '@/components/icons/minimax';
 import Ollama from '@/components/icons/ollama';
 import OpenAi from '@/components/icons/open-ai';
 import Qwen from '@/components/icons/qwen';
@@ -45,6 +46,7 @@ const providerIcons: Record<ProviderType, React.ComponentType<React.SVGProps<SVG
     [ProviderType.Gemini]: Gemini,
     [ProviderType.Glm]: GLM,
     [ProviderType.Kimi]: Kimi,
+    [ProviderType.Minimax]: MiniMax,
     [ProviderType.Ollama]: Ollama,
     [ProviderType.Openai]: OpenAi,
     [ProviderType.Qwen]: Qwen,
@@ -58,6 +60,7 @@ const providerTypes = [
     { label: 'Gemini', type: ProviderType.Gemini },
     { label: 'GLM', type: ProviderType.Glm },
     { label: 'Kimi', type: ProviderType.Kimi },
+    { label: 'MiniMax', type: ProviderType.Minimax },
     { label: 'Ollama', type: ProviderType.Ollama },
     { label: 'OpenAI', type: ProviderType.Openai },
     { label: 'Qwen', type: ProviderType.Qwen },

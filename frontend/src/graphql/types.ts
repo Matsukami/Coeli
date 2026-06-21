@@ -206,6 +206,7 @@ export enum ProviderType {
     Gemini = 'gemini',
     Glm = 'glm',
     Kimi = 'kimi',
+    Minimax = 'minimax',
     Ollama = 'ollama',
     Openai = 'openai',
     Qwen = 'qwen',
@@ -716,6 +717,7 @@ export type SettingsProvidersQuery = {
             glm: boolean;
             kimi: boolean;
             qwen: boolean;
+            minimax: boolean;
         };
         default: {
             openai: ProviderConfigFragmentFragment;
@@ -728,6 +730,7 @@ export type SettingsProvidersQuery = {
             glm: ProviderConfigFragmentFragment | null;
             kimi: ProviderConfigFragmentFragment | null;
             qwen: ProviderConfigFragmentFragment | null;
+            minimax: ProviderConfigFragmentFragment | null;
         };
         userDefined: Array<ProviderConfigFragmentFragment> | null;
         models: {
@@ -741,6 +744,7 @@ export type SettingsProvidersQuery = {
             glm: Array<ModelConfigFragmentFragment> | null;
             kimi: Array<ModelConfigFragmentFragment> | null;
             qwen: Array<ModelConfigFragmentFragment> | null;
+            minimax: Array<ModelConfigFragmentFragment> | null;
         };
     };
 };
@@ -3521,6 +3525,7 @@ export const SettingsProvidersDocument = {
                                             { kind: 'Field', name: { kind: 'Name', value: 'glm' } },
                                             { kind: 'Field', name: { kind: 'Name', value: 'kimi' } },
                                             { kind: 'Field', name: { kind: 'Name', value: 'qwen' } },
+                                            { kind: 'Field', name: { kind: 'Name', value: 'minimax' } },
                                         ],
                                     },
                                 },
@@ -3650,6 +3655,19 @@ export const SettingsProvidersDocument = {
                                             {
                                                 kind: 'Field',
                                                 name: { kind: 'Name', value: 'qwen' },
+                                                selectionSet: {
+                                                    kind: 'SelectionSet',
+                                                    selections: [
+                                                        {
+                                                            kind: 'FragmentSpread',
+                                                            name: { kind: 'Name', value: 'providerConfigFragment' },
+                                                        },
+                                                    ],
+                                                },
+                                            },
+                                            {
+                                                kind: 'Field',
+                                                name: { kind: 'Name', value: 'minimax' },
                                                 selectionSet: {
                                                     kind: 'SelectionSet',
                                                     selections: [
@@ -3802,6 +3820,19 @@ export const SettingsProvidersDocument = {
                                             {
                                                 kind: 'Field',
                                                 name: { kind: 'Name', value: 'qwen' },
+                                                selectionSet: {
+                                                    kind: 'SelectionSet',
+                                                    selections: [
+                                                        {
+                                                            kind: 'FragmentSpread',
+                                                            name: { kind: 'Name', value: 'modelConfigFragment' },
+                                                        },
+                                                    ],
+                                                },
+                                            },
+                                            {
+                                                kind: 'Field',
+                                                name: { kind: 'Name', value: 'minimax' },
                                                 selectionSet: {
                                                     kind: 'SelectionSet',
                                                     selections: [

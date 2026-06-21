@@ -560,6 +560,7 @@ query settingsProviders {
             glm
             kimi
             qwen
+            minimax
         }
         default {
             openai {
@@ -590,6 +591,9 @@ query settingsProviders {
                 ...providerConfigFragment
             }
             qwen {
+                ...providerConfigFragment
+            }
+            minimax {
                 ...providerConfigFragment
             }
         }
@@ -625,6 +629,9 @@ query settingsProviders {
                 ...modelConfigFragment
             }
             qwen {
+                ...modelConfigFragment
+            }
+            minimax {
                 ...modelConfigFragment
             }
         }

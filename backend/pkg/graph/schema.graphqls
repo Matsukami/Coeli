@@ -21,6 +21,7 @@ enum ProviderType {
   glm
   kimi
   qwen
+  minimax
 }
 
 # Reasoning effort levels for advanced AI models
@@ -725,6 +726,7 @@ type ProvidersModelsList {
   glm: [ModelConfig!]
   kimi: [ModelConfig!]
   qwen: [ModelConfig!]
+  minimax: [ModelConfig!]
 }
 
 # Provider availability status
@@ -739,6 +741,7 @@ type ProvidersReadinessStatus {
   glm: Boolean!
   kimi: Boolean!
   qwen: Boolean!
+  minimax: Boolean!
 }
 
 # Default provider configurations
@@ -753,6 +756,7 @@ type DefaultProvidersConfig {
   glm: ProviderConfig
   kimi: ProviderConfig
   qwen: ProviderConfig
+  minimax: ProviderConfig
 }
 
 # Complete providers configuration

@@ -21,6 +21,7 @@ import (
 	"pentagi/pkg/providers/gemini"
 	"pentagi/pkg/providers/glm"
 	"pentagi/pkg/providers/kimi"
+	"pentagi/pkg/providers/minimax"
 	"pentagi/pkg/providers/openai"
 	"pentagi/pkg/providers/pconfig"
 	"pentagi/pkg/providers/provider"
@@ -2101,6 +2102,11 @@ func (r *queryResolver) SettingsProviders(ctx context.Context) (*model.Providers
 			if models, err := qwen.DefaultModels(); err == nil {
 				config.Models.Qwen = converter.ConvertModels(models)
 			}
+		case provider.ProviderMiniMax:
+			config.Default.Minimax = mpcfg
+			if models, err := minimax.DefaultModels(); err == nil {
+				config.Models.Minimax = converter.ConvertModels(models)
+			}
 		}
 	}
 
@@ -2133,6 +2139,8 @@ func (r *queryResolver) SettingsProviders(ctx context.Context) (*model.Providers
 			config.Enabled.Kimi = true
 		case provider.ProviderQwen:
 			config.Enabled.Qwen = true
+		case provider.ProviderMiniMax:
+			config.Enabled.Minimax = true
 		}
 	}
 

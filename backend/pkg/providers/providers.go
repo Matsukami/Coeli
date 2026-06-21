@@ -27,6 +27,7 @@ import (
 	"pentagi/pkg/providers/gemini"
 	"pentagi/pkg/providers/glm"
 	"pentagi/pkg/providers/kimi"
+	"pentagi/pkg/providers/minimax"
 	"pentagi/pkg/providers/ollama"
 	"pentagi/pkg/providers/openai"
 	"pentagi/pkg/providers/pconfig"
@@ -235,6 +236,12 @@ func NewProviderController(
 		defaultConfigs[provider.ProviderQwen] = config
 	}
 
+	if config, err := minimax.DefaultProviderConfig(); err != nil {
+		return nil, fmt.Errorf("failed to create minimax provider config: %w", err)
+	} else {
+		defaultConfigs[provider.ProviderMiniMax] = config
+	}
+
 	if cfg.OpenAIKey != "" {
 		p, err := openai.New(cfg, provider.DefaultProviderNameOpenAI, defaultConfigs[provider.ProviderOpenAI])
 		if err != nil {
@@ -326,6 +333,15 @@ func NewProviderController(
 		}
 
 		providers[provider.DefaultProviderNameQwen] = p
+	}
+
+	if cfg.MiniMaxAPIKey != "" {
+		p, err := minimax.New(cfg, provider.DefaultProviderNameMiniMax, defaultConfigs[provider.ProviderMiniMax])
+		if err != nil {
+			return nil, fmt.Errorf("failed to create minimax provider: %w", err)
+		}
+
+		providers[provider.DefaultProviderNameMiniMax] = p
 	}
 
 	summarizerAgent := csum.NewSummarizer(csum.SummarizerConfig{
@@ -734,6 +750,8 @@ func (pc *providerController) GetProvider(
 		return pc.Providers.Get(provider.DefaultProviderNameKimi)
 	case provider.DefaultProviderNameQwen:
 		return pc.Providers.Get(provider.DefaultProviderNameQwen)
+	case provider.DefaultProviderNameMiniMax:
+		return pc.Providers.Get(provider.DefaultProviderNameMiniMax)
 	}
 
 	return nil, fmt.Errorf("provider '%s' not found", prvname)
@@ -840,6 +858,12 @@ func (pc *providerController) NewProvider(prv database.Provider) (provider.Provi
 			return nil, fmt.Errorf("failed to build qwen provider config: %w", err)
 		}
 		return qwen.New(pc.cfg, providerName, qwenConfig)
+	case provider.ProviderMiniMax:
+		minimaxConfig, err := minimax.BuildProviderConfig(prv.Config)
+		if err != nil {
+			return nil, fmt.Errorf("failed to build minimax provider config: %w", err)
+		}
+		return minimax.New(pc.cfg, providerName, minimaxConfig)
 	default:
 		return nil, fmt.Errorf("unknown provider type: %s", prv.Type)
 	}
@@ -1178,6 +1202,8 @@ func (pc *providerController) buildProviderFromConfig(
 		return kimi.New(pc.cfg, prvname, config)
 	case provider.ProviderQwen:
 		return qwen.New(pc.cfg, prvname, config)
+	case provider.ProviderMiniMax:
+		return minimax.New(pc.cfg, prvname, config)
 	default:
 		return nil, fmt.Errorf("unknown provider type: %s", prvtype)
 	}
