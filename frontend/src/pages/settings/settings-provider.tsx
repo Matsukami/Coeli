@@ -21,6 +21,7 @@ import {
     type FieldValues,
     useController,
     useForm,
+    type UseFormSetValue,
     useFormState,
     useWatch,
 } from 'react-hook-form';
@@ -459,6 +460,7 @@ function FormModelComboboxItem<T extends FieldValues = FieldValues>({
                                                     className="mt-2"
                                                     onClick={() => {
                                                         field.onChange(search);
+                                                        onOptionSelect?.({ name: search });
                                                         setIsOpen(false);
                                                         setSearch('');
                                                     }}
@@ -553,6 +555,14 @@ const agentConfigSchema = z
         topK: optionalNumber,
         topP: optionalNumber,
     })
+    .refine((data) => data.minLength == null || data.maxLength == null || data.minLength <= data.maxLength, {
+        message: 'Min length must not exceed max length',
+        path: ['minLength'],
+    })
+    .refine((data) => data.reasoning?.maxTokens == null || data.reasoning.maxTokens <= 32000, {
+        message: 'Maximum 32000 tokens',
+        path: ['reasoning', 'maxTokens'],
+    })
     .optional();
 
 const formSchema = z.object({
@@ -635,11 +645,13 @@ function ReasoningFields({
     control,
     isLoading,
     models,
+    setValue,
 }: {
     agentKey: string;
     control: Control<FormInput>;
     isLoading: boolean;
     models: ModelOption[];
+    setValue: UseFormSetValue<FormInput>;
 }) {
     const selectedModel = useWatch({ control, name: `agents.${agentKey}.model` });
     const capability = models.find((model) => model.name === selectedModel)?.reasoning ?? null;
@@ -697,7 +709,22 @@ function ReasoningFields({
                                 <FormLabel>Reasoning Effort</FormLabel>
                                 <Select
                                     disabled={isLoading}
-                                    onValueChange={(value) => field.onChange(value !== 'none' ? value : null)}
+                                    onValueChange={(value) => {
+                                        const next = value !== 'none' ? value : null;
+                                        field.onChange(next);
+
+                                        // max/xhigh are adaptive-thinking effort levels; selecting one
+                                        // implies adaptive mode so the backend doesn't drop the reasoning.
+                                        if (
+                                            supportsAdaptive &&
+                                            (next === ReasoningEffort.Xhigh || next === ReasoningEffort.Max)
+                                        ) {
+                                            setValue(
+                                                `agents.${agentKey}.reasoning.mode` as const,
+                                                ReasoningMode.Adaptive,
+                                            );
+                                        }
+                                    }}
                                     value={field.value ?? 'none'}
                                 >
                                     <FormControl>
@@ -1671,6 +1698,7 @@ function SettingsProvider() {
                                                 control={control}
                                                 isLoading={isLoading}
                                                 models={availableModels}
+                                                setValue={setValue}
                                             />
 
                                             {/* Price Configuration */}
