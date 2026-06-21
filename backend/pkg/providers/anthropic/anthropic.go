@@ -155,7 +155,9 @@ func (p *anthropicProvider) Call(
 	opt pconfig.ProviderOptionsType,
 	prompt string,
 ) (string, error) {
-	ctx, options := p.prepareCallOptions(ctx, opt, p.providerConfig.GetOptionsForType(opt))
+	ctx, options := p.providerConfig.PrepareAdaptiveCallOptions(
+		ctx, p.models, opt, p.providerConfig.GetOptionsForType(opt),
+	)
 	return provider.WrapGenerateFromSinglePrompt(
 		ctx, p, opt, p.llm, prompt,
 		options...,
@@ -168,7 +170,7 @@ func (p *anthropicProvider) CallEx(
 	chain []llms.MessageContent,
 	streamCb streaming.Callback,
 ) (*llms.ContentResponse, error) {
-	ctx, options := p.prepareCallOptions(ctx, opt, append([]llms.CallOption{
+	ctx, options := p.providerConfig.PrepareAdaptiveCallOptions(ctx, p.models, opt, append([]llms.CallOption{
 		llms.WithStreamingFunc(streamCb),
 	}, p.providerConfig.GetOptionsForType(opt)...))
 	return provider.WrapGenerateContent(
@@ -184,7 +186,7 @@ func (p *anthropicProvider) CallWithTools(
 	tools []llms.Tool,
 	streamCb streaming.Callback,
 ) (*llms.ContentResponse, error) {
-	ctx, options := p.prepareCallOptions(ctx, opt, append([]llms.CallOption{
+	ctx, options := p.providerConfig.PrepareAdaptiveCallOptions(ctx, p.models, opt, append([]llms.CallOption{
 		llms.WithTools(tools),
 		llms.WithStreamingFunc(streamCb),
 	}, p.providerConfig.GetOptionsForType(opt)...))

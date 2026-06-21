@@ -249,7 +249,9 @@ func (p *bedrockProvider) Call(
 	opt pconfig.ProviderOptionsType,
 	prompt string,
 ) (string, error) {
-	ctx, options := p.prepareCallOptions(ctx, opt, p.providerConfig.GetOptionsForType(opt))
+	ctx, options := p.providerConfig.PrepareAdaptiveCallOptions(
+		ctx, p.models, opt, p.providerConfig.GetOptionsForType(opt),
+	)
 
 	return provider.WrapGenerateFromSinglePrompt(
 		ctx, p, opt, p.llm, prompt, options...,
@@ -282,7 +284,7 @@ func (p *bedrockProvider) CallEx(
 	options := []llms.CallOption{llms.WithStreamingFunc(streamCb)}
 	options = append(options, configOptions...)
 	options = append(options, llms.WithTools(tools))
-	ctx, options = p.prepareCallOptions(ctx, opt, options)
+	ctx, options = p.providerConfig.PrepareAdaptiveCallOptions(ctx, p.models, opt, options)
 
 	return provider.WrapGenerateContent(ctx, p, opt, p.llm.GenerateContent, chain, options...)
 }
@@ -307,7 +309,7 @@ func (p *bedrockProvider) CallWithTools(
 
 	// Put cleaned tools after config to override any dirty tools restored from config.
 	options := append(configOptions, llms.WithStreamingFunc(streamCb), llms.WithTools(tools))
-	ctx, options = p.prepareCallOptions(ctx, opt, options)
+	ctx, options = p.providerConfig.PrepareAdaptiveCallOptions(ctx, p.models, opt, options)
 
 	return provider.WrapGenerateContent(ctx, p, opt, p.llm.GenerateContent, chain, options...)
 }

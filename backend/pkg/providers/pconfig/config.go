@@ -1,6 +1,7 @@
 package pconfig
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -915,56 +916,135 @@ func (pc *ProviderConfig) GetOptionsForType(optType ProviderOptionsType) []llms.
 	return pc.defaultOptions
 }
 
-func (pc *ProviderConfig) GetPriceInfoForType(optType ProviderOptionsType) *PriceInfo {
+// AgentConfigForType returns the agent config for opt, applying the
+// SimpleJSON→Simple and Assistant→PrimaryAgent fallbacks. Returns nil for an
+// unset slot or unknown type.
+func (pc *ProviderConfig) AgentConfigForType(optType ProviderOptionsType) *AgentConfig {
 	if pc == nil {
 		return nil
 	}
 
-	var agentConfig *AgentConfig
 	switch optType {
 	case OptionsTypeSimple:
-		agentConfig = pc.Simple
+		return pc.Simple
 	case OptionsTypeSimpleJSON:
 		if pc.SimpleJSON != nil {
-			agentConfig = pc.SimpleJSON
-		} else {
-			agentConfig = pc.Simple
+			return pc.SimpleJSON
 		}
+		return pc.Simple
 	case OptionsTypePrimaryAgent:
-		agentConfig = pc.PrimaryAgent
+		return pc.PrimaryAgent
 	case OptionsTypeAssistant:
 		if pc.Assistant != nil {
-			agentConfig = pc.Assistant
-		} else {
-			agentConfig = pc.PrimaryAgent
+			return pc.Assistant
 		}
+		return pc.PrimaryAgent
 	case OptionsTypeGenerator:
-		agentConfig = pc.Generator
+		return pc.Generator
 	case OptionsTypeRefiner:
-		agentConfig = pc.Refiner
+		return pc.Refiner
 	case OptionsTypeAdviser:
-		agentConfig = pc.Adviser
+		return pc.Adviser
 	case OptionsTypeReflector:
-		agentConfig = pc.Reflector
+		return pc.Reflector
 	case OptionsTypeSearcher:
-		agentConfig = pc.Searcher
+		return pc.Searcher
 	case OptionsTypeEnricher:
-		agentConfig = pc.Enricher
+		return pc.Enricher
 	case OptionsTypeCoder:
-		agentConfig = pc.Coder
+		return pc.Coder
 	case OptionsTypeInstaller:
-		agentConfig = pc.Installer
+		return pc.Installer
 	case OptionsTypePentester:
-		agentConfig = pc.Pentester
+		return pc.Pentester
 	default:
 		return nil
 	}
+}
 
-	if agentConfig != nil && agentConfig.Price != nil {
+func (pc *ProviderConfig) GetPriceInfoForType(optType ProviderOptionsType) *PriceInfo {
+	if agentConfig := pc.AgentConfigForType(optType); agentConfig != nil {
 		return agentConfig.Price
 	}
 
 	return nil
+}
+
+// Adaptive thinking is requested as a budget thinking block (via WithReasoning),
+// which the bedrock/anthropic transport interceptors rewrite to
+// thinking.type=adaptive + output_config.effort. The chosen effort travels to the
+// interceptor on the request context.
+type adaptiveEffortContextKey struct{}
+
+// WithAdaptiveEffort threads the adaptive-thinking effort onto ctx. Empty effort
+// defaults to "high" (the API rejects an empty effort).
+func WithAdaptiveEffort(ctx context.Context, effort string) context.Context {
+	if effort == "" {
+		effort = string(llms.ReasoningHigh)
+	}
+
+	return context.WithValue(ctx, adaptiveEffortContextKey{}, effort)
+}
+
+func AdaptiveEffortFromContext(ctx context.Context) (string, bool) {
+	effort, ok := ctx.Value(adaptiveEffortContextKey{}).(string)
+	return effort, ok && effort != ""
+}
+
+func (pc *ProviderConfig) modelReasoningMode(models ModelsConfig, opt ProviderOptionsType) ModelReasoningMode {
+	agentConfig := pc.AgentConfigForType(opt)
+	if agentConfig == nil || agentConfig.Model == "" {
+		return ModelReasoningNone
+	}
+
+	for _, m := range models {
+		if m.Name == agentConfig.Model && m.Reasoning != nil {
+			return m.Reasoning.Mode
+		}
+	}
+
+	return ModelReasoningNone
+}
+
+func (pc *ProviderConfig) reasoningConfigForType(opt ProviderOptionsType) (ReasoningConfig, bool) {
+	agentConfig := pc.AgentConfigForType(opt)
+	if agentConfig == nil || agentConfig.Reasoning.IsZero() {
+		return ReasoningConfig{}, false
+	}
+
+	return agentConfig.Reasoning, true
+}
+
+// UsesAdaptiveThinking reports whether this agent's call must use adaptive
+// thinking: the agent selected adaptive mode, or the model only supports adaptive
+// (e.g. Opus 4.7/4.8, where budget thinking returns a 400).
+func (pc *ProviderConfig) UsesAdaptiveThinking(models ModelsConfig, opt ProviderOptionsType) bool {
+	if pc.modelReasoningMode(models, opt) == ModelReasoningAdaptiveOnly {
+		return true
+	}
+
+	reasoning, ok := pc.reasoningConfigForType(opt)
+	return ok && reasoning.EffectiveMode() == ReasoningModeAdaptive
+}
+
+// PrepareAdaptiveCallOptions threads the effort onto ctx and appends the budget
+// thinking CallOption that the interceptor rewrites to adaptive form. No-op for
+// non-adaptive calls.
+func (pc *ProviderConfig) PrepareAdaptiveCallOptions(
+	ctx context.Context,
+	models ModelsConfig,
+	opt ProviderOptionsType,
+	options []llms.CallOption,
+) (context.Context, []llms.CallOption) {
+	if !pc.UsesAdaptiveThinking(models, opt) {
+		return ctx, options
+	}
+
+	reasoning, _ := pc.reasoningConfigForType(opt)
+	ctx = WithAdaptiveEffort(ctx, string(reasoning.Effort))
+	options = append(options, llms.WithReasoning(llms.ReasoningHigh, 0))
+
+	return ctx, options
 }
 
 func (pc *ProviderConfig) BuildOptionsMap() map[ProviderOptionsType][]llms.CallOption {

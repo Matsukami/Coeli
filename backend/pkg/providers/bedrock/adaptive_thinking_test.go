@@ -77,8 +77,8 @@ func TestRewriteAdaptiveThinkingBodyStripsSamplingAndSetsDisplay(t *testing.T) {
 }
 
 // TestBackstopForcesAdaptiveForAdaptiveOnlyModel verifies that an adaptive-only
-// model (from models.yml) forces adaptive thinking via prepareCallOptions even
-// when the agent config carries no reasoning block.
+// model (from models.yml) forces adaptive thinking via PrepareAdaptiveCallOptions
+// even when the agent config carries no reasoning block.
 func TestBackstopForcesAdaptiveForAdaptiveOnlyModel(t *testing.T) {
 	models, err := DefaultModels(&config.Config{})
 	require.NoError(t, err)
@@ -86,14 +86,11 @@ func TestBackstopForcesAdaptiveForAdaptiveOnlyModel(t *testing.T) {
 	pc, err := BuildProviderConfig([]byte("simple:\n  model: us.anthropic.claude-opus-4-8\n  temperature: 1.0\n  n: 1\n  max_tokens: 4000\n"))
 	require.NoError(t, err)
 
-	p := &bedrockProvider{providerConfig: pc, models: models}
-
-	assert.Equal(t, pconfig.ModelReasoningAdaptiveOnly, p.modelReasoningMode(pconfig.OptionsTypeSimple))
-	assert.True(t, p.usesAdaptiveThinking(pconfig.OptionsTypeSimple),
+	assert.True(t, pc.UsesAdaptiveThinking(models, pconfig.OptionsTypeSimple),
 		"adaptive-only model must force adaptive even without an agent reasoning block")
 
-	ctx, options := p.prepareCallOptions(context.Background(), pconfig.OptionsTypeSimple, nil)
-	effort, ok := adaptiveThinkingEffortFromContext(ctx)
+	ctx, options := pc.PrepareAdaptiveCallOptions(context.Background(), models, pconfig.OptionsTypeSimple, nil)
+	effort, ok := pconfig.AdaptiveEffortFromContext(ctx)
 	assert.True(t, ok, "effort must be installed in context for the middleware")
 	assert.Equal(t, string(llms.ReasoningHigh), effort)
 	assert.NotEmpty(t, options, "WithReasoning must be appended so langchaingo emits a thinking block")
@@ -107,13 +104,10 @@ func TestBackstopLeavesNonReasoningModelUntouched(t *testing.T) {
 	pc, err := BuildProviderConfig([]byte("simple:\n  model: openai.gpt-oss-120b-1:0\n  temperature: 0.5\n  n: 1\n  max_tokens: 4000\n"))
 	require.NoError(t, err)
 
-	p := &bedrockProvider{providerConfig: pc, models: models}
+	assert.False(t, pc.UsesAdaptiveThinking(models, pconfig.OptionsTypeSimple))
 
-	assert.NotEqual(t, pconfig.ModelReasoningAdaptiveOnly, p.modelReasoningMode(pconfig.OptionsTypeSimple))
-	assert.False(t, p.usesAdaptiveThinking(pconfig.OptionsTypeSimple))
-
-	ctx, options := p.prepareCallOptions(context.Background(), pconfig.OptionsTypeSimple, nil)
-	_, ok := adaptiveThinkingEffortFromContext(ctx)
+	ctx, options := pc.PrepareAdaptiveCallOptions(context.Background(), models, pconfig.OptionsTypeSimple, nil)
+	_, ok := pconfig.AdaptiveEffortFromContext(ctx)
 	assert.False(t, ok, "no adaptive effort should be set for a non-adaptive model")
 	assert.Empty(t, options)
 }
