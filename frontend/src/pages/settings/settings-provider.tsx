@@ -6,10 +6,12 @@ import {
     CheckCircle,
     ChevronsUpDown,
     Clock,
-    Cpu,
+    Ellipsis,
+    GripVertical,
     Lightbulb,
     Loader2,
     Play,
+    Plug,
     Save,
     Trash2,
     XCircle,
@@ -26,20 +28,31 @@ import {
     useWatch,
 } from 'react-hook-form';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { toast } from 'sonner';
 import { z } from 'zod';
 
 import type { AgentConfigInput, AgentsConfigInput, ProviderConfigFragmentFragment } from '@/graphql/types';
 
+import { SettingsPageHeader } from '@/components/layouts/settings-page-header';
 import ConfirmationDialog from '@/components/shared/confirmation-dialog';
+import { HeaderButton } from '@/components/shared/header-button';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { FormSubmitButton } from '@/components/ui/form-submit-button';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { StatusCard } from '@/components/ui/status-card';
 import {
@@ -55,6 +68,7 @@ import {
     TestProviderDocument,
     UpdateProviderDocument,
 } from '@/graphql/types';
+import { useBreakpoint } from '@/hooks/use-breakpoint';
 import { routes } from '@/lib/routes';
 import { cn } from '@/lib/utils';
 
@@ -856,22 +870,47 @@ function TestResultsDialog({ handleOpenChange, isOpen, results }: TestResultsDia
 
     const getStatusIcon = (result: boolean | null | undefined) => {
         if (result === true) {
-            return <CheckCircle className="size-4 text-green-500" />;
-        } else if (result === false) {
-            return <XCircle className="size-4 text-red-500" />;
-        } else {
-            return <Clock className="size-4 text-yellow-500" />;
+            return <CheckCircle className="size-4 shrink-0 text-green-500" />;
         }
+
+        if (result === false) {
+            return <XCircle className="size-4 shrink-0 text-red-500" />;
+        }
+
+        return <Clock className="size-4 shrink-0 text-yellow-500" />;
     };
 
-    const getStatusColor = (result: boolean | null | undefined) => {
+    const getResultBadge = (result: boolean | null | undefined) => {
         if (result === true) {
-            return 'text-green-600';
-        } else if (result === false) {
-            return 'text-red-600';
-        } else {
-            return 'text-yellow-600';
+            return (
+                <Badge
+                    className="shrink-0 border-green-500/40 bg-green-500/10 text-green-600"
+                    variant="outline"
+                >
+                    Success
+                </Badge>
+            );
         }
+
+        if (result === false) {
+            return (
+                <Badge
+                    className="shrink-0"
+                    variant="destructive"
+                >
+                    Failed
+                </Badge>
+            );
+        }
+
+        return (
+            <Badge
+                className="shrink-0"
+                variant="secondary"
+            >
+                Unknown
+            </Badge>
+        );
     };
 
     return (
@@ -879,11 +918,11 @@ function TestResultsDialog({ handleOpenChange, isOpen, results }: TestResultsDia
             onOpenChange={handleOpenChange}
             open={isOpen}
         >
-            <DialogContent className="flex max-h-[80vh] max-w-4xl flex-col">
+            <DialogContent className="flex max-h-[80vh] max-w-3xl flex-col">
                 <DialogHeader className="shrink-0">
                     <DialogTitle>Provider Test Results</DialogTitle>
                 </DialogHeader>
-                <div className="flex flex-1 flex-col gap-6 overflow-y-auto">
+                <div className="flex flex-1 flex-col overflow-y-auto">
                     <Accordion
                         className="w-full"
                         type="multiple"
@@ -891,66 +930,86 @@ function TestResultsDialog({ handleOpenChange, isOpen, results }: TestResultsDia
                         {agentResults.map(({ agentType, tests }) => {
                             const testsCount = tests.length;
                             const successTestsCount = tests.filter((test) => test.result === true).length;
+                            const isAllPassed = testsCount > 0 && successTestsCount === testsCount;
+                            const isNonePassed = testsCount > 0 && successTestsCount === 0;
 
                             return (
                                 <AccordionItem
                                     key={agentType}
                                     value={agentType}
                                 >
-                                    <AccordionTrigger className="text-left">
-                                        <div className="mr-4 flex w-full items-center justify-between">
-                                            <span className="text-lg font-semibold capitalize">{agentType}</span>
-                                            <span className="text-muted-foreground text-sm">
-                                                {successTestsCount}/{testsCount} tests passed
+                                    <AccordionTrigger className="group text-left hover:no-underline">
+                                        <div className="mr-3 flex w-full items-center justify-between gap-3">
+                                            <span className="font-semibold group-hover:underline">
+                                                {getName(agentType)}
                                             </span>
+                                            <Badge
+                                                className={
+                                                    isAllPassed
+                                                        ? 'shrink-0 border-green-500/40 bg-green-500/10 text-green-600'
+                                                        : 'shrink-0'
+                                                }
+                                                variant={
+                                                    isNonePassed ? 'destructive' : isAllPassed ? 'outline' : 'secondary'
+                                                }
+                                            >
+                                                {successTestsCount}/{testsCount} passed
+                                            </Badge>
                                         </div>
                                     </AccordionTrigger>
                                     <AccordionContent>
-                                        <div className="flex flex-col gap-3 pt-2">
+                                        <div className="flex flex-col gap-2 pt-1">
                                             {tests.map((test, index) => (
                                                 <div
                                                     className="rounded-lg border p-3"
                                                     key={index}
                                                 >
-                                                    <div className="mb-2 flex items-start justify-between">
-                                                        <div className="flex items-center gap-2">
-                                                            {getStatusIcon(test.result)}
-                                                            <span className="font-medium">{test.name}</span>
-                                                            {test.type && (
-                                                                <span className="text-muted-foreground text-sm">
-                                                                    ({test.type})
-                                                                </span>
-                                                            )}
+                                                    <div className="flex items-start justify-between gap-2">
+                                                        <div className="flex min-w-0 items-start gap-2">
+                                                            <span className="mt-0.5">{getStatusIcon(test.result)}</span>
+                                                            <div className="min-w-0">
+                                                                <div className="font-medium break-words">
+                                                                    {test.name}
+                                                                </div>
+                                                                {test.type && (
+                                                                    <div className="text-muted-foreground text-xs break-words">
+                                                                        {test.type}
+                                                                    </div>
+                                                                )}
+                                                            </div>
                                                         </div>
-                                                        <div className="text-muted-foreground flex items-center gap-3 text-sm">
+                                                        {getResultBadge(test.result)}
+                                                    </div>
+                                                    {(test.reasoning !== undefined ||
+                                                        test.streaming !== undefined ||
+                                                        Boolean(test.latency)) && (
+                                                        <div className="mt-2 flex flex-wrap gap-1.5">
                                                             {test.reasoning !== undefined && (
-                                                                <span>Reasoning: {test.reasoning ? 'Yes' : 'No'}</span>
+                                                                <Badge variant="outline">
+                                                                    Reasoning: {test.reasoning ? 'Yes' : 'No'}
+                                                                </Badge>
                                                             )}
                                                             {test.streaming !== undefined && (
-                                                                <span>Streaming: {test.streaming ? 'Yes' : 'No'}</span>
+                                                                <Badge variant="outline">
+                                                                    Streaming: {test.streaming ? 'Yes' : 'No'}
+                                                                </Badge>
                                                             )}
-                                                            {test.latency && <span>Latency: {test.latency}ms</span>}
+                                                            {Boolean(test.latency) && (
+                                                                <Badge variant="outline">{test.latency} ms</Badge>
+                                                            )}
                                                         </div>
-                                                    </div>
-                                                    <div
-                                                        className={`text-sm font-medium ${getStatusColor(test.result)}`}
-                                                    >
-                                                        Result:{' '}
-                                                        {test.result === true
-                                                            ? 'Success'
-                                                            : test.result === false
-                                                              ? 'Failed'
-                                                              : 'Unknown'}
-                                                    </div>
+                                                    )}
                                                     {test.error && (
-                                                        <div className="mt-2 rounded border border-red-200 bg-red-50 p-2 text-sm text-red-700">
-                                                            <strong>Error:</strong> {test.error}
+                                                        <div className="border-destructive/30 bg-destructive/5 mt-2 max-h-40 overflow-auto rounded-md border p-2">
+                                                            <pre className="text-destructive font-mono text-xs break-words whitespace-pre-wrap">
+                                                                {test.error}
+                                                            </pre>
                                                         </div>
                                                     )}
                                                 </div>
                                             ))}
                                             {tests.length === 0 && (
-                                                <div className="text-muted-foreground py-4 text-center">
+                                                <div className="text-muted-foreground py-4 text-center text-sm">
                                                     No tests available for this agent
                                                 </div>
                                             )}
@@ -1000,11 +1059,11 @@ function SettingsProvider() {
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
     const { data, error, loading } = useQuery(SettingsProvidersDocument);
-    const [createProvider, { error: createError, loading: isCreateLoading }] = useMutation(CreateProviderDocument);
-    const [updateProvider, { error: updateError, loading: isUpdateLoading }] = useMutation(UpdateProviderDocument);
-    const [deleteProvider, { error: deleteError, loading: isDeleteLoading }] = useMutation(DeleteProviderDocument);
-    const [testProvider, { error: testError, loading: isTestLoading }] = useMutation(TestProviderDocument);
-    const [testAgent, { error: agentTestError, loading: isAgentTestLoading }] = useMutation(TestAgentDocument);
+    const [createProvider, { loading: isCreateLoading }] = useMutation(CreateProviderDocument);
+    const [updateProvider, { loading: isUpdateLoading }] = useMutation(UpdateProviderDocument);
+    const [deleteProvider, { loading: isDeleteLoading }] = useMutation(DeleteProviderDocument);
+    const [testProvider, { loading: isTestLoading }] = useMutation(TestProviderDocument);
+    const [testAgent, { loading: isAgentTestLoading }] = useMutation(TestAgentDocument);
     const [currentAgentKey, setCurrentAgentKey] = useState<null | string>(null);
     const [submitError, setSubmitError] = useState<null | string>(null);
     const [isTestDialogOpen, setIsTestDialogOpen] = useState(false);
@@ -1017,6 +1076,7 @@ function SettingsProvider() {
 
     const isNew = providerId === 'new';
     const isLoading = isCreateLoading || isUpdateLoading || isDeleteLoading;
+    const { isDesktop } = useBreakpoint();
 
     const form = useForm<FormInput, unknown, FormData>({
         defaultValues: {
@@ -1064,6 +1124,12 @@ function SettingsProvider() {
             window.removeEventListener('popstate', handlePopState, { capture: true });
         };
     }, [isDirty]);
+
+    useEffect(() => {
+        if (submitError) {
+            toast.error(submitError);
+        }
+    }, [submitError]);
 
     const selectedType = useWatch({ control, name: 'type' });
 
@@ -1379,16 +1445,6 @@ function SettingsProvider() {
         }
     };
 
-    const handleBack = () => {
-        if (isDirty) {
-            setIsLeaveDialogOpen(true);
-
-            return;
-        }
-
-        navigate(routes.settings.providers);
-    };
-
     const handleConfirmLeave = () => {
         if (pendingBrowserBack) {
             allowBrowserLeaveRef.current = true;
@@ -1412,21 +1468,37 @@ function SettingsProvider() {
 
     if (loading) {
         return (
-            <StatusCard
-                description="Please wait while we fetch provider configuration"
-                icon={<Loader2 className="text-muted-foreground size-16 animate-spin" />}
-                title="Loading provider data..."
-            />
+            <>
+                <SettingsPageHeader
+                    icon={<Plug className="size-4 shrink-0" />}
+                    title={isNew ? 'Create Provider' : 'Edit Provider'}
+                />
+                <div className="flex flex-1 items-center justify-center p-4">
+                    <StatusCard
+                        description="Please wait while we fetch provider configuration"
+                        icon={<Loader2 className="text-muted-foreground size-16 animate-spin" />}
+                        title="Loading provider data..."
+                    />
+                </div>
+            </>
         );
     }
 
     if (error) {
         return (
-            <Alert variant="destructive">
-                <AlertCircle className="size-4" />
-                <AlertTitle>Error loading provider data</AlertTitle>
-                <AlertDescription>{error.message}</AlertDescription>
-            </Alert>
+            <>
+                <SettingsPageHeader
+                    icon={<Plug className="size-4 shrink-0" />}
+                    title={isNew ? 'Create Provider' : 'Edit Provider'}
+                />
+                <div className="flex flex-1 items-center justify-center p-4">
+                    <StatusCard
+                        description={error.message}
+                        icon={<AlertCircle className="text-destructive size-16" />}
+                        title="Error loading provider data"
+                    />
+                </div>
+            </>
         );
     }
 
@@ -1434,385 +1506,389 @@ function SettingsProvider() {
         ? Object.keys(data?.settingsProviders.models).filter((key) => key !== '__typename')
         : [];
 
-    const mutationError = createError || updateError || deleteError || testError || agentTestError || submitError;
+    const metaFields = (
+        <div className="flex flex-col gap-6">
+            <div className="text-center">
+                <h2 className="text-2xl font-semibold">{isNew ? 'Create a new provider' : 'Edit provider'}</h2>
+                <p className="text-muted-foreground mt-2">
+                    {isNew ? 'Configure a new language model provider' : 'Update provider settings and configuration'}
+                </p>
+            </div>
+
+            <FormComboboxItem
+                allowCustom={false}
+                control={control}
+                description="The type of language model provider"
+                disabled={isLoading || !!selectedType}
+                label="Type"
+                name="type"
+                options={providers}
+                placeholder="Select provider"
+            />
+
+            <FormInputStringItem
+                control={control}
+                description="A unique name for your provider configuration"
+                disabled={isLoading}
+                label="Name"
+                name="name"
+                placeholder="Enter provider name"
+            />
+        </div>
+    );
+
+    const agentConfigs = (
+        <Accordion
+            className="w-full"
+            type="multiple"
+        >
+            {agentTypes.map((agentKey) => (
+                <AccordionItem
+                    key={agentKey}
+                    value={agentKey}
+                >
+                    <AccordionTrigger className="group text-left hover:no-underline">
+                        <div className="flex w-full items-center justify-between gap-2">
+                            <span className="group-hover:underline">{getName(agentKey)}</span>
+                            <span
+                                className={cn(
+                                    'hover:bg-accent hover:text-accent-foreground mr-2 flex items-center gap-1 rounded border px-2 py-1 text-xs',
+                                    (isTestLoading || isAgentTestLoading) &&
+                                        'pointer-events-none cursor-not-allowed opacity-50',
+                                )}
+                                onClick={(event) => {
+                                    if (isTestLoading || isAgentTestLoading) {
+                                        return;
+                                    }
+
+                                    event.stopPropagation();
+                                    handleTestAgent(agentKey);
+                                }}
+                            >
+                                {isAgentTestLoading && currentAgentKey === agentKey ? (
+                                    <Loader2 className="size-4 animate-spin" />
+                                ) : (
+                                    <Play className="size-4" />
+                                )}
+                                <span className="no-underline! hover:no-underline!">
+                                    {isAgentTestLoading && currentAgentKey === agentKey ? 'Testing...' : 'Test'}
+                                </span>
+                            </span>
+                        </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="flex flex-col gap-4 pt-4">
+                        <div className="grid grid-cols-1 gap-4 p-px md:grid-cols-2">
+                            {/* Model field */}
+                            <FormModelComboboxItem
+                                control={control}
+                                disabled={isLoading}
+                                label="Model"
+                                name={`agents.${agentKey}.model`}
+                                onOptionSelect={(option) => {
+                                    const price = option?.price;
+
+                                    setValue(`agents.${agentKey}.price.input` as const, price?.input ?? null);
+                                    setValue(`agents.${agentKey}.price.output` as const, price?.output ?? null);
+                                    setValue(`agents.${agentKey}.price.cacheRead` as const, price?.cacheRead ?? null);
+                                    setValue(`agents.${agentKey}.price.cacheWrite` as const, price?.cacheWrite ?? null);
+
+                                    // Reset reasoning on model change: adaptive-only models lock
+                                    // to adaptive, others clear the now-stale mode/effort/budget.
+                                    setValue(
+                                        `agents.${agentKey}.reasoning.mode` as const,
+                                        option?.reasoning?.mode === ModelReasoningMode.AdaptiveOnly
+                                            ? ReasoningMode.Adaptive
+                                            : null,
+                                    );
+                                    setValue(`agents.${agentKey}.reasoning.effort` as const, null);
+                                    setValue(`agents.${agentKey}.reasoning.maxTokens` as const, null);
+                                }}
+                                options={availableModels}
+                                placeholder="Select or enter model name"
+                            />
+
+                            {/* Temperature field */}
+                            <FormInputNumberItem
+                                control={control}
+                                disabled={isLoading}
+                                label="Temperature"
+                                max="2"
+                                min="0"
+                                name={`agents.${agentKey}.temperature`}
+                                placeholder="0.7"
+                                step="0.1"
+                            />
+
+                            {/* Max Tokens field */}
+                            <FormInputNumberItem
+                                control={control}
+                                disabled={isLoading}
+                                label="Max Tokens"
+                                min="1"
+                                name={`agents.${agentKey}.maxTokens`}
+                                placeholder="1000"
+                                valueType="integer"
+                            />
+
+                            {/* Top P field */}
+                            <FormInputNumberItem
+                                control={control}
+                                disabled={isLoading}
+                                label="Top P"
+                                max="1"
+                                min="0"
+                                name={`agents.${agentKey}.topP`}
+                                placeholder="0.9"
+                                step="0.01"
+                            />
+
+                            {/* Top K field */}
+                            <FormInputNumberItem
+                                control={control}
+                                disabled={isLoading}
+                                label="Top K"
+                                min="1"
+                                name={`agents.${agentKey}.topK`}
+                                placeholder="40"
+                                valueType="integer"
+                            />
+
+                            {/* Min Length field */}
+                            <FormInputNumberItem
+                                control={control}
+                                disabled={isLoading}
+                                label="Min Length"
+                                min="0"
+                                name={`agents.${agentKey}.minLength`}
+                                placeholder="0"
+                                valueType="integer"
+                            />
+
+                            {/* Max Length field */}
+                            <FormInputNumberItem
+                                control={control}
+                                disabled={isLoading}
+                                label="Max Length"
+                                min="1"
+                                name={`agents.${agentKey}.maxLength`}
+                                placeholder="2000"
+                                valueType="integer"
+                            />
+
+                            {/* Repetition Penalty field */}
+                            <FormInputNumberItem
+                                control={control}
+                                disabled={isLoading}
+                                label="Repetition Penalty"
+                                max="2"
+                                min="0"
+                                name={`agents.${agentKey}.repetitionPenalty`}
+                                placeholder="1.0"
+                                step="0.01"
+                            />
+
+                            {/* Frequency Penalty field */}
+                            <FormInputNumberItem
+                                control={control}
+                                disabled={isLoading}
+                                label="Frequency Penalty"
+                                max="2"
+                                min="0"
+                                name={`agents.${agentKey}.frequencyPenalty`}
+                                placeholder="0.0"
+                                step="0.01"
+                            />
+
+                            {/* Presence Penalty field */}
+                            <FormInputNumberItem
+                                control={control}
+                                disabled={isLoading}
+                                label="Presence Penalty"
+                                max="2"
+                                min="0"
+                                name={`agents.${agentKey}.presencePenalty`}
+                                placeholder="0.0"
+                                step="0.01"
+                            />
+                        </div>
+
+                        <ReasoningFields
+                            agentKey={agentKey}
+                            control={control}
+                            isLoading={isLoading}
+                            models={availableModels}
+                            setValue={setValue}
+                        />
+
+                        {/* Price Configuration */}
+                        <div className="col-span-full p-px">
+                            <div className="mt-6 flex flex-col gap-4">
+                                <h4 className="text-sm font-medium">Price Configuration</h4>
+                                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                    {/* Price Input field */}
+                                    <FormInputNumberItem
+                                        control={control}
+                                        description="Price per 1M input tokens"
+                                        disabled={isLoading}
+                                        label="Input Price"
+                                        min="0"
+                                        name={`agents.${agentKey}.price.input`}
+                                        placeholder="0.001"
+                                        step="0.000001"
+                                    />
+
+                                    {/* Price Output field */}
+                                    <FormInputNumberItem
+                                        control={control}
+                                        description="Price per 1M output tokens"
+                                        disabled={isLoading}
+                                        label="Output Price"
+                                        min="0"
+                                        name={`agents.${agentKey}.price.output`}
+                                        placeholder="0.002"
+                                        step="0.000001"
+                                    />
+
+                                    {/* Cache Read Price field */}
+                                    <FormInputNumberItem
+                                        control={control}
+                                        description="Price per 1M cached read tokens"
+                                        disabled={isLoading}
+                                        label="Cache Read Price"
+                                        min="0"
+                                        name={`agents.${agentKey}.price.cacheRead`}
+                                        placeholder="0.0001"
+                                        step="0.000001"
+                                    />
+
+                                    {/* Cache Write Price field */}
+                                    <FormInputNumberItem
+                                        control={control}
+                                        description="Price per 1M cache write tokens"
+                                        disabled={isLoading}
+                                        label="Cache Write Price"
+                                        min="0"
+                                        name={`agents.${agentKey}.price.cacheWrite`}
+                                        placeholder="0.00015"
+                                        step="0.000001"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    </AccordionContent>
+                </AccordionItem>
+            ))}
+        </Accordion>
+    );
 
     return (
-        <>
-            <div className="flex flex-col gap-4">
-                <div className="flex flex-col gap-2">
-                    <h2 className="flex items-center gap-2 text-lg font-semibold">
-                        <Cpu className="text-muted-foreground size-5" />
-                        {isNew ? 'New Provider' : 'Provider Settings'}
-                    </h2>
-
-                    <div className="text-muted-foreground">
-                        {isNew
-                            ? 'Configure a new language model provider'
-                            : 'Update provider settings and configuration'}
-                    </div>
-                </div>
-
-                <Form {...form}>
-                    <form
-                        className="flex flex-col gap-6"
-                        id="provider-form"
-                        onSubmit={handleFormSubmit(handleSubmit)}
-                    >
-                        {/* Error Alert */}
-                        {mutationError && (
-                            <Alert variant="destructive">
-                                <AlertCircle className="size-4" />
-                                <AlertTitle>Error</AlertTitle>
-                                <AlertDescription>
-                                    {typeof mutationError === 'string' ? (
-                                        <div className="whitespace-pre-line">{mutationError}</div>
-                                    ) : (
-                                        mutationError.message
-                                    )}
-                                </AlertDescription>
-                            </Alert>
-                        )}
-
-                        {/* Form fields */}
-                        <FormComboboxItem
-                            allowCustom={false}
-                            control={control}
-                            description="The type of language model provider"
-                            disabled={isLoading || !!selectedType}
-                            label="Type"
-                            name="type"
-                            options={providers}
-                            placeholder="Select provider"
-                        />
-
-                        <FormInputStringItem
-                            control={control}
-                            description="A unique name for your provider configuration"
-                            disabled={isLoading}
-                            label="Name"
-                            name="name"
-                            placeholder="Enter provider name"
-                        />
-
-                        {/* Agents Configuration Section */}
-                        <div className="flex flex-col gap-4">
-                            <div>
-                                <h3 className="text-lg font-medium">Agent Configurations</h3>
-                                <p className="text-muted-foreground text-sm">Configure settings for each agent type</p>
-                            </div>
-
-                            <Accordion
-                                className="w-full"
-                                type="multiple"
-                            >
-                                {agentTypes.map((agentKey) => (
-                                    <AccordionItem
-                                        key={agentKey}
-                                        value={agentKey}
-                                    >
-                                        <AccordionTrigger className="group text-left hover:no-underline">
-                                            <div className="flex w-full items-center justify-between gap-2">
-                                                <span className="group-hover:underline">{getName(agentKey)}</span>
-                                                <span
-                                                    className={cn(
-                                                        'hover:bg-accent hover:text-accent-foreground mr-2 flex items-center gap-1 rounded border px-2 py-1 text-xs',
-                                                        (isTestLoading || isAgentTestLoading) &&
-                                                            'pointer-events-none cursor-not-allowed opacity-50',
-                                                    )}
-                                                    onClick={(event) => {
-                                                        if (isTestLoading || isAgentTestLoading) {
-                                                            return;
-                                                        }
-
-                                                        event.stopPropagation();
-                                                        handleTestAgent(agentKey);
-                                                    }}
-                                                >
-                                                    {isAgentTestLoading && currentAgentKey === agentKey ? (
-                                                        <Loader2 className="size-4 animate-spin" />
-                                                    ) : (
-                                                        <Play className="size-4" />
-                                                    )}
-                                                    <span className="no-underline! hover:no-underline!">
-                                                        {isAgentTestLoading && currentAgentKey === agentKey
-                                                            ? 'Testing...'
-                                                            : 'Test'}
-                                                    </span>
-                                                </span>
-                                            </div>
-                                        </AccordionTrigger>
-                                        <AccordionContent className="flex flex-col gap-4 pt-4">
-                                            <div className="grid grid-cols-1 gap-4 p-px md:grid-cols-2">
-                                                {/* Model field */}
-                                                <FormModelComboboxItem
-                                                    control={control}
-                                                    disabled={isLoading}
-                                                    label="Model"
-                                                    name={`agents.${agentKey}.model`}
-                                                    onOptionSelect={(option) => {
-                                                        const price = option?.price;
-
-                                                        setValue(
-                                                            `agents.${agentKey}.price.input` as const,
-                                                            price?.input ?? null,
-                                                        );
-                                                        setValue(
-                                                            `agents.${agentKey}.price.output` as const,
-                                                            price?.output ?? null,
-                                                        );
-                                                        setValue(
-                                                            `agents.${agentKey}.price.cacheRead` as const,
-                                                            price?.cacheRead ?? null,
-                                                        );
-                                                        setValue(
-                                                            `agents.${agentKey}.price.cacheWrite` as const,
-                                                            price?.cacheWrite ?? null,
-                                                        );
-
-                                                        // Reset reasoning on model change: adaptive-only models lock
-                                                        // to adaptive, others clear the now-stale mode/effort/budget.
-                                                        setValue(
-                                                            `agents.${agentKey}.reasoning.mode` as const,
-                                                            option?.reasoning?.mode === ModelReasoningMode.AdaptiveOnly
-                                                                ? ReasoningMode.Adaptive
-                                                                : null,
-                                                        );
-                                                        setValue(`agents.${agentKey}.reasoning.effort` as const, null);
-                                                        setValue(
-                                                            `agents.${agentKey}.reasoning.maxTokens` as const,
-                                                            null,
-                                                        );
-                                                    }}
-                                                    options={availableModels}
-                                                    placeholder="Select or enter model name"
-                                                />
-
-                                                {/* Temperature field */}
-                                                <FormInputNumberItem
-                                                    control={control}
-                                                    disabled={isLoading}
-                                                    label="Temperature"
-                                                    max="2"
-                                                    min="0"
-                                                    name={`agents.${agentKey}.temperature`}
-                                                    placeholder="0.7"
-                                                    step="0.1"
-                                                />
-
-                                                {/* Max Tokens field */}
-                                                <FormInputNumberItem
-                                                    control={control}
-                                                    disabled={isLoading}
-                                                    label="Max Tokens"
-                                                    min="1"
-                                                    name={`agents.${agentKey}.maxTokens`}
-                                                    placeholder="1000"
-                                                    valueType="integer"
-                                                />
-
-                                                {/* Top P field */}
-                                                <FormInputNumberItem
-                                                    control={control}
-                                                    disabled={isLoading}
-                                                    label="Top P"
-                                                    max="1"
-                                                    min="0"
-                                                    name={`agents.${agentKey}.topP`}
-                                                    placeholder="0.9"
-                                                    step="0.01"
-                                                />
-
-                                                {/* Top K field */}
-                                                <FormInputNumberItem
-                                                    control={control}
-                                                    disabled={isLoading}
-                                                    label="Top K"
-                                                    min="1"
-                                                    name={`agents.${agentKey}.topK`}
-                                                    placeholder="40"
-                                                    valueType="integer"
-                                                />
-
-                                                {/* Min Length field */}
-                                                <FormInputNumberItem
-                                                    control={control}
-                                                    disabled={isLoading}
-                                                    label="Min Length"
-                                                    min="0"
-                                                    name={`agents.${agentKey}.minLength`}
-                                                    placeholder="0"
-                                                    valueType="integer"
-                                                />
-
-                                                {/* Max Length field */}
-                                                <FormInputNumberItem
-                                                    control={control}
-                                                    disabled={isLoading}
-                                                    label="Max Length"
-                                                    min="1"
-                                                    name={`agents.${agentKey}.maxLength`}
-                                                    placeholder="2000"
-                                                    valueType="integer"
-                                                />
-
-                                                {/* Repetition Penalty field */}
-                                                <FormInputNumberItem
-                                                    control={control}
-                                                    disabled={isLoading}
-                                                    label="Repetition Penalty"
-                                                    max="2"
-                                                    min="0"
-                                                    name={`agents.${agentKey}.repetitionPenalty`}
-                                                    placeholder="1.0"
-                                                    step="0.01"
-                                                />
-
-                                                {/* Frequency Penalty field */}
-                                                <FormInputNumberItem
-                                                    control={control}
-                                                    disabled={isLoading}
-                                                    label="Frequency Penalty"
-                                                    max="2"
-                                                    min="0"
-                                                    name={`agents.${agentKey}.frequencyPenalty`}
-                                                    placeholder="0.0"
-                                                    step="0.01"
-                                                />
-
-                                                {/* Presence Penalty field */}
-                                                <FormInputNumberItem
-                                                    control={control}
-                                                    disabled={isLoading}
-                                                    label="Presence Penalty"
-                                                    max="2"
-                                                    min="0"
-                                                    name={`agents.${agentKey}.presencePenalty`}
-                                                    placeholder="0.0"
-                                                    step="0.01"
-                                                />
-                                            </div>
-
-                                            <ReasoningFields
-                                                agentKey={agentKey}
-                                                control={control}
-                                                isLoading={isLoading}
-                                                models={availableModels}
-                                                setValue={setValue}
-                                            />
-
-                                            {/* Price Configuration */}
-                                            <div className="col-span-full p-px">
-                                                <div className="mt-6 flex flex-col gap-4">
-                                                    <h4 className="text-sm font-medium">Price Configuration</h4>
-                                                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                                        {/* Price Input field */}
-                                                        <FormInputNumberItem
-                                                            control={control}
-                                                            description="Price per 1M input tokens"
-                                                            disabled={isLoading}
-                                                            label="Input Price"
-                                                            min="0"
-                                                            name={`agents.${agentKey}.price.input`}
-                                                            placeholder="0.001"
-                                                            step="0.000001"
-                                                        />
-
-                                                        {/* Price Output field */}
-                                                        <FormInputNumberItem
-                                                            control={control}
-                                                            description="Price per 1M output tokens"
-                                                            disabled={isLoading}
-                                                            label="Output Price"
-                                                            min="0"
-                                                            name={`agents.${agentKey}.price.output`}
-                                                            placeholder="0.002"
-                                                            step="0.000001"
-                                                        />
-
-                                                        {/* Cache Read Price field */}
-                                                        <FormInputNumberItem
-                                                            control={control}
-                                                            description="Price per 1M cached read tokens"
-                                                            disabled={isLoading}
-                                                            label="Cache Read Price"
-                                                            min="0"
-                                                            name={`agents.${agentKey}.price.cacheRead`}
-                                                            placeholder="0.0001"
-                                                            step="0.000001"
-                                                        />
-
-                                                        {/* Cache Write Price field */}
-                                                        <FormInputNumberItem
-                                                            control={control}
-                                                            description="Price per 1M cache write tokens"
-                                                            disabled={isLoading}
-                                                            label="Cache Write Price"
-                                                            min="0"
-                                                            name={`agents.${agentKey}.price.cacheWrite`}
-                                                            placeholder="0.00015"
-                                                            step="0.000001"
-                                                        />
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </AccordionContent>
-                                    </AccordionItem>
-                                ))}
-                            </Accordion>
-                        </div>
-                    </form>
-                </Form>
-            </div>
-
-            {/* Sticky buttons at bottom */}
-            <div className="bg-background sticky -bottom-4 -mx-4 mt-4 -mb-4 flex items-center border-t p-4 shadow-lg">
-                <div className="flex gap-2">
-                    {/* Delete button - only show when editing existing provider */}
-                    {!isNew && (
-                        <Button
-                            disabled={isLoading}
-                            onClick={handleDelete}
+        <div className={isDesktop ? 'flex h-[100dvh] min-h-0 flex-col' : 'flex min-h-[100dvh] flex-col'}>
+            <SettingsPageHeader
+                actions={
+                    <>
+                        <HeaderButton
+                            disabled={isLoading || isTestLoading || isAgentTestLoading}
+                            icon={
+                                isTestLoading ? (
+                                    <Loader2 className="size-4 animate-spin" />
+                                ) : (
+                                    <Play className="size-4" />
+                                )
+                            }
+                            label={isTestLoading ? 'Testing...' : 'Test'}
+                            onClick={() => handleTest()}
                             type="button"
-                            variant="destructive"
+                            variant="outline"
+                        />
+                        <FormSubmitButton
+                            form="provider-form"
+                            icon={<Save className="size-4" />}
+                            loading={isLoading}
+                            size="sm"
+                            variant="secondary"
                         >
-                            {isDeleteLoading ? (
-                                <Loader2 className="size-4 animate-spin" />
-                            ) : (
-                                <Trash2 className="size-4" />
-                            )}
-                            {isDeleteLoading ? 'Deleting...' : 'Delete'}
-                        </Button>
+                            {isNew ? 'Create' : 'Save'}
+                        </FormSubmitButton>
+                        {!isNew && (
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button
+                                        aria-label="Provider actions"
+                                        className="size-8 p-0"
+                                        type="button"
+                                        variant="ghost"
+                                    >
+                                        <Ellipsis />
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent
+                                    align="end"
+                                    className="min-w-24"
+                                >
+                                    <DropdownMenuItem
+                                        disabled={isDeleteLoading}
+                                        onClick={handleDelete}
+                                    >
+                                        {isDeleteLoading ? (
+                                            <Loader2 className="size-4 animate-spin" />
+                                        ) : (
+                                            <Trash2 className="size-4" />
+                                        )}
+                                        {isDeleteLoading ? 'Deleting...' : 'Delete'}
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        )}
+                    </>
+                }
+                icon={<Plug className="size-4 shrink-0" />}
+                title={isNew ? 'Create Provider' : 'Edit Provider'}
+            />
+            <Form {...form}>
+                <form
+                    className="flex min-h-0 flex-1 flex-col"
+                    id="provider-form"
+                    onSubmit={handleFormSubmit(handleSubmit)}
+                >
+                    {isDesktop ? (
+                        <div className="flex min-h-0 w-full max-w-full flex-1 overflow-hidden">
+                            <ResizablePanelGroup
+                                className="w-full"
+                                orientation="horizontal"
+                            >
+                                <ResizablePanel
+                                    defaultSize={45}
+                                    minSize={30}
+                                >
+                                    <div className="h-full min-h-0 overflow-y-auto">
+                                        <Card className="mx-auto min-h-full w-full max-w-2xl rounded-none border-0">
+                                            <CardContent className="flex flex-col gap-6 py-6">{metaFields}</CardContent>
+                                        </Card>
+                                    </div>
+                                </ResizablePanel>
+                                <ResizableHandle withHandle>
+                                    <GripVertical className="size-4" />
+                                </ResizableHandle>
+                                <ResizablePanel
+                                    defaultSize={55}
+                                    minSize={30}
+                                >
+                                    <div className="h-full min-h-0 overflow-y-auto p-4">{agentConfigs}</div>
+                                </ResizablePanel>
+                            </ResizablePanelGroup>
+                        </div>
+                    ) : (
+                        <div className="flex min-w-0 flex-1 items-start justify-center p-4">
+                            <Card className="w-full max-w-3xl">
+                                <CardContent className="flex flex-col gap-6 pt-6">
+                                    {metaFields}
+                                    {agentConfigs}
+                                </CardContent>
+                            </Card>
+                        </div>
                     )}
-                    <Button
-                        disabled={isLoading || isTestLoading || isAgentTestLoading}
-                        onClick={() => handleTest()}
-                        type="button"
-                        variant="outline"
-                    >
-                        {isTestLoading ? <Loader2 className="size-4 animate-spin" /> : <Play className="size-4" />}
-                        {isTestLoading ? 'Testing...' : 'Test'}
-                    </Button>
-                </div>
-
-                <div className="ml-auto flex gap-2">
-                    <Button
-                        disabled={isLoading}
-                        onClick={handleBack}
-                        type="button"
-                        variant="outline"
-                    >
-                        Cancel
-                    </Button>
-                    <FormSubmitButton
-                        form="provider-form"
-                        icon={<Save className="size-4" />}
-                        loading={isLoading}
-                        variant="secondary"
-                    >
-                        {isLoading ? 'Saving...' : isNew ? 'Create Provider' : 'Update Provider'}
-                    </FormSubmitButton>
-                </div>
-            </div>
+                </form>
+            </Form>
 
             <TestResultsDialog
                 handleOpenChange={setIsTestDialogOpen}
@@ -1841,7 +1917,7 @@ function SettingsProvider() {
                 isOpen={isLeaveDialogOpen}
                 title="Discard changes?"
             />
-        </>
+        </div>
     );
 }
 
