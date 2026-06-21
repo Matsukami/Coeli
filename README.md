@@ -72,7 +72,7 @@ You can watch the video **PentAGI overview**:
 - Persistent Storage. All commands and outputs are stored in PostgreSQL with [pgvector](https://hub.docker.com/r/vxcontrol/pgvector) extension.
 - Scalable Architecture. Microservices-based design supporting horizontal scaling.
 - Self-Hosted Solution. Complete control over your deployment and data.
-- Flexible Authentication. Support for 10+ LLM providers ([OpenAI](https://platform.openai.com/), [Anthropic](https://www.anthropic.com/), [Google AI/Gemini](https://ai.google.dev/), [AWS Bedrock](https://aws.amazon.com/bedrock/), [Ollama](https://ollama.com/), [DeepSeek](https://www.deepseek.com/en/), [GLM](https://z.ai/), [Kimi](https://platform.moonshot.ai/), [Qwen](https://www.alibabacloud.com/en/), Custom) plus aggregators ([OpenRouter](https://openrouter.ai/), [DeepInfra](https://deepinfra.com/), [Atlas Cloud](https://www.atlascloud.ai/)). For production local deployments, see our [vLLM + Qwen3.5-27B-FP8 guide](examples/guides/vllm-qwen35-27b-fp8.md).
+- Flexible Authentication. Support for 10+ LLM providers ([OpenAI](https://platform.openai.com/), [Anthropic](https://www.anthropic.com/), [Google AI/Gemini](https://ai.google.dev/), [AWS Bedrock](https://aws.amazon.com/bedrock/), [Ollama](https://ollama.com/), [DeepSeek](https://www.deepseek.com/en/), [GLM](https://z.ai/), [Kimi](https://platform.moonshot.ai/), [Qwen](https://www.alibabacloud.com/en/), [MiniMax](https://www.minimax.io/), Custom) plus aggregators ([OpenRouter](https://openrouter.ai/), [DeepInfra](https://deepinfra.com/), [Atlas Cloud](https://www.atlascloud.ai/)). For production local deployments, see our [vLLM + Qwen3.5-27B-FP8 guide](examples/guides/vllm-qwen35-27b-fp8.md).
 - API Token Authentication. Secure Bearer token system for programmatic access to REST and GraphQL APIs.
 - Quick Deployment. Easy setup through [Docker Compose](https://docs.docker.com/compose/) with comprehensive environment configuration.
 
@@ -1728,12 +1728,14 @@ PROXY_URL=http://your-proxy:8080
 
 #### Supported Models
 
-PentAGI supports 10 Claude models with tool calling, streaming, extended thinking, adaptive thinking, and prompt caching. Models marked with `*` are used in default configuration.
+PentAGI supports 11 Claude models with tool calling, streaming, extended thinking, adaptive thinking, and prompt caching. Models marked with `*` are used in default configuration.
 
 **Claude 4 Series - Latest Models (2025-2026)**
 
 | Model ID                 | Thinking | Release Date | Price (Input/Output/Cache R/W) | Use Case                                        |
 | ------------------------ | -------- | ------------ | ------------------------------ | ----------------------------------------------- |
+| `claude-opus-4-8`        | ✅ adaptive-only | May 2026 | $5.00/$25.00/$0.50/$6.25       | Flagship for coding, agents, and deep reasoning. Adaptive thinking only — budget thinking and sampling params (temperature/top_p/top_k) are rejected. Most demanding exploit development and multi-stage attack simulation |
+| `claude-opus-4-7`        | ✅ adaptive-only | Apr 2026 | $5.00/$25.00/$0.50/$6.25       | Advanced software engineering and long-running agentic security analysis. Adaptive thinking only (manual budget thinking rejected) |
 | `claude-opus-4-6`*       | ✅        | May 2025     | $5.00/$25.00/$0.50/$6.25       | Most intelligent model for autonomous agents and coding. Extended + adaptive thinking for complex exploit development, multi-stage attack simulation |
 | `claude-sonnet-4-6`*     | ✅        | Aug 2025     | $3.00/$15.00/$0.30/$3.75       | Best speed/intelligence balance with adaptive thinking. Multi-phase security assessments, intelligent vulnerability analysis, real-time threat hunting |
 | `claude-haiku-4-5`*      | ✅        | Oct 2025     | $1.00/$5.00/$0.10/$1.25        | Fastest model with near-frontier intelligence. High-frequency scanning, real-time monitoring, bulk automated testing |
@@ -1764,7 +1766,7 @@ PentAGI supports 10 Claude models with tool calling, streaming, extended thinkin
 
 **Key Features**:
 - **Extended Thinking**: All Claude 4.5+ and 4.6 models with configurable chain-of-thought reasoning depths for complex security analysis
-- **Adaptive Thinking**: Claude 4.6 series (Opus/Sonnet) dynamically adjusts reasoning depth based on task complexity for optimal performance
+- **Adaptive Thinking**: Claude 4.6 series (Opus/Sonnet) dynamically adjusts reasoning depth based on task complexity; Claude Opus 4.7/4.8 are adaptive-thinking-only (manual budget thinking and sampling parameters are rejected with HTTP 400)
 - **Prompt Caching**: Significant cost reduction with separate read/write pricing (10% read, 125% write of input)
 - **Extended Context Window**: 200K tokens standard, up to 1M tokens (beta) for Claude Opus/Sonnet 4.6 for comprehensive codebase analysis
 - **Tool Calling**: Robust function calling with exceptional accuracy for security tool orchestration
@@ -1928,7 +1930,7 @@ BEDROCK_MODELS_PATH=/opt/pentagi/conf/bedrock.models.yml
 
 #### Supported Models
 
-PentAGI supports 21 AWS Bedrock models with tool calling, streaming, and multimodal capabilities. Models marked with `*` are used in default configuration.
+PentAGI supports 24 AWS Bedrock models with tool calling, streaming, and multimodal capabilities. Models marked with `*` are used in default configuration.
 
 | Model ID                                         | Provider        | Thinking | Multimodal | Price (Input/Output) | Use Case                                |
 | ------------------------------------------------ | --------------- | -------- | ---------- | -------------------- | --------------------------------------- |
@@ -1937,6 +1939,8 @@ PentAGI supports 21 AWS Bedrock models with tool calling, streaming, and multimo
 | `us.amazon.nova-pro-v1:0`                        | Amazon Nova     | ❌        | ✅          | $0.80/$3.20          | Balanced accuracy, speed, cost          |
 | `us.amazon.nova-lite-v1:0`                       | Amazon Nova     | ❌        | ✅          | $0.06/$0.24          | Fast processing, high-volume operations |
 | `us.amazon.nova-micro-v1:0`                      | Amazon Nova     | ❌        | ❌          | $0.035/$0.14         | Ultra-low latency, real-time monitoring |
+| `us.anthropic.claude-opus-4-8`                   | Anthropic       | ✅ adaptive-only | ✅   | $5.00/$25.00         | Flagship coding/agents/deep reasoning; adaptive thinking only (sampling params rejected) |
+| `us.anthropic.claude-opus-4-7`                   | Anthropic       | ✅ adaptive-only | ✅   | $5.00/$25.00         | Advanced engineering, long-running agents; adaptive thinking only |
 | `us.anthropic.claude-opus-4-6-v1`*               | Anthropic       | ✅        | ✅          | $5.00/$25.00         | World-class coding, enterprise agents   |
 | `us.anthropic.claude-sonnet-4-6`                 | Anthropic       | ✅        | ✅          | $3.00/$15.00         | Frontier intelligence, enterprise scale |
 | `us.anthropic.claude-opus-4-5-20251101-v1:0`     | Anthropic       | ✅        | ✅          | $5.00/$25.00         | Multi-day software development          |
@@ -2436,6 +2440,43 @@ EMBEDDING_STRIP_NEW_LINES=    # optional, default applies
 > Note: the Global/US DashScope endpoint (`dashscope-us.aliyuncs.com`) does **not** expose embedding APIs — use the International or China endpoints for `text-embedding-v4`.
 
 **As OpenAI-typed custom LLM provider**: instead of the dedicated `QWEN_*` variables, you can wire any Qwen chat model through PentAGI's custom OpenAI-compatible provider by pointing `OPENAI_SERVER_URL` (or a custom provider entry) to the DashScope `/compatible-mode/v1` endpoint and selecting the desired Qwen model name. Useful when you already manage all model traffic through a single OpenAI-shaped client (e.g. shared with LiteLLM/OneAPI proxies).
+
+### MiniMax Provider Configuration
+
+PentAGI integrates with MiniMax's M-series through the OpenAI-compatible `https://api.minimax.io/v1` endpoint: large-context agentic models with tool calling, JSON output, and streaming.
+
+#### Configuration Variables
+
+| Variable             | Default Value               | Description                                        |
+| -------------------- | --------------------------- | -------------------------------------------------- |
+| `MINIMAX_API_KEY`    |                             | MiniMax API key for authentication                 |
+| `MINIMAX_SERVER_URL` | `https://api.minimax.io/v1` | MiniMax API endpoint URL                           |
+| `MINIMAX_PROVIDER`   |                             | Provider prefix for LiteLLM integration (optional) |
+
+#### Configuration Examples
+
+```bash
+# Direct API usage
+MINIMAX_API_KEY=your_minimax_api_key
+MINIMAX_SERVER_URL=https://api.minimax.io/v1
+
+# With LiteLLM proxy
+MINIMAX_API_KEY=your_litellm_key
+MINIMAX_SERVER_URL=http://litellm-proxy:4000
+MINIMAX_PROVIDER=minimax  # Adds prefix to model names (minimax/MiniMax-M3) for LiteLLM
+```
+
+#### Supported Models
+
+PentAGI ships 3 MiniMax models with tool calling, JSON output, and streaming. `MiniMax-M3` is the default for all agent types.
+
+| Model ID                 | Context | Price (Input/Output) | Use Case                                                                                            |
+| ------------------------ | ------- | -------------------- | --------------------------------------------------------------------------------------------------- |
+| `MiniMax-M3`*            | ~1M     | $0.60/$2.40          | Latest flagship for agentic reasoning, tool use, code generation, and long-context tasks (default)  |
+| `MiniMax-M2.7`           | 204K    | $0.40/$1.10          | Previous-generation model with strong reasoning and coding                                          |
+| `MiniMax-M2.7-highspeed` | 204K    | $0.40/$1.10          | Low-latency variant of M2.7 for fast-response scenarios                                             |
+
+**LiteLLM Integration**: Set `MINIMAX_PROVIDER=minimax` to enable model name prefixing when using default PentAGI configurations with LiteLLM proxy. Leave empty for direct API usage.
 
 ## Advanced Setup
 

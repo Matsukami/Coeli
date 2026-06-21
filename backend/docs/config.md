@@ -31,6 +31,7 @@ This document serves as a comprehensive guide to the configuration system in Pen
     - [GLM LLM Provider](#glm-llm-provider)
     - [Kimi LLM Provider](#kimi-llm-provider)
     - [Qwen LLM Provider](#qwen-llm-provider)
+    - [MiniMax LLM Provider](#minimax-llm-provider)
     - [Custom LLM Provider](#custom-llm-provider)
     - [Usage Details](#usage-details-6)
   - [Embedding Settings](#embedding-settings)
@@ -665,6 +666,16 @@ There is no `VERTEX_API_KEY` or `GOOGLE_APPLICATION_CREDENTIALS` variable wired 
 - China: `https://dashscope.aliyuncs.com/compatible-mode/v1`
 
 **LiteLLM Integration**: Set `QWEN_PROVIDER=dashscope` to enable model prefixing (e.g., `dashscope/qwen-plus`) when using LiteLLM proxy with default PentAGI configs.
+
+### MiniMax LLM Provider
+
+| Option           | Environment Variable | Default Value               | Description                                             |
+| ---------------- | -------------------- | --------------------------- | ------------------------------------------------------- |
+| MiniMaxAPIKey    | `MINIMAX_API_KEY`    | *(none)*                    | MiniMax API key for authentication                      |
+| MiniMaxServerURL | `MINIMAX_SERVER_URL` | `https://api.minimax.io/v1` | MiniMax API endpoint URL                                |
+| MiniMaxProvider  | `MINIMAX_PROVIDER`   | *(none)*                    | Provider name prefix for LiteLLM integration (optional) |
+
+**LiteLLM Integration**: Set `MINIMAX_PROVIDER=minimax` to enable model prefixing (e.g., `minimax/MiniMax-M3`) when using LiteLLM proxy with default PentAGI configs.
 
 ### Custom LLM Provider
 
