@@ -6,6 +6,7 @@ import {
     CheckCircle,
     Code,
     FileDiff,
+    FileText,
     Loader2,
     RotateCcw,
     Save,
@@ -35,6 +36,7 @@ import type {
 type AgentPrompt = AgentPrompts;
 type AgentPrompts = { human?: DefaultPrompt; system: DefaultPrompt };
 
+import { SettingsPageHeader } from '@/components/layouts/settings-page-header';
 import ConfirmationDialog from '@/components/shared/confirmation-dialog';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -576,14 +578,25 @@ function SettingsPrompt() {
         }
     };
 
+    const isNew = promptId === 'new';
+    const pageHeader = (
+        <SettingsPageHeader
+            icon={<FileText className="size-4 shrink-0" />}
+            title={isNew ? 'Create Prompt' : 'Edit Prompt'}
+        />
+    );
+
     if (loading) {
         return (
             <>
-                <StatusCard
-                    description="Please wait while we fetch prompt information"
-                    icon={<Loader2 className="text-muted-foreground size-16 animate-spin" />}
-                    title="Loading prompt data..."
-                />
+                {pageHeader}
+                <div className="flex flex-1 flex-col gap-4 p-4">
+                    <StatusCard
+                        description="Please wait while we fetch prompt information"
+                        icon={<Loader2 className="text-muted-foreground size-16 animate-spin" />}
+                        title="Loading prompt data..."
+                    />
+                </div>
             </>
         );
     }
@@ -591,11 +604,14 @@ function SettingsPrompt() {
     if (error) {
         return (
             <>
-                <Alert variant="destructive">
-                    <AlertCircle className="size-4" />
-                    <AlertTitle>Error loading prompt data</AlertTitle>
-                    <AlertDescription>{error.message}</AlertDescription>
-                </Alert>
+                {pageHeader}
+                <div className="flex flex-1 flex-col gap-4 p-4">
+                    <Alert variant="destructive">
+                        <AlertCircle className="size-4" />
+                        <AlertTitle>Error loading prompt data</AlertTitle>
+                        <AlertDescription>{error.message}</AlertDescription>
+                    </Alert>
+                </div>
             </>
         );
     }
@@ -603,13 +619,16 @@ function SettingsPrompt() {
     if (!promptInfo) {
         return (
             <>
-                <Alert variant="destructive">
-                    <AlertCircle className="size-4" />
-                    <AlertTitle>Prompt not found</AlertTitle>
-                    <AlertDescription>
-                        The prompt "{promptId}" could not be found or is not supported for editing.
-                    </AlertDescription>
-                </Alert>
+                {pageHeader}
+                <div className="flex flex-1 flex-col gap-4 p-4">
+                    <Alert variant="destructive">
+                        <AlertCircle className="size-4" />
+                        <AlertTitle>Prompt not found</AlertTitle>
+                        <AlertDescription>
+                            The prompt "{promptId}" could not be found or is not supported for editing.
+                        </AlertDescription>
+                    </Alert>
+                </div>
             </>
         );
     }
@@ -700,96 +719,57 @@ function SettingsPrompt() {
     const mutationError = createError || updateError || deleteError || validateError || submitError;
 
     return (
-        <div className="flex flex-col gap-4">
-            <div className="flex flex-col gap-2">
-                <h2 className="flex items-center gap-2 text-lg font-semibold">
-                    {promptInfo.type === 'agent' ? (
-                        <Bot className="text-muted-foreground size-5" />
-                    ) : (
-                        <Wrench className="text-muted-foreground size-5" />
-                    )}
-                    {promptInfo.displayName}
-                </h2>
+        <>
+            {pageHeader}
+            <div className="flex flex-1 flex-col gap-4 p-4">
+                <div className="flex flex-col gap-2">
+                    <h2 className="flex items-center gap-2 text-lg font-semibold">
+                        {promptInfo.type === 'agent' ? (
+                            <Bot className="text-muted-foreground size-5" />
+                        ) : (
+                            <Wrench className="text-muted-foreground size-5" />
+                        )}
+                        {promptInfo.displayName}
+                    </h2>
 
-                <div className="text-muted-foreground">
-                    {promptInfo.type === 'agent'
-                        ? 'Configure prompts for this AI agent'
-                        : 'Configure the prompt for this tool'}
+                    <div className="text-muted-foreground">
+                        {promptInfo.type === 'agent'
+                            ? 'Configure prompts for this AI agent'
+                            : 'Configure the prompt for this tool'}
+                    </div>
                 </div>
-            </div>
 
-            <Tabs
-                className="w-full"
-                defaultValue="system"
-                onValueChange={(value) => setActiveTab(value as 'human' | 'system')}
-            >
-                <TabsList>
-                    <TabsTrigger value="system">
-                        <div className="flex items-center gap-2">
-                            <Code className="size-4" />
-                            System Prompt
-                        </div>
-                    </TabsTrigger>
-                    {promptInfo.type === 'agent' && promptInfo.hasHuman && (
-                        <TabsTrigger value="human">
+                <Tabs
+                    className="w-full"
+                    defaultValue="system"
+                    onValueChange={(value) => setActiveTab(value as 'human' | 'system')}
+                >
+                    <TabsList>
+                        <TabsTrigger value="system">
                             <div className="flex items-center gap-2">
-                                <User className="size-4" />
-                                Human Prompt
+                                <Code className="size-4" />
+                                System Prompt
                             </div>
                         </TabsTrigger>
-                    )}
-                </TabsList>
+                        {promptInfo.type === 'agent' && promptInfo.hasHuman && (
+                            <TabsTrigger value="human">
+                                <div className="flex items-center gap-2">
+                                    <User className="size-4" />
+                                    Human Prompt
+                                </div>
+                            </TabsTrigger>
+                        )}
+                    </TabsList>
 
-                <TabsContent
-                    className="mt-4"
-                    value="system"
-                >
-                    <Form {...systemForm}>
-                        <form
-                            className="flex flex-col gap-6"
-                            id="system-prompt-form"
-                            onSubmit={systemForm.handleSubmit(handleSystemSubmit)}
-                        >
-                            {/* Error Alert */}
-                            {mutationError && (
-                                <Alert variant="destructive">
-                                    <AlertCircle className="size-4" />
-                                    <AlertTitle>Error</AlertTitle>
-                                    <AlertDescription>
-                                        {typeof mutationError !== 'string' ? (
-                                            mutationError.message
-                                        ) : (
-                                            <div className="whitespace-pre-line">{mutationError}</div>
-                                        )}
-                                    </AlertDescription>
-                                </Alert>
-                            )}
-
-                            {/* System Template Field */}
-                            <FormTextareaItem
-                                control={systemForm.control}
-                                disabled={isLoading}
-                                name="template"
-                                placeholder={
-                                    promptInfo.type === 'tool'
-                                        ? 'Enter the tool template...'
-                                        : 'Enter the system prompt template...'
-                                }
-                            />
-                        </form>
-                    </Form>
-                </TabsContent>
-
-                {promptInfo.type === 'agent' && promptInfo.hasHuman && (
                     <TabsContent
-                        className="mt-6"
-                        value="human"
+                        className="mt-4"
+                        value="system"
                     >
-                        <Form {...humanForm}>
+                        <Form {...systemForm}>
                             <form
                                 className="flex flex-col gap-6"
-                                id="human-prompt-form"
-                                onSubmit={humanForm.handleSubmit(handleHumanSubmit)}
+                                id="system-prompt-form"
+                                onSubmit={systemForm.handleSubmit(handleSystemSubmit)}
                             >
                                 {/* Error Alert */}
                                 {mutationError && (
@@ -806,212 +786,254 @@ function SettingsPrompt() {
                                     </Alert>
                                 )}
 
-                                {/* Human Template Field */}
+                                {/* System Template Field */}
                                 <FormTextareaItem
-                                    control={humanForm.control}
+                                    control={systemForm.control}
                                     disabled={isLoading}
                                     name="template"
-                                    placeholder="Enter the human prompt template..."
+                                    placeholder={
+                                        promptInfo.type === 'tool'
+                                            ? 'Enter the tool template...'
+                                            : 'Enter the system prompt template...'
+                                    }
                                 />
                             </form>
                         </Form>
                     </TabsContent>
-                )}
-            </Tabs>
 
-            {/* Sticky footer with variables and buttons */}
-            <div className="bg-background sticky -bottom-4 -mx-4 mt-4 -mb-4 border-t p-4 shadow-lg">
-                {/* Variables */}
-                {variablesData && (
-                    <Variables
-                        currentTemplate={variablesData.currentTemplate}
-                        onVariableClick={handleVariableClickCallback}
-                        variables={variablesData.variables}
-                    />
-                )}
-
-                {/* Action buttons */}
-                <div className="flex items-center">
-                    <div className="flex gap-2">
-                        {/* Reset button - only show when user has custom prompt */}
-                        {((activeTab === 'system' && promptInfo?.userSystemPrompt) ||
-                            (activeTab === 'human' && promptInfo?.userHumanPrompt)) && (
-                            <>
-                                <Button
-                                    disabled={isLoading}
-                                    onClick={handleReset}
-                                    type="button"
-                                    variant="destructive"
-                                >
-                                    {isDeleteLoading ? <Loader2 className="size-4 animate-spin" /> : <RotateCcw />}
-                                    {isDeleteLoading ? 'Resetting...' : 'Reset'}
-                                </Button>
-
-                                <Button
-                                    disabled={isLoading}
-                                    onClick={() => setIsDiffDialogOpen(true)}
-                                    type="button"
-                                    variant="outline"
-                                >
-                                    <FileDiff className="size-4" />
-                                    Diff
-                                </Button>
-                            </>
-                        )}
-                        <Button
-                            disabled={isLoading}
-                            onClick={handleValidate}
-                            type="button"
-                            variant="outline"
+                    {promptInfo.type === 'agent' && promptInfo.hasHuman && (
+                        <TabsContent
+                            className="mt-6"
+                            value="human"
                         >
-                            {isValidateLoading ? (
-                                <Loader2 className="size-4 animate-spin" />
-                            ) : (
-                                <CheckCircle className="size-4" />
+                            <Form {...humanForm}>
+                                <form
+                                    className="flex flex-col gap-6"
+                                    id="human-prompt-form"
+                                    onSubmit={humanForm.handleSubmit(handleHumanSubmit)}
+                                >
+                                    {/* Error Alert */}
+                                    {mutationError && (
+                                        <Alert variant="destructive">
+                                            <AlertCircle className="size-4" />
+                                            <AlertTitle>Error</AlertTitle>
+                                            <AlertDescription>
+                                                {typeof mutationError !== 'string' ? (
+                                                    mutationError.message
+                                                ) : (
+                                                    <div className="whitespace-pre-line">{mutationError}</div>
+                                                )}
+                                            </AlertDescription>
+                                        </Alert>
+                                    )}
+
+                                    {/* Human Template Field */}
+                                    <FormTextareaItem
+                                        control={humanForm.control}
+                                        disabled={isLoading}
+                                        name="template"
+                                        placeholder="Enter the human prompt template..."
+                                    />
+                                </form>
+                            </Form>
+                        </TabsContent>
+                    )}
+                </Tabs>
+
+                {/* Sticky footer with variables and buttons */}
+                <div className="bg-background sticky -bottom-4 -mx-4 mt-4 -mb-4 border-t p-4 shadow-lg">
+                    {/* Variables */}
+                    {variablesData && (
+                        <Variables
+                            currentTemplate={variablesData.currentTemplate}
+                            onVariableClick={handleVariableClickCallback}
+                            variables={variablesData.variables}
+                        />
+                    )}
+
+                    {/* Action buttons */}
+                    <div className="flex items-center">
+                        <div className="flex gap-2">
+                            {/* Reset button - only show when user has custom prompt */}
+                            {((activeTab === 'system' && promptInfo?.userSystemPrompt) ||
+                                (activeTab === 'human' && promptInfo?.userHumanPrompt)) && (
+                                <>
+                                    <Button
+                                        disabled={isLoading}
+                                        onClick={handleReset}
+                                        type="button"
+                                        variant="destructive"
+                                    >
+                                        {isDeleteLoading ? <Loader2 className="size-4 animate-spin" /> : <RotateCcw />}
+                                        {isDeleteLoading ? 'Resetting...' : 'Reset'}
+                                    </Button>
+
+                                    <Button
+                                        disabled={isLoading}
+                                        onClick={() => setIsDiffDialogOpen(true)}
+                                        type="button"
+                                        variant="outline"
+                                    >
+                                        <FileDiff className="size-4" />
+                                        Diff
+                                    </Button>
+                                </>
                             )}
-                            {isValidateLoading ? 'Validating...' : 'Validate'}
-                        </Button>
-                    </div>
+                            <Button
+                                disabled={isLoading}
+                                onClick={handleValidate}
+                                type="button"
+                                variant="outline"
+                            >
+                                {isValidateLoading ? (
+                                    <Loader2 className="size-4 animate-spin" />
+                                ) : (
+                                    <CheckCircle className="size-4" />
+                                )}
+                                {isValidateLoading ? 'Validating...' : 'Validate'}
+                            </Button>
+                        </div>
 
-                    <div className="ml-auto flex gap-2">
-                        <Button
-                            disabled={isLoading}
-                            onClick={handleBack}
-                            type="button"
-                            variant="outline"
-                        >
-                            Cancel
-                        </Button>
-                        {activeTab === 'system' && (
-                            <FormSubmitButton
-                                form="system-prompt-form"
-                                icon={<Save className="size-4" />}
-                                loading={isLoading}
-                                variant="secondary"
+                        <div className="ml-auto flex gap-2">
+                            <Button
+                                disabled={isLoading}
+                                onClick={handleBack}
+                                type="button"
+                                variant="outline"
                             >
-                                {isLoading ? 'Saving...' : 'Save Changes'}
-                            </FormSubmitButton>
-                        )}
-                        {activeTab === 'human' && promptInfo?.type === 'agent' && promptInfo?.hasHuman && (
-                            <FormSubmitButton
-                                form="human-prompt-form"
-                                icon={<Save className="size-4" />}
-                                loading={isLoading}
-                                variant="secondary"
-                            >
-                                {isLoading ? 'Saving...' : 'Save Changes'}
-                            </FormSubmitButton>
-                        )}
+                                Cancel
+                            </Button>
+                            {activeTab === 'system' && (
+                                <FormSubmitButton
+                                    form="system-prompt-form"
+                                    icon={<Save className="size-4" />}
+                                    loading={isLoading}
+                                    variant="secondary"
+                                >
+                                    {isLoading ? 'Saving...' : 'Save Changes'}
+                                </FormSubmitButton>
+                            )}
+                            {activeTab === 'human' && promptInfo?.type === 'agent' && promptInfo?.hasHuman && (
+                                <FormSubmitButton
+                                    form="human-prompt-form"
+                                    icon={<Save className="size-4" />}
+                                    loading={isLoading}
+                                    variant="secondary"
+                                >
+                                    {isLoading ? 'Saving...' : 'Save Changes'}
+                                </FormSubmitButton>
+                            )}
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            {/* Reset Confirmation Dialog */}
-            <ConfirmationDialog
-                cancelText="Cancel"
-                cancelVariant="outline"
-                confirmIcon={<RotateCcw />}
-                confirmText="Reset"
-                confirmVariant="destructive"
-                description="Are you sure you want to reset this prompt to its default value? This action cannot be undone."
-                handleConfirm={handleConfirmReset}
-                handleOpenChange={setResetDialogOpen}
-                isOpen={resetDialogOpen}
-                itemName={`${activeTab} prompt`}
-                itemType="template"
-                title="Reset Prompt"
-            />
+                {/* Reset Confirmation Dialog */}
+                <ConfirmationDialog
+                    cancelText="Cancel"
+                    cancelVariant="outline"
+                    confirmIcon={<RotateCcw />}
+                    confirmText="Reset"
+                    confirmVariant="destructive"
+                    description="Are you sure you want to reset this prompt to its default value? This action cannot be undone."
+                    handleConfirm={handleConfirmReset}
+                    handleOpenChange={setResetDialogOpen}
+                    isOpen={resetDialogOpen}
+                    itemName={`${activeTab} prompt`}
+                    itemType="template"
+                    title="Reset Prompt"
+                />
 
-            {/* Leave Confirmation Dialog */}
-            <ConfirmationDialog
-                cancelText="Stay"
-                confirmIcon={undefined}
-                confirmText="Leave"
-                confirmVariant="destructive"
-                description="You have unsaved changes. Are you sure you want to leave without saving?"
-                handleConfirm={handleConfirmLeave}
-                handleOpenChange={handleLeaveDialogOpenChange}
-                isOpen={isLeaveDialogOpen}
-                title="Discard changes?"
-            />
+                {/* Leave Confirmation Dialog */}
+                <ConfirmationDialog
+                    cancelText="Stay"
+                    confirmIcon={undefined}
+                    confirmText="Leave"
+                    confirmVariant="destructive"
+                    description="You have unsaved changes. Are you sure you want to leave without saving?"
+                    handleConfirm={handleConfirmLeave}
+                    handleOpenChange={handleLeaveDialogOpenChange}
+                    isOpen={isLeaveDialogOpen}
+                    title="Discard changes?"
+                />
 
-            {/* Validation Results Dialog */}
-            <Dialog
-                onOpenChange={setValidationDialogOpen}
-                open={validationDialogOpen}
-            >
-                <DialogContent className="max-w-2xl">
-                    <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2">
-                            <AlertCircle className="size-5" />
-                            Validation Results
-                        </DialogTitle>
-                        <DialogDescription>
-                            The validation result for the {activeTab} prompt template.
-                        </DialogDescription>
-                    </DialogHeader>
+                {/* Validation Results Dialog */}
+                <Dialog
+                    onOpenChange={setValidationDialogOpen}
+                    open={validationDialogOpen}
+                >
+                    <DialogContent className="max-w-2xl">
+                        <DialogHeader>
+                            <DialogTitle className="flex items-center gap-2">
+                                <AlertCircle className="size-5" />
+                                Validation Results
+                            </DialogTitle>
+                            <DialogDescription>
+                                The validation result for the {activeTab} prompt template.
+                            </DialogDescription>
+                        </DialogHeader>
 
-                    {validationResult && (
-                        <div className="flex flex-col gap-4">
-                            <Alert variant={validationResult.result ? 'default' : 'destructive'}>
-                                {validationResult.result === 'success' ? (
-                                    <CheckCircle className="size-4 text-green-500!" />
-                                ) : (
-                                    <XCircle className="size-4 text-red-500!" />
-                                )}
-                                <AlertTitle>
-                                    {validationResult.result === 'success' ? 'Valid Template' : 'Validation Error'}
-                                </AlertTitle>
-                                <AlertDescription>
-                                    <div className="whitespace-pre-line">
-                                        {validationResult.message}
-                                        {validationResult.details && (
-                                            <div className="mt-2">
-                                                <strong>Details:</strong> {validationResult.details}
-                                            </div>
-                                        )}
-                                        {validationResult.line && (
-                                            <div className="mt-1">
-                                                <strong>Line:</strong> {validationResult.line}
-                                            </div>
-                                        )}
-                                    </div>
-                                </AlertDescription>
-                            </Alert>
+                        {validationResult && (
+                            <div className="flex flex-col gap-4">
+                                <Alert variant={validationResult.result ? 'default' : 'destructive'}>
+                                    {validationResult.result === 'success' ? (
+                                        <CheckCircle className="size-4 text-green-500!" />
+                                    ) : (
+                                        <XCircle className="size-4 text-red-500!" />
+                                    )}
+                                    <AlertTitle>
+                                        {validationResult.result === 'success' ? 'Valid Template' : 'Validation Error'}
+                                    </AlertTitle>
+                                    <AlertDescription>
+                                        <div className="whitespace-pre-line">
+                                            {validationResult.message}
+                                            {validationResult.details && (
+                                                <div className="mt-2">
+                                                    <strong>Details:</strong> {validationResult.details}
+                                                </div>
+                                            )}
+                                            {validationResult.line && (
+                                                <div className="mt-1">
+                                                    <strong>Line:</strong> {validationResult.line}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </AlertDescription>
+                                </Alert>
 
-                            <div className="flex justify-end">
-                                <Button onClick={() => setValidationDialogOpen(false)}>Close</Button>
+                                <div className="flex justify-end">
+                                    <Button onClick={() => setValidationDialogOpen(false)}>Close</Button>
+                                </div>
                             </div>
-                        </div>
-                    )}
-                </DialogContent>
-            </Dialog>
+                        )}
+                    </DialogContent>
+                </Dialog>
 
-            {/* Diff Dialog */}
-            <Dialog
-                onOpenChange={setIsDiffDialogOpen}
-                open={isDiffDialogOpen}
-            >
-                <DialogContent className="max-w-7xl">
-                    <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2">
-                            <FileDiff className="size-5" />
-                            Diff
-                        </DialogTitle>
-                        <DialogDescription>Changes between current value and default template.</DialogDescription>
-                    </DialogHeader>
-                    <div className="max-h-[70vh] overflow-auto">
-                        <ReactDiffViewer
-                            newValue={currentTemplate}
-                            oldValue={defaultTemplate}
-                            splitView
-                            styles={diffStyles}
-                            useDarkTheme
-                        />
-                    </div>
-                </DialogContent>
-            </Dialog>
-        </div>
+                {/* Diff Dialog */}
+                <Dialog
+                    onOpenChange={setIsDiffDialogOpen}
+                    open={isDiffDialogOpen}
+                >
+                    <DialogContent className="max-w-7xl">
+                        <DialogHeader>
+                            <DialogTitle className="flex items-center gap-2">
+                                <FileDiff className="size-5" />
+                                Diff
+                            </DialogTitle>
+                            <DialogDescription>Changes between current value and default template.</DialogDescription>
+                        </DialogHeader>
+                        <div className="max-h-[70vh] overflow-auto">
+                            <ReactDiffViewer
+                                newValue={currentTemplate}
+                                oldValue={defaultTemplate}
+                                splitView
+                                styles={diffStyles}
+                                useDarkTheme
+                            />
+                        </div>
+                    </DialogContent>
+                </Dialog>
+            </div>
+        </>
     );
 }
 

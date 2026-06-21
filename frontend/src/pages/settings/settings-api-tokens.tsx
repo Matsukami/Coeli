@@ -25,6 +25,7 @@ import * as z from 'zod';
 
 import type { ApiTokenFragmentFragment } from '@/graphql/types';
 
+import { SettingsPageHeader } from '@/components/layouts/settings-page-header';
 import ConfirmationDialog from '@/components/shared/confirmation-dialog';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -840,29 +841,42 @@ function SettingsAPITokens() {
         [deletingToken, handleCopyTokenId, handleDeleteDialogOpen, handleEdit, isDeleteLoading],
     );
 
+    const pageHeader = (
+        <SettingsPageHeader
+            icon={<Key className="size-4 shrink-0" />}
+            title="API Tokens"
+        />
+    );
+
     if (isLoading) {
         return (
-            <div className="flex flex-col gap-4">
-                <SettingsAPITokensHeader onCreateClick={handleCreateNew} />
-                <StatusCard
-                    description="Please wait while we fetch your API tokens"
-                    icon={<Loader2 className="text-muted-foreground size-16 animate-spin" />}
-                    title="Loading tokens..."
-                />
-            </div>
+            <>
+                {pageHeader}
+                <div className="flex flex-1 flex-col gap-4 p-4">
+                    <SettingsAPITokensHeader onCreateClick={handleCreateNew} />
+                    <StatusCard
+                        description="Please wait while we fetch your API tokens"
+                        icon={<Loader2 className="text-muted-foreground size-16 animate-spin" />}
+                        title="Loading tokens..."
+                    />
+                </div>
+            </>
         );
     }
 
     if (error) {
         return (
-            <div className="flex flex-col gap-4">
-                <SettingsAPITokensHeader onCreateClick={handleCreateNew} />
-                <Alert variant="destructive">
-                    <AlertCircle className="size-4" />
-                    <AlertTitle>Error loading tokens</AlertTitle>
-                    <AlertDescription>{error.message}</AlertDescription>
-                </Alert>
-            </div>
+            <>
+                {pageHeader}
+                <div className="flex flex-1 flex-col gap-4 p-4">
+                    <SettingsAPITokensHeader onCreateClick={handleCreateNew} />
+                    <Alert variant="destructive">
+                        <AlertCircle className="size-4" />
+                        <AlertTitle>Error loading tokens</AlertTitle>
+                        <AlertDescription>{error.message}</AlertDescription>
+                    </Alert>
+                </div>
+            </>
         );
     }
 
@@ -870,109 +884,115 @@ function SettingsAPITokens() {
 
     if (tokens.length === 0 && !creatingToken) {
         return (
-            <div className="flex flex-col gap-4">
-                <SettingsAPITokensHeader onCreateClick={handleCreateNew} />
-                <StatusCard
-                    action={
-                        <Button
-                            onClick={handleCreateNew}
-                            variant="secondary"
-                        >
-                            <Plus className="size-4" />
-                            Create Token
-                        </Button>
-                    }
-                    description="Create your first API token to access PentAGI programmatically"
-                    icon={<Key className="text-muted-foreground size-8" />}
-                    title="No API tokens configured"
-                />
-            </div>
+            <>
+                {pageHeader}
+                <div className="flex flex-1 flex-col gap-4 p-4">
+                    <SettingsAPITokensHeader onCreateClick={handleCreateNew} />
+                    <StatusCard
+                        action={
+                            <Button
+                                onClick={handleCreateNew}
+                                variant="secondary"
+                            >
+                                <Plus className="size-4" />
+                                Create Token
+                            </Button>
+                        }
+                        description="Create your first API token to access PentAGI programmatically"
+                        icon={<Key className="text-muted-foreground size-8" />}
+                        title="No API tokens configured"
+                    />
+                </div>
+            </>
         );
     }
 
     return (
-        <div className="flex flex-col gap-4">
-            <SettingsAPITokensHeader onCreateClick={handleCreateNew} />
+        <>
+            {pageHeader}
+            <div className="flex flex-1 flex-col gap-4 p-4">
+                <SettingsAPITokensHeader onCreateClick={handleCreateNew} />
 
-            {(createError || updateError || deleteError || deleteErrorMessage) && (
-                <Alert variant="destructive">
-                    <AlertCircle className="size-4" />
-                    <AlertTitle>Error</AlertTitle>
-                    <AlertDescription>
-                        {createError?.message || updateError?.message || deleteError?.message || deleteErrorMessage}
-                    </AlertDescription>
-                </Alert>
-            )}
+                {(createError || updateError || deleteError || deleteErrorMessage) && (
+                    <Alert variant="destructive">
+                        <AlertCircle className="size-4" />
+                        <AlertTitle>Error</AlertTitle>
+                        <AlertDescription>
+                            {createError?.message || updateError?.message || deleteError?.message || deleteErrorMessage}
+                        </AlertDescription>
+                    </Alert>
+                )}
 
-            <DataTable<APIToken>
-                columns={columns}
-                data={creatingToken ? [createNewTokenPlaceholder, ...tokens] : tokens}
-                empty={{ entityName: 'API tokens' }}
-                filterPlaceholder="Filter tokens..."
-                filterValue={filter}
-                onFilterChange={setFilter}
-                onPageChange={handlePageChange}
-                pageIndex={currentPage}
-                renderRowContextMenu={renderRowContextMenu}
-            />
+                <DataTable<APIToken>
+                    columns={columns}
+                    data={creatingToken ? [createNewTokenPlaceholder, ...tokens] : tokens}
+                    empty={{ entityName: 'API tokens' }}
+                    filterPlaceholder="Filter tokens..."
+                    filterValue={filter}
+                    onFilterChange={setFilter}
+                    onPageChange={handlePageChange}
+                    pageIndex={currentPage}
+                    renderRowContextMenu={renderRowContextMenu}
+                />
 
-            <Dialog
-                onOpenChange={setShowTokenDialog}
-                open={showTokenDialog}
-            >
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>API Token Created</DialogTitle>
-                        <DialogDescription>
-                            Copy this token now. You won't be able to see it again for security reasons.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <div className="bg-muted rounded p-4">
-                        <code className="text-sm break-all">{tokenSecret}</code>
-                    </div>
-                    <div className="flex gap-2">
-                        <Button
-                            className="flex-1"
-                            onClick={async () => {
-                                if (tokenSecret) {
-                                    const success = await copyToClipboard(tokenSecret);
+                <Dialog
+                    onOpenChange={setShowTokenDialog}
+                    open={showTokenDialog}
+                >
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>API Token Created</DialogTitle>
+                            <DialogDescription>
+                                Copy this token now. You won't be able to see it again for security reasons.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <div className="bg-muted rounded p-4">
+                            <code className="text-sm break-all">{tokenSecret}</code>
+                        </div>
+                        <div className="flex gap-2">
+                            <Button
+                                className="flex-1"
+                                onClick={async () => {
+                                    if (tokenSecret) {
+                                        const success = await copyToClipboard(tokenSecret);
 
-                                    if (success) {
-                                        toast.success('Token copied to clipboard');
-                                    } else {
-                                        toast.error('Failed to copy token to clipboard');
+                                        if (success) {
+                                            toast.success('Token copied to clipboard');
+                                        } else {
+                                            toast.error('Failed to copy token to clipboard');
+                                        }
                                     }
-                                }
-                            }}
-                            variant="secondary"
-                        >
-                            <Copy className="size-4" />
-                            Copy Token
-                        </Button>
-                        <Button
-                            className="flex-1"
-                            onClick={() => {
-                                setShowTokenDialog(false);
-                                setTokenSecret(null);
-                            }}
-                            variant="outline"
-                        >
-                            Close
-                        </Button>
-                    </div>
-                </DialogContent>
-            </Dialog>
+                                }}
+                                variant="secondary"
+                            >
+                                <Copy className="size-4" />
+                                Copy Token
+                            </Button>
+                            <Button
+                                className="flex-1"
+                                onClick={() => {
+                                    setShowTokenDialog(false);
+                                    setTokenSecret(null);
+                                }}
+                                variant="outline"
+                            >
+                                Close
+                            </Button>
+                        </div>
+                    </DialogContent>
+                </Dialog>
 
-            <ConfirmationDialog
-                cancelText="Cancel"
-                confirmText="Delete"
-                handleConfirm={() => handleDelete(deletingToken?.tokenId)}
-                handleOpenChange={setIsDeleteDialogOpen}
-                isOpen={isDeleteDialogOpen}
-                itemName={deletingToken?.name || deletingToken?.tokenId}
-                itemType="token"
-            />
-        </div>
+                <ConfirmationDialog
+                    cancelText="Cancel"
+                    confirmText="Delete"
+                    handleConfirm={() => handleDelete(deletingToken?.tokenId)}
+                    handleOpenChange={setIsDeleteDialogOpen}
+                    isOpen={isDeleteDialogOpen}
+                    itemName={deletingToken?.name || deletingToken?.tokenId}
+                    itemType="token"
+                />
+            </div>
+        </>
     );
 }
 

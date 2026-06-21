@@ -8,6 +8,7 @@ import {
     Bot,
     Code,
     Ellipsis,
+    FileText,
     Loader2,
     Pencil,
     RotateCcw,
@@ -16,7 +17,7 @@ import {
     User,
     Wrench,
 } from 'lucide-react';
-import { Fragment, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import type { DefaultPromptFragmentFragment as DefaultPrompt, PromptType } from '@/graphql/types';
@@ -24,6 +25,7 @@ import type { DefaultPromptFragmentFragment as DefaultPrompt, PromptType } from 
 type AgentPrompt = AgentPrompts;
 type AgentPrompts = { human?: DefaultPrompt; system: DefaultPrompt };
 
+import { SettingsPageHeader } from '@/components/layouts/settings-page-header';
 import ConfirmationDialog from '@/components/shared/confirmation-dialog';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -777,29 +779,42 @@ function SettingsPrompts() {
         </>
     );
 
+    const pageHeader = (
+        <SettingsPageHeader
+            icon={<FileText className="size-4 shrink-0" />}
+            title="Prompts"
+        />
+    );
+
     if (isLoading) {
         return (
-            <div className="flex flex-col gap-4">
-                <SettingsPromptsHeader />
-                <StatusCard
-                    description="Please wait while we fetch your prompt templates"
-                    icon={<Loader2 className="text-muted-foreground size-16 animate-spin" />}
-                    title="Loading prompts..."
-                />
-            </div>
+            <>
+                {pageHeader}
+                <div className="flex flex-1 flex-col gap-6 p-4">
+                    <SettingsPromptsHeader />
+                    <StatusCard
+                        description="Please wait while we fetch your prompt templates"
+                        icon={<Loader2 className="text-muted-foreground size-16 animate-spin" />}
+                        title="Loading prompts..."
+                    />
+                </div>
+            </>
         );
     }
 
     if (error) {
         return (
-            <div className="flex flex-col gap-4">
-                <SettingsPromptsHeader />
-                <Alert variant="destructive">
-                    <AlertCircle className="size-4" />
-                    <AlertTitle>Error loading prompts</AlertTitle>
-                    <AlertDescription>{error.message}</AlertDescription>
-                </Alert>
-            </div>
+            <>
+                {pageHeader}
+                <div className="flex flex-1 flex-col gap-6 p-4">
+                    <SettingsPromptsHeader />
+                    <Alert variant="destructive">
+                        <AlertCircle className="size-4" />
+                        <AlertTitle>Error loading prompts</AlertTitle>
+                        <AlertDescription>{error.message}</AlertDescription>
+                    </Alert>
+                </div>
+            </>
         );
     }
 
@@ -808,20 +823,24 @@ function SettingsPrompts() {
 
     if (agentPrompts.length === 0 && toolPrompts.length === 0) {
         return (
-            <div className="flex flex-col gap-4">
-                <SettingsPromptsHeader />
-                <StatusCard
-                    description="Prompt templates could not be loaded"
-                    icon={<Settings className="text-muted-foreground size-8" />}
-                    title="No prompts available"
-                />
-            </div>
+            <>
+                {pageHeader}
+                <div className="flex flex-1 flex-col gap-6 p-4">
+                    <SettingsPromptsHeader />
+                    <StatusCard
+                        description="Prompt templates could not be loaded"
+                        icon={<Settings className="text-muted-foreground size-8" />}
+                        title="No prompts available"
+                    />
+                </div>
+            </>
         );
     }
 
     return (
-        <Fragment>
-            <div className="flex flex-col gap-6">
+        <>
+            {pageHeader}
+            <div className="flex flex-1 flex-col gap-6 p-4">
                 <SettingsPromptsHeader />
 
                 {agentPrompts.length > 0 && (
@@ -887,7 +906,7 @@ function SettingsPrompts() {
                 isOpen={resetDialogOpen}
                 title={`Reset ${resetOperation?.displayName || 'Prompt'}`}
             />
-        </Fragment>
+        </>
     );
 }
 

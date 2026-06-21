@@ -1,13 +1,14 @@
 import type { ColumnDef, Row } from '@tanstack/react-table';
 
 import { useMutation, useQuery } from '@apollo/client/react';
-import { AlertCircle, ChevronDown, Copy, Ellipsis, Loader2, Pencil, Plus, Settings, Trash } from 'lucide-react';
+import { AlertCircle, ChevronDown, Copy, Ellipsis, Loader2, Pencil, Plug, Plus, Settings, Trash } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import type { ProviderConfigFragmentFragment } from '@/graphql/types';
 
 import { providerIcons } from '@/components/icons/provider-icon';
+import { SettingsPageHeader } from '@/components/layouts/settings-page-header';
 import ConfirmationDialog from '@/components/shared/confirmation-dialog';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -340,29 +341,42 @@ function SettingsProviders() {
         [deletingProvider, handleProviderClone, handleProviderDeleteDialogOpen, handleProviderEdit, isDeleteLoading],
     );
 
+    const pageHeader = (
+        <SettingsPageHeader
+            icon={<Plug className="size-4 shrink-0" />}
+            title="Providers"
+        />
+    );
+
     if (isLoading) {
         return (
-            <div className="flex flex-col gap-4">
-                <SettingsProvidersHeader />
-                <StatusCard
-                    description="Please wait while we fetch your provider configurations"
-                    icon={<Loader2 className="text-muted-foreground size-16 animate-spin" />}
-                    title="Loading providers..."
-                />
-            </div>
+            <>
+                {pageHeader}
+                <div className="flex flex-1 flex-col gap-4 p-4">
+                    <SettingsProvidersHeader />
+                    <StatusCard
+                        description="Please wait while we fetch your provider configurations"
+                        icon={<Loader2 className="text-muted-foreground size-16 animate-spin" />}
+                        title="Loading providers..."
+                    />
+                </div>
+            </>
         );
     }
 
     if (error) {
         return (
-            <div className="flex flex-col gap-4">
-                <SettingsProvidersHeader />
-                <Alert variant="destructive">
-                    <AlertCircle className="size-4" />
-                    <AlertTitle>Error loading providers</AlertTitle>
-                    <AlertDescription>{error.message}</AlertDescription>
-                </Alert>
-            </div>
+            <>
+                {pageHeader}
+                <div className="flex flex-1 flex-col gap-4 p-4">
+                    <SettingsProvidersHeader />
+                    <Alert variant="destructive">
+                        <AlertCircle className="size-4" />
+                        <AlertTitle>Error loading providers</AlertTitle>
+                        <AlertDescription>{error.message}</AlertDescription>
+                    </Alert>
+                </div>
+            </>
         );
     }
 
@@ -370,62 +384,68 @@ function SettingsProviders() {
 
     if (providers.length === 0) {
         return (
-            <div className="flex flex-col gap-4">
-                <SettingsProvidersHeader />
-                <StatusCard
-                    action={
-                        <Button
-                            onClick={() => navigate(routes.settings.newProvider())}
-                            variant="secondary"
-                        >
-                            <Plus className="size-4" />
-                            Add Provider
-                        </Button>
-                    }
-                    description="Get started by adding your first language model provider"
-                    icon={<Settings className="text-muted-foreground size-8" />}
-                    title="No providers configured"
-                />
-            </div>
+            <>
+                {pageHeader}
+                <div className="flex flex-1 flex-col gap-4 p-4">
+                    <SettingsProvidersHeader />
+                    <StatusCard
+                        action={
+                            <Button
+                                onClick={() => navigate(routes.settings.newProvider())}
+                                variant="secondary"
+                            >
+                                <Plus className="size-4" />
+                                Add Provider
+                            </Button>
+                        }
+                        description="Get started by adding your first language model provider"
+                        icon={<Settings className="text-muted-foreground size-8" />}
+                        title="No providers configured"
+                    />
+                </div>
+            </>
         );
     }
 
     return (
-        <div className="flex flex-col gap-4">
-            <SettingsProvidersHeader />
+        <>
+            {pageHeader}
+            <div className="flex flex-1 flex-col gap-4 p-4">
+                <SettingsProvidersHeader />
 
-            {/* Delete Error Alert */}
-            {(deleteError || deleteErrorMessage) && (
-                <Alert variant="destructive">
-                    <AlertCircle className="size-4" />
-                    <AlertTitle>Error deleting provider</AlertTitle>
-                    <AlertDescription>{deleteError?.message || deleteErrorMessage}</AlertDescription>
-                </Alert>
-            )}
+                {/* Delete Error Alert */}
+                {(deleteError || deleteErrorMessage) && (
+                    <Alert variant="destructive">
+                        <AlertCircle className="size-4" />
+                        <AlertTitle>Error deleting provider</AlertTitle>
+                        <AlertDescription>{deleteError?.message || deleteErrorMessage}</AlertDescription>
+                    </Alert>
+                )}
 
-            <DataTable<Provider>
-                columns={columns}
-                data={providers}
-                empty={{ entityName: 'providers' }}
-                filterPlaceholder="Filter providers..."
-                filterValue={filter}
-                onFilterChange={setFilter}
-                onPageChange={handlePageChange}
-                pageIndex={currentPage}
-                renderRowContextMenu={renderRowContextMenu}
-                renderSubComponent={renderSubComponent}
-            />
+                <DataTable<Provider>
+                    columns={columns}
+                    data={providers}
+                    empty={{ entityName: 'providers' }}
+                    filterPlaceholder="Filter providers..."
+                    filterValue={filter}
+                    onFilterChange={setFilter}
+                    onPageChange={handlePageChange}
+                    pageIndex={currentPage}
+                    renderRowContextMenu={renderRowContextMenu}
+                    renderSubComponent={renderSubComponent}
+                />
 
-            <ConfirmationDialog
-                cancelText="Cancel"
-                confirmText="Delete"
-                handleConfirm={() => handleProviderDelete(deletingProvider?.id)}
-                handleOpenChange={setIsDeleteDialogOpen}
-                isOpen={isDeleteDialogOpen}
-                itemName={deletingProvider?.name}
-                itemType="provider"
-            />
-        </div>
+                <ConfirmationDialog
+                    cancelText="Cancel"
+                    confirmText="Delete"
+                    handleConfirm={() => handleProviderDelete(deletingProvider?.id)}
+                    handleOpenChange={setIsDeleteDialogOpen}
+                    isOpen={isDeleteDialogOpen}
+                    itemName={deletingProvider?.name}
+                    itemType="provider"
+                />
+            </div>
+        </>
     );
 }
 
