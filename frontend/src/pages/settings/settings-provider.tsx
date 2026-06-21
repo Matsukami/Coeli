@@ -637,9 +637,8 @@ const reasoningEffortLabel: Record<ReasoningEffort, string> = {
 
 const defaultReasoningEfforts: ReasoningEffort[] = [ReasoningEffort.Low, ReasoningEffort.Medium, ReasoningEffort.High];
 
-// ReasoningFields renders the per-agent reasoning controls, gated by the selected
-// model's declared capability (models.yml) instead of a model-name allowlist:
-// adaptive-only models lock to adaptive, and the effort options follow the model.
+// Gated by the selected model's declared capability (models.yml), not a model-name
+// allowlist: adaptive-only models lock to adaptive, and effort options follow the model.
 function ReasoningFields({
     agentKey,
     control,

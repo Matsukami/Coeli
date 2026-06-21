@@ -2077,6 +2077,9 @@ func (r *queryResolver) SettingsProviders(ctx context.Context) (*model.Providers
 			config.Default.Bedrock = mpcfg
 			if models, err := bedrock.DefaultModels(r.Config); err == nil {
 				config.Models.Bedrock = converter.ConvertModels(models)
+			} else {
+				// A bad BEDROCK_MODELS_PATH otherwise yields an empty model list with no signal.
+				r.Logger.WithError(err).Warn("failed to load bedrock models")
 			}
 		case provider.ProviderOllama:
 			config.Default.Ollama = mpcfg

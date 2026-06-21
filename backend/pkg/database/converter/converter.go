@@ -580,8 +580,8 @@ func ConvertModels(models pconfig.ModelsConfig) []*model.ModelConfig {
 	return gmodels
 }
 
-// convertModelReasoningMode maps a pconfig model reasoning capability to its GraphQL
-// enum value (only adaptive-only differs in spelling: hyphen vs underscore).
+// Bridges the one spelling difference between the pconfig and GraphQL reasoning
+// enums: adaptive-only (hyphen) vs adaptive_only (underscore).
 func convertModelReasoningMode(m pconfig.ModelReasoningMode) model.ModelReasoningMode {
 	switch m {
 	case pconfig.ModelReasoningAdaptiveOnly:

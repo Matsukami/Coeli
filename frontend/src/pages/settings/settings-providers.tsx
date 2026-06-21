@@ -52,19 +52,26 @@ const providerIcons: Record<ProviderType, React.ComponentType<React.SVGProps<SVG
     [ProviderType.Qwen]: Qwen,
 };
 
-const providerTypes = [
-    { label: 'Anthropic', type: ProviderType.Anthropic },
-    { label: 'Bedrock', type: ProviderType.Bedrock },
-    { label: 'Custom', type: ProviderType.Custom },
-    { label: 'DeepSeek', type: ProviderType.Deepseek },
-    { label: 'Gemini', type: ProviderType.Gemini },
-    { label: 'GLM', type: ProviderType.Glm },
-    { label: 'Kimi', type: ProviderType.Kimi },
-    { label: 'MiniMax', type: ProviderType.Minimax },
-    { label: 'Ollama', type: ProviderType.Ollama },
-    { label: 'OpenAI', type: ProviderType.Openai },
-    { label: 'Qwen', type: ProviderType.Qwen },
-];
+// Exhaustive Record so a newly-added ProviderType is a compile error here, not a
+// provider silently missing from the create-provider menu.
+const providerLabels: Record<ProviderType, string> = {
+    [ProviderType.Anthropic]: 'Anthropic',
+    [ProviderType.Bedrock]: 'Bedrock',
+    [ProviderType.Custom]: 'Custom',
+    [ProviderType.Deepseek]: 'DeepSeek',
+    [ProviderType.Gemini]: 'Gemini',
+    [ProviderType.Glm]: 'GLM',
+    [ProviderType.Kimi]: 'Kimi',
+    [ProviderType.Minimax]: 'MiniMax',
+    [ProviderType.Ollama]: 'Ollama',
+    [ProviderType.Openai]: 'OpenAI',
+    [ProviderType.Qwen]: 'Qwen',
+};
+
+const providerTypes = (Object.keys(providerLabels) as ProviderType[]).map((type) => ({
+    label: providerLabels[type],
+    type,
+}));
 
 function SettingsProviders() {
     const { data, error, loading: isLoading } = useQuery(SettingsProvidersDocument);
