@@ -33,6 +33,22 @@ const (
 	ProviderMiniMax   ProviderType = "minimax"
 )
 
+// AllProviderTypes enumerates every supported provider type; keep it in sync with
+// the consts above. The API-layer type whitelist validates against it.
+var AllProviderTypes = ProvidersListTypes{
+	ProviderOpenAI,
+	ProviderAnthropic,
+	ProviderGemini,
+	ProviderBedrock,
+	ProviderOllama,
+	ProviderCustom,
+	ProviderDeepSeek,
+	ProviderGLM,
+	ProviderKimi,
+	ProviderQwen,
+	ProviderMiniMax,
+}
+
 type ProviderName string
 
 func (p ProviderName) String() string {
