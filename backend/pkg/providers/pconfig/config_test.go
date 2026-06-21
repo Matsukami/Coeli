@@ -1956,3 +1956,35 @@ func TestReasoningConfig_IsZero(t *testing.T) {
 	assert.False(t, ReasoningConfig{Effort: llms.ReasoningLow}.IsZero())
 	assert.False(t, ReasoningConfig{MaxTokens: 1}.IsZero())
 }
+
+func TestAgentConfigValidate(t *testing.T) {
+	require.NoError(t, (&AgentConfig{
+		Temperature: 2, TopP: 1, TopK: 40, MaxTokens: 8192,
+		MinLength: 1, MaxLength: 100,
+		RepetitionPenalty: 1.1, FrequencyPenalty: -2, PresencePenalty: 2,
+		Reasoning: ReasoningConfig{MaxTokens: 32000},
+		Price:     &PriceInfo{Input: 5, Output: 25},
+	}).Validate())
+	require.NoError(t, (&AgentConfig{}).Validate(), "zero value (all unset) is valid")
+
+	cases := map[string]*AgentConfig{
+		"temperature too high":      {Temperature: 5},
+		"temperature negative":      {Temperature: -1},
+		"top_p too high":            {TopP: 1.5},
+		"top_k negative":            {TopK: -1},
+		"max_tokens negative":       {MaxTokens: -100},
+		"inverted length window":    {MinLength: 5000, MaxLength: 10},
+		"frequency out of range":    {FrequencyPenalty: 9},
+		"reasoning budget over cap": {Reasoning: ReasoningConfig{MaxTokens: 40000}},
+		"negative price":            {Price: &PriceInfo{Input: -1}},
+	}
+	for name, ac := range cases {
+		t.Run(name, func(t *testing.T) {
+			assert.Error(t, ac.Validate())
+		})
+	}
+
+	err := (&ProviderConfig{Adviser: &AgentConfig{Temperature: 5}}).Validate()
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "adviser")
+}

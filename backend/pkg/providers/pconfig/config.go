@@ -276,6 +276,71 @@ type ProviderConfig struct {
 	rawConfig      []byte            `json:"-" yaml:"-"`
 }
 
+// Validate rejects universally-invalid agent values (negatives where a value is
+// physically meaningless, an inverted length window, an out-of-range probability
+// or temperature, a reasoning budget over the engine cap). It stays permissive —
+// 0 means "unset", and provider-specific tuning ranges are the LLM API's job —
+// so it never rejects a valid provider-specific config.
+func (pc *ProviderConfig) Validate() error {
+	agents := map[string]*AgentConfig{
+		"simple": pc.Simple, "simple_json": pc.SimpleJSON, "primary_agent": pc.PrimaryAgent,
+		"assistant": pc.Assistant, "generator": pc.Generator, "refiner": pc.Refiner,
+		"adviser": pc.Adviser, "reflector": pc.Reflector, "searcher": pc.Searcher,
+		"enricher": pc.Enricher, "coder": pc.Coder, "installer": pc.Installer,
+		"pentester": pc.Pentester,
+	}
+	for name, ac := range agents {
+		if ac == nil {
+			continue
+		}
+		if err := ac.Validate(); err != nil {
+			return fmt.Errorf("%s: %w", name, err)
+		}
+	}
+	return nil
+}
+
+func (ac *AgentConfig) Validate() error {
+	if ac.Temperature < 0 || ac.Temperature > 2 {
+		return fmt.Errorf("temperature %v out of range [0, 2]", ac.Temperature)
+	}
+	if ac.TopP < 0 || ac.TopP > 1 {
+		return fmt.Errorf("top_p %v out of range [0, 1]", ac.TopP)
+	}
+	if ac.TopK < 0 {
+		return fmt.Errorf("top_k %d must be >= 0", ac.TopK)
+	}
+	if ac.MaxTokens < 0 {
+		return fmt.Errorf("max_tokens %d must be >= 0", ac.MaxTokens)
+	}
+	if ac.MinLength < 0 {
+		return fmt.Errorf("min_length %d must be >= 0", ac.MinLength)
+	}
+	if ac.MaxLength < 0 {
+		return fmt.Errorf("max_length %d must be >= 0", ac.MaxLength)
+	}
+	if ac.MinLength > 0 && ac.MaxLength > 0 && ac.MinLength > ac.MaxLength {
+		return fmt.Errorf("min_length %d must not exceed max_length %d", ac.MinLength, ac.MaxLength)
+	}
+	if ac.RepetitionPenalty < 0 || ac.RepetitionPenalty > 2 {
+		return fmt.Errorf("repetition_penalty %v out of range [0, 2]", ac.RepetitionPenalty)
+	}
+	if ac.FrequencyPenalty < -2 || ac.FrequencyPenalty > 2 {
+		return fmt.Errorf("frequency_penalty %v out of range [-2, 2]", ac.FrequencyPenalty)
+	}
+	if ac.PresencePenalty < -2 || ac.PresencePenalty > 2 {
+		return fmt.Errorf("presence_penalty %v out of range [-2, 2]", ac.PresencePenalty)
+	}
+	if ac.Reasoning.MaxTokens < 0 || ac.Reasoning.MaxTokens > 32000 {
+		return fmt.Errorf("reasoning.max_tokens %d out of range [0, 32000]", ac.Reasoning.MaxTokens)
+	}
+	if ac.Price != nil &&
+		(ac.Price.Input < 0 || ac.Price.Output < 0 || ac.Price.CacheRead < 0 || ac.Price.CacheWrite < 0) {
+		return fmt.Errorf("price values must be >= 0")
+	}
+	return nil
+}
+
 const EmptyProviderConfigRaw = `{
   "simple": {},
   "simple_json": {},

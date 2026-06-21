@@ -888,6 +888,10 @@ func (pc *providerController) CreateProvider(
 		return result, fmt.Errorf("failed to patch provider config: %w", err)
 	}
 
+	if err = config.Validate(); err != nil {
+		return result, fmt.Errorf("invalid provider config: %w", err)
+	}
+
 	rawConfig, err := json.Marshal(config)
 	if err != nil {
 		return result, fmt.Errorf("failed to marshal provider config: %w", err)
@@ -932,6 +936,10 @@ func (pc *providerController) UpdateProvider(
 
 	if config, err = pc.patchProviderConfig(prvtype, config); err != nil {
 		return result, fmt.Errorf("failed to patch provider config: %w", err)
+	}
+
+	if err = config.Validate(); err != nil {
+		return result, fmt.Errorf("invalid provider config: %w", err)
 	}
 
 	rawConfig, err := json.Marshal(config)
