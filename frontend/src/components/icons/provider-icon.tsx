@@ -29,7 +29,7 @@ interface ProviderIconProps {
     tooltip?: string;
 }
 
-const providerIcons: Record<ProviderType, ProviderIconConfig> = {
+export const providerIcons: Record<ProviderType, ProviderIconConfig> = {
     [ProviderType.Anthropic]: { className: 'text-purple-500', icon: Anthropic },
     [ProviderType.Bedrock]: { className: 'text-blue-500', icon: Bedrock },
     [ProviderType.Custom]: { className: 'text-blue-500', icon: Custom },

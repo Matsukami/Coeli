@@ -7,17 +7,7 @@ import { useNavigate } from 'react-router-dom';
 
 import type { ProviderConfigFragmentFragment } from '@/graphql/types';
 
-import Anthropic from '@/components/icons/anthropic';
-import Bedrock from '@/components/icons/bedrock';
-import Custom from '@/components/icons/custom';
-import DeepSeek from '@/components/icons/deepseek';
-import Gemini from '@/components/icons/gemini';
-import GLM from '@/components/icons/glm';
-import Kimi from '@/components/icons/kimi';
-import MiniMax from '@/components/icons/minimax';
-import Ollama from '@/components/icons/ollama';
-import OpenAi from '@/components/icons/open-ai';
-import Qwen from '@/components/icons/qwen';
+import { providerIcons } from '@/components/icons/provider-icon';
 import ConfirmationDialog from '@/components/shared/confirmation-dialog';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -37,20 +27,6 @@ import { useTableState } from '@/hooks/use-table-state';
 import { routes } from '@/lib/routes';
 import { formatDate } from '@/lib/utils/format';
 type Provider = ProviderConfigFragmentFragment;
-
-const providerIcons: Record<ProviderType, React.ComponentType<React.SVGProps<SVGSVGElement>>> = {
-    [ProviderType.Anthropic]: Anthropic,
-    [ProviderType.Bedrock]: Bedrock,
-    [ProviderType.Custom]: Custom,
-    [ProviderType.Deepseek]: DeepSeek,
-    [ProviderType.Gemini]: Gemini,
-    [ProviderType.Glm]: GLM,
-    [ProviderType.Kimi]: Kimi,
-    [ProviderType.Minimax]: MiniMax,
-    [ProviderType.Ollama]: Ollama,
-    [ProviderType.Openai]: OpenAi,
-    [ProviderType.Qwen]: Qwen,
-};
 
 // Exhaustive Record so a newly-added ProviderType is a compile error here, not a
 // provider silently missing from the create-provider menu.
@@ -145,7 +121,7 @@ function SettingsProviders() {
                 accessorKey: 'type',
                 cell: ({ row }) => {
                     const providerType = row.getValue('type') as ProviderType;
-                    const Icon = providerIcons[providerType];
+                    const Icon = providerIcons[providerType]?.icon;
                     const label = providerTypes.find((p) => p.type === providerType)?.label || providerType;
 
                     return (
@@ -490,7 +466,7 @@ function SettingsProvidersHeader() {
                     }}
                 >
                     {providerTypes.map(({ label, type }) => {
-                        const Icon = providerIcons[type];
+                        const Icon = providerIcons[type]?.icon;
 
                         return (
                             <DropdownMenuItem
