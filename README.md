@@ -1734,8 +1734,8 @@ PentAGI supports 11 Claude models with tool calling, streaming, extended thinkin
 
 | Model ID                 | Thinking | Release Date | Price (Input/Output/Cache R/W) | Use Case                                        |
 | ------------------------ | -------- | ------------ | ------------------------------ | ----------------------------------------------- |
-| `claude-opus-4-8`        | ✅ adaptive-only | May 2026 | $5.00/$25.00/$0.50/$6.25       | Flagship for coding, agents, and deep reasoning. Adaptive thinking only — budget thinking and sampling params (temperature/top_p/top_k) are rejected. Most demanding exploit development and multi-stage attack simulation |
-| `claude-opus-4-7`        | ✅ adaptive-only | Apr 2026 | $5.00/$25.00/$0.50/$6.25       | Advanced software engineering and long-running agentic security analysis. Adaptive thinking only (manual budget thinking rejected) |
+| `claude-opus-4-8`        | ✅        | May 2026     | $5.00/$25.00/$0.50/$6.25       | Flagship for coding, agents, and deep reasoning. Adaptive thinking only — budget thinking and sampling params (temperature/top_p/top_k) are rejected. Most demanding exploit development and multi-stage attack simulation |
+| `claude-opus-4-7`        | ✅        | Apr 2026     | $5.00/$25.00/$0.50/$6.25       | Advanced software engineering and long-running agentic security analysis. Adaptive thinking only (manual budget thinking rejected) |
 | `claude-opus-4-6`*       | ✅        | May 2025     | $5.00/$25.00/$0.50/$6.25       | Most intelligent model for autonomous agents and coding. Extended + adaptive thinking for complex exploit development, multi-stage attack simulation |
 | `claude-sonnet-4-6`*     | ✅        | Aug 2025     | $3.00/$15.00/$0.30/$3.75       | Best speed/intelligence balance with adaptive thinking. Multi-phase security assessments, intelligent vulnerability analysis, real-time threat hunting |
 | `claude-haiku-4-5`*      | ✅        | Oct 2025     | $1.00/$5.00/$0.10/$1.25        | Fastest model with near-frontier intelligence. High-frequency scanning, real-time monitoring, bulk automated testing |
@@ -1939,8 +1939,8 @@ PentAGI supports 24 AWS Bedrock models with tool calling, streaming, and multimo
 | `us.amazon.nova-pro-v1:0`                        | Amazon Nova     | ❌        | ✅          | $0.80/$3.20          | Balanced accuracy, speed, cost          |
 | `us.amazon.nova-lite-v1:0`                       | Amazon Nova     | ❌        | ✅          | $0.06/$0.24          | Fast processing, high-volume operations |
 | `us.amazon.nova-micro-v1:0`                      | Amazon Nova     | ❌        | ❌          | $0.035/$0.14         | Ultra-low latency, real-time monitoring |
-| `us.anthropic.claude-opus-4-8`                   | Anthropic       | ✅ adaptive-only | ✅   | $5.00/$25.00         | Flagship coding/agents/deep reasoning; adaptive thinking only (sampling params rejected) |
-| `us.anthropic.claude-opus-4-7`                   | Anthropic       | ✅ adaptive-only | ✅   | $5.00/$25.00         | Advanced engineering, long-running agents; adaptive thinking only |
+| `us.anthropic.claude-opus-4-8`                   | Anthropic       | ✅        | ✅          | $5.00/$25.00         | Flagship coding/agents/deep reasoning; adaptive thinking only (sampling params rejected) |
+| `us.anthropic.claude-opus-4-7`                   | Anthropic       | ✅        | ✅          | $5.00/$25.00         | Advanced engineering, long-running agents; adaptive thinking only |
 | `us.anthropic.claude-opus-4-6-v1`*               | Anthropic       | ✅        | ✅          | $5.00/$25.00         | World-class coding, enterprise agents   |
 | `us.anthropic.claude-sonnet-4-6`                 | Anthropic       | ✅        | ✅          | $3.00/$15.00         | Frontier intelligence, enterprise scale |
 | `us.anthropic.claude-opus-4-5-20251101-v1:0`     | Anthropic       | ✅        | ✅          | $5.00/$25.00         | Multi-day software development          |
