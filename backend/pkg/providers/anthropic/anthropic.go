@@ -3,7 +3,6 @@ package anthropic
 import (
 	"context"
 	"embed"
-	"net/http"
 
 	"pentagi/pkg/config"
 	"pentagi/pkg/providers/pconfig"
@@ -74,12 +73,6 @@ func New(
 	if err != nil {
 		return nil, err
 	}
-
-	base := httpClient.Transport
-	if base == nil {
-		base = http.DefaultTransport
-	}
-	httpClient.Transport = &adaptiveThinkingTransport{base: base}
 
 	models, err := DefaultModels()
 	if err != nil {

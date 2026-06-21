@@ -176,7 +176,7 @@ llm.GenerateContent(ctx, messages,
 )
 ```
 
-> **Adaptive thinking is the exception — do NOT set temperature for it.** Claude Opus 4.7/4.8 (and the 4.6 series when run in adaptive mode) use `thinking.type=adaptive` + `output_config.effort` and **reject every sampling parameter** (`temperature`/`top_p`/`top_k`) with HTTP 400. PentAGI handles this in `pkg/providers/anthropic/adaptive_thinking.go` and `pkg/providers/bedrock/adaptive_thinking.go`, which rewrite the request to adaptive form and strip those params for adaptive(-only) models. A model's capability is declared in its provider `models.yml` via `reasoning.mode` (`adaptive` = budget or adaptive; `adaptive-only` = adaptive required, budget returns 400); the per-agent `ReasoningConfig.Mode`/`Effort` then selects the mode at call time.
+> **Adaptive thinking is the exception — do NOT set temperature for it.** Claude Opus 4.7/4.8 (and the 4.6 series when run in adaptive mode) use `thinking.type=adaptive` + `output_config.effort` and **reject every sampling parameter** (`temperature`/`top_p`/`top_k`) with HTTP 400. The forked langchaingo handles this natively: `llms.WithAdaptiveReasoning(effort)` makes the anthropic and bedrock clients emit the adaptive request shape and omit those sampling params. A model's capability is declared in its provider `models.yml` via `reasoning.mode` (`adaptive` = budget or adaptive; `adaptive-only` = adaptive required, budget returns 400); the per-agent `ReasoningConfig.Mode`/`Effort` then selects the mode at call time (PentAGI's `PrepareAdaptiveCallOptions` appends `WithAdaptiveReasoning`).
 
 #### 1.3 Interleaved Thinking with Tools
 

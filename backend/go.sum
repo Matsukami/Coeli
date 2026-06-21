@@ -220,7 +220,6 @@ github.com/gabriel-vasile/mimetype v1.4.9 h1:5k+WDwEsD9eTLL8Tz3L0VnmVh9QxGjRmjBv
 github.com/gabriel-vasile/mimetype v1.4.9/go.mod h1:WnSQhFKJuBlRyLiKohA/2DtIlPFAbguNaG7QCHcyGok=
 github.com/gage-technologies/mistral-go v1.1.0 h1:POv1wM9jA/9OBXGV2YdPi9Y/h09+MjCbUF+9hRYlVUI=
 github.com/gage-technologies/mistral-go v1.1.0/go.mod h1:tF++Xt7U975GcLlzhrjSQb8l/x+PrriO9QEdsgm9l28=
-github.com/ghodss/yaml v1.0.0 h1:wQHKEahhL6wmXdzwWG11gIVCkOv05bNOh+Rxn0yngAk=
 github.com/ghodss/yaml v1.0.0/go.mod h1:4dBDuWmgqj2HViK6kFavaiC9ZROes6MMH2rRYeMEF04=
 github.com/gin-contrib/cors v1.7.2 h1:oLDHxdg8W/XDoN/8zamqk/Drgt4oVZDvaV0YmvVICQw=
 github.com/gin-contrib/cors v1.7.2/go.mod h1:SUJVARKgQ40dmrzgXEVxj2m7Ig1v1qIboQkPDTQ9t2E=
@@ -631,8 +630,8 @@ github.com/vxcontrol/cloud v0.9.0 h1:p7xYTgUctbY8w6YfhugNzvfi3/0EQoZGumMe67keAng
 github.com/vxcontrol/cloud v0.9.0/go.mod h1:AeiQFqiMgJJAXy6FYXtDS2a3P/PMB56iiBNY2vGrZhQ=
 github.com/vxcontrol/graphiti-go-client v0.9.0 h1:3GxpFmQoHmz/d7/9tyEqD8+S99v2cuqG1UEmrbAFrLU=
 github.com/vxcontrol/graphiti-go-client v0.9.0/go.mod h1:6UHL5uqAKp4KAdziva4qgcAxFtBzU05Hm/BAo4NkAuo=
-github.com/vxcontrol/langchaingo v0.1.14-update.5 h1:QIib3znyGg/YnRSRB3ZMxwwfRE2vy+xZ2gDH6zwj9fk=
-github.com/vxcontrol/langchaingo v0.1.14-update.5/go.mod h1:fJal4XqJsYXRFTbAPJpwcJdztea9+1174fSDYacgctU=
+github.com/vxcontrol/langchaingo v0.1.15-0.20260621133759-91d8dfdd9c89 h1:voo1O4CrwWnWxiHDbkpSugMMZtzB3nDda10Ligesz5k=
+github.com/vxcontrol/langchaingo v0.1.15-0.20260621133759-91d8dfdd9c89/go.mod h1:fJal4XqJsYXRFTbAPJpwcJdztea9+1174fSDYacgctU=
 github.com/wasilibs/go-re2 v1.10.0 h1:vQZEBYZOCA9jdBMmrO4+CvqyCj0x4OomXTJ4a5/urQ0=
 github.com/wasilibs/go-re2 v1.10.0/go.mod h1:k+5XqO2bCJS+QpGOnqugyfwC04nw0jaglmjrrkG8U6o=
 github.com/wasilibs/wazero-helpers v0.0.0-20240620070341-3dff1577cd52 h1:OvLBa8SqJnZ6P+mjlzc2K7PM22rRUPE1x32G9DTPrC4=

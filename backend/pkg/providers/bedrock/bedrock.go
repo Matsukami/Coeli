@@ -20,7 +20,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockruntime"
 	smithybearer "github.com/aws/smithy-go/auth/bearer"
-	"github.com/aws/smithy-go/middleware"
 	"github.com/invopop/jsonschema"
 	"github.com/vxcontrol/langchaingo/llms"
 	"github.com/vxcontrol/langchaingo/llms/bedrock"
@@ -135,9 +134,6 @@ func New(
 ) (provider.Provider, error) {
 	opts := []func(*bconfig.LoadOptions) error{
 		bconfig.WithRegion(cfg.BedrockRegion),
-		bconfig.WithAPIOptions([]func(*middleware.Stack) error{
-			addAdaptiveThinkingMiddleware,
-		}),
 	}
 
 	// Choose authentication strategy based on configuration

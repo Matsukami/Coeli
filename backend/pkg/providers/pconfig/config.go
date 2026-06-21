@@ -716,9 +716,8 @@ func (ac *AgentConfig) BuildOptions() []llms.CallOption {
 	if _, ok := ac.raw["reasoning"]; ok && !ac.Reasoning.IsZero() {
 		switch ac.Reasoning.EffectiveMode() {
 		case ReasoningModeAdaptive:
-			// Adaptive thinking is applied per-call by the provider that supports it
-			// (Bedrock rewrites the Converse body in prepareCallOptions); no generic
-			// CallOption is emitted here.
+			// Adaptive thinking is applied per-call by PrepareAdaptiveCallOptions
+			// (it appends llms.WithAdaptiveReasoning); no CallOption is emitted here.
 		case ReasoningModeBudget:
 			if ac.Reasoning.MaxTokens > 0 && ac.Reasoning.MaxTokens <= 32000 {
 				options = append(options, llms.WithReasoning(llms.ReasoningNone, ac.Reasoning.MaxTokens))
@@ -970,27 +969,6 @@ func (pc *ProviderConfig) GetPriceInfoForType(optType ProviderOptionsType) *Pric
 	return nil
 }
 
-// Adaptive thinking is requested as a budget thinking block (via WithReasoning),
-// which the bedrock/anthropic transport interceptors rewrite to
-// thinking.type=adaptive + output_config.effort. The chosen effort travels to the
-// interceptor on the request context.
-type adaptiveEffortContextKey struct{}
-
-// WithAdaptiveEffort threads the adaptive-thinking effort onto ctx. Empty effort
-// defaults to "high" (the API rejects an empty effort).
-func WithAdaptiveEffort(ctx context.Context, effort string) context.Context {
-	if effort == "" {
-		effort = string(llms.ReasoningHigh)
-	}
-
-	return context.WithValue(ctx, adaptiveEffortContextKey{}, effort)
-}
-
-func AdaptiveEffortFromContext(ctx context.Context) (string, bool) {
-	effort, ok := ctx.Value(adaptiveEffortContextKey{}).(string)
-	return effort, ok && effort != ""
-}
-
 func (pc *ProviderConfig) modelReasoningMode(models ModelsConfig, opt ProviderOptionsType) ModelReasoningMode {
 	agentConfig := pc.AgentConfigForType(opt)
 	if agentConfig == nil || agentConfig.Model == "" {
@@ -1027,9 +1005,10 @@ func (pc *ProviderConfig) UsesAdaptiveThinking(models ModelsConfig, opt Provider
 	return ok && reasoning.EffectiveMode() == ReasoningModeAdaptive
 }
 
-// PrepareAdaptiveCallOptions threads the effort onto ctx and appends the budget
-// thinking CallOption that the interceptor rewrites to adaptive form. No-op for
-// non-adaptive calls.
+// PrepareAdaptiveCallOptions appends the adaptive-thinking CallOption for agents
+// that require it. No-op for non-adaptive calls. The langchaingo provider emits
+// thinking.type=adaptive + output_config.effort and omits sampling params; an
+// empty effort defaults to "high" there.
 func (pc *ProviderConfig) PrepareAdaptiveCallOptions(
 	ctx context.Context,
 	models ModelsConfig,
@@ -1041,8 +1020,7 @@ func (pc *ProviderConfig) PrepareAdaptiveCallOptions(
 	}
 
 	reasoning, _ := pc.reasoningConfigForType(opt)
-	ctx = WithAdaptiveEffort(ctx, string(reasoning.Effort))
-	options = append(options, llms.WithReasoning(llms.ReasoningHigh, 0))
+	options = append(options, llms.WithAdaptiveReasoning(reasoning.Effort))
 
 	return ctx, options
 }
