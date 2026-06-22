@@ -843,16 +843,16 @@ function SettingsPrompt() {
                     </TabsTrigger>
                 )}
             </TabsList>
-
-            {variablesData && (
-                <Variables
-                    currentTemplate={variablesData.currentTemplate}
-                    onVariableClick={handleVariableClickCallback}
-                    variables={variablesData.variables}
-                />
-            )}
         </>
     );
+
+    const variablesPanel = variablesData ? (
+        <Variables
+            currentTemplate={variablesData.currentTemplate}
+            onVariableClick={handleVariableClickCallback}
+            variables={variablesData.variables}
+        />
+    ) : null;
 
     const promptEditor = (
         <>
@@ -924,7 +924,10 @@ function SettingsPrompt() {
                             >
                                 <div className="h-full min-h-0 overflow-y-auto">
                                     <Card className="mx-auto min-h-full w-full max-w-2xl rounded-none border-0">
-                                        <CardContent className="flex flex-col gap-6 py-6">{promptMeta}</CardContent>
+                                        <CardContent className="flex flex-col gap-6 py-6">
+                                            {promptMeta}
+                                            {variablesPanel}
+                                        </CardContent>
                                     </Card>
                                 </div>
                             </ResizablePanel>
@@ -943,6 +946,7 @@ function SettingsPrompt() {
                     <div className="flex min-h-0 flex-1 flex-col gap-4 p-4">
                         {promptMeta}
                         {promptEditor}
+                        {variablesPanel}
                     </div>
                 )}
             </Tabs>
