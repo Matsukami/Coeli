@@ -48,6 +48,7 @@ import {
 } from '@/components/layouts/app/app-header';
 import ConfirmationDialog from '@/components/shared/confirmation-dialog';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -1064,24 +1065,24 @@ function Variables({ currentTemplate, onVariableClick, variables }: VariablesPro
     const usedVariables = getUsedVariables(currentTemplate);
 
     return (
-        <div className="bg-muted/50 rounded-md border p-3">
-            <h4 className="text-muted-foreground mb-2 text-sm font-medium">Available Variables:</h4>
-            <div className="flex flex-wrap gap-1">
+        <div className="bg-card overflow-hidden rounded-lg border">
+            <div className="border-b px-4 py-3">
+                <h4 className="text-sm font-medium">Available variables</h4>
+                <p className="text-muted-foreground mt-1 text-xs">Click a variable to insert it into the template.</p>
+            </div>
+            <div className="bg-background flex flex-wrap gap-1.5 px-4 py-3">
                 {variables.map((variable) => {
                     const isUsed = usedVariables.has(variable);
 
                     return (
-                        <code
-                            className={`cursor-pointer rounded border px-2 py-1 font-mono text-xs transition-colors ${
-                                isUsed
-                                    ? 'border-green-300 bg-green-100 text-green-800 hover:bg-green-200'
-                                    : 'bg-background text-foreground hover:bg-accent'
-                            }`}
+                        <Badge
+                            className="cursor-pointer font-mono font-normal"
                             key={variable}
                             onClick={() => onVariableClick(variable)}
+                            variant={isUsed ? 'green' : 'secondary'}
                         >
                             {`{{.${variable}}}`}
-                        </code>
+                        </Badge>
                     );
                 })}
             </div>
