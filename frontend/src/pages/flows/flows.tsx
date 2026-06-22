@@ -9,11 +9,16 @@ import { toast } from 'sonner';
 
 import { FlowStatusIcon } from '@/components/icons/flow-status-icon';
 import { ProviderIcon } from '@/components/icons/provider-icon';
+import {
+    AppHeader,
+    AppHeaderAction,
+    AppHeaderActions,
+    AppHeaderContent,
+    AppHeaderTitle,
+} from '@/components/layouts/app/app-header';
 import ConfirmationDialog from '@/components/shared/confirmation-dialog';
-import { HeaderButton } from '@/components/shared/header-button';
 import { InlineEditInput } from '@/components/shared/inline-edit';
 import { Badge } from '@/components/ui/badge';
-import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage } from '@/components/ui/breadcrumb';
 import { Button } from '@/components/ui/button';
 import { ContextMenuItem, ContextMenuSeparator } from '@/components/ui/context-menu';
 import { DataTable, DataTableColumnHeader } from '@/components/ui/data-table';
@@ -24,8 +29,6 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Separator } from '@/components/ui/separator';
-import { SidebarTrigger } from '@/components/ui/sidebar';
 import { StatusCard } from '@/components/ui/status-card';
 import { Toggle } from '@/components/ui/toggle';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -566,31 +569,19 @@ function Flows() {
     );
 
     const pageHeader = (
-        <header className="bg-background sticky top-0 z-10 flex h-12 w-full shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
-            <div className="flex min-w-0 flex-1 items-center gap-2 px-4">
-                <SidebarTrigger className="-ml-1 shrink-0" />
-                <Separator
-                    className="h-4 shrink-0"
-                    orientation="vertical"
-                />
-                <Breadcrumb className="min-w-0 flex-1">
-                    <BreadcrumbList className="min-w-0 flex-nowrap">
-                        <BreadcrumbItem className="min-w-0">
-                            <GitFork className="size-4 shrink-0" />
-                            <BreadcrumbPage className="min-w-0 truncate">Flows</BreadcrumbPage>
-                        </BreadcrumbItem>
-                    </BreadcrumbList>
-                </Breadcrumb>
-            </div>
-            <div className="flex shrink-0 items-center gap-2 px-4">
-                <HeaderButton
+        <AppHeader>
+            <AppHeaderContent>
+                <AppHeaderTitle icon={<GitFork className="size-4 shrink-0" />}>Flows</AppHeaderTitle>
+            </AppHeaderContent>
+            <AppHeaderActions>
+                <AppHeaderAction
                     icon={<Plus />}
                     label="New Flow"
                     onClick={() => navigate(routes.newFlow)}
                     variant="secondary"
                 />
-            </div>
-        </header>
+            </AppHeaderActions>
+        </AppHeader>
     );
 
     if (isLoading) {

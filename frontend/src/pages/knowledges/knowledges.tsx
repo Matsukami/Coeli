@@ -7,11 +7,16 @@ import { toast } from 'sonner';
 
 import type { BadgeVariant } from '@/components/ui/badge';
 
+import {
+    AppHeader,
+    AppHeaderAction,
+    AppHeaderActions,
+    AppHeaderContent,
+    AppHeaderTitle,
+} from '@/components/layouts/app/app-header';
 import ConfirmationDialog from '@/components/shared/confirmation-dialog';
-import { HeaderButton } from '@/components/shared/header-button';
 import { InlineEditInput } from '@/components/shared/inline-edit';
 import { Badge } from '@/components/ui/badge';
-import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage } from '@/components/ui/breadcrumb';
 import { Button } from '@/components/ui/button';
 import { ContextMenuItem, ContextMenuSeparator } from '@/components/ui/context-menu';
 import { DataTable, DataTableColumnHeader } from '@/components/ui/data-table';
@@ -23,8 +28,6 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { InputSearch } from '@/components/ui/input-search';
-import { Separator } from '@/components/ui/separator';
-import { SidebarTrigger } from '@/components/ui/sidebar';
 import { StatusCard } from '@/components/ui/status-card';
 import { KnowledgeDocType } from '@/graphql/types';
 import { useTableState } from '@/hooks/use-table-state';
@@ -372,23 +375,11 @@ function Knowledges() {
     );
 
     const pageHeader = (
-        <header className="bg-background sticky top-0 z-10 flex h-12 w-full shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
-            <div className="flex min-w-0 flex-1 items-center gap-2 px-4">
-                <SidebarTrigger className="-ml-1 shrink-0" />
-                <Separator
-                    className="h-4 shrink-0"
-                    orientation="vertical"
-                />
-                <Breadcrumb className="min-w-0 flex-1">
-                    <BreadcrumbList className="min-w-0 flex-nowrap">
-                        <BreadcrumbItem className="min-w-0">
-                            <LibraryBig className="size-4 shrink-0" />
-                            <BreadcrumbPage className="min-w-0 truncate">Knowledges</BreadcrumbPage>
-                        </BreadcrumbItem>
-                    </BreadcrumbList>
-                </Breadcrumb>
-            </div>
-            <div className="flex shrink-0 items-center gap-2 px-4">
+        <AppHeader>
+            <AppHeaderContent>
+                <AppHeaderTitle icon={<LibraryBig className="size-4 shrink-0" />}>Knowledges</AppHeaderTitle>
+            </AppHeaderContent>
+            <AppHeaderActions>
                 <InputSearch
                     ariaLabel="Search knowledge documents"
                     // Use Mod+K — Mod+F is reserved as the page-wide default
@@ -401,14 +392,14 @@ function Knowledges() {
                     placeholder="Semantic search..."
                     searchQuery={semanticQuery}
                 />
-                <HeaderButton
+                <AppHeaderAction
                     icon={<Plus />}
                     label="New Knowledge"
                     onClick={() => navigate(routes.newKnowledge)}
                     variant="secondary"
                 />
-            </div>
-        </header>
+            </AppHeaderActions>
+        </AppHeader>
     );
 
     if (isLoading && !knowledges.length) {

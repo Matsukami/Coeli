@@ -20,6 +20,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { z } from 'zod';
 
+import { AppHeader, AppHeaderActions, AppHeaderContent } from '@/components/layouts/app/app-header';
 import ConfirmationDialog from '@/components/shared/confirmation-dialog';
 import {
     DetailNavigationButtons,
@@ -42,9 +43,7 @@ import {
 import { Form, FormControl, FormField, FormItem } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupTextareaAutosize } from '@/components/ui/input-group';
-import { Separator } from '@/components/ui/separator';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Spinner } from '@/components/ui/spinner';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useTemplateDetailNavigation } from '@/features/templates/use-template-detail-navigation';
@@ -404,13 +403,8 @@ function Template() {
 
     const pageHeader = (
         <>
-            <header className="bg-background sticky top-0 z-10 flex h-12 shrink-0 items-center gap-2 border-b px-4">
-                <div className="flex min-w-0 flex-1 items-center gap-2">
-                    <SidebarTrigger className="-ml-1 shrink-0" />
-                    <Separator
-                        className="mr-2 h-4 shrink-0"
-                        orientation="vertical"
-                    />
+            <AppHeader>
+                <AppHeaderContent>
                     <Breadcrumb className="min-w-0 flex-1">
                         <BreadcrumbList className="min-w-0 flex-nowrap">
                             <BreadcrumbItem className="min-w-0 gap-2">
@@ -444,8 +438,8 @@ function Template() {
                             </BreadcrumbItem>
                         </BreadcrumbList>
                     </Breadcrumb>
-                </div>
-                <div className="flex shrink-0 items-center gap-2">
+                </AppHeaderContent>
+                <AppHeaderActions>
                     {canShowActions && !isMobile && (
                         <DetailNavigationToolbar<Template>
                             controller={templateNav}
@@ -520,8 +514,8 @@ function Template() {
                             </DropdownMenuContent>
                         </DropdownMenu>
                     )}
-                </div>
-            </header>
+                </AppHeaderActions>
+            </AppHeader>
             {isMobile && canShowActions && (
                 <DetailNavigationSheet<Template>
                     controller={templateNav}

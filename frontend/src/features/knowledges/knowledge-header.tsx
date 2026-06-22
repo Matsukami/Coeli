@@ -7,13 +7,13 @@ import { toast } from 'sonner';
 
 import type { KnowledgeDocumentFragmentFragment } from '@/graphql/types';
 
+import { AppHeader, AppHeaderAction, AppHeaderActions, AppHeaderContent } from '@/components/layouts/app/app-header';
 import ConfirmationDialog from '@/components/shared/confirmation-dialog';
 import {
     DetailNavigationButtons,
     DetailNavigationSheet,
     DetailNavigationToolbar,
 } from '@/components/shared/detail-navigation';
-import { HeaderButton } from '@/components/shared/header-button';
 import { InlineEditInput, useInlineEdit } from '@/components/shared/inline-edit';
 import { Badge } from '@/components/ui/badge';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage } from '@/components/ui/breadcrumb';
@@ -25,8 +25,6 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Separator } from '@/components/ui/separator';
-import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Spinner } from '@/components/ui/spinner';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useBreakpoint } from '@/hooks/use-breakpoint';
@@ -155,13 +153,8 @@ export function KnowledgeHeader({
 
     return (
         <>
-            <header className="bg-background sticky top-0 z-10 flex h-12 shrink-0 items-center gap-2 border-b px-4">
-                <div className="flex min-w-0 flex-1 items-center gap-2">
-                    <SidebarTrigger className="-ml-1 shrink-0" />
-                    <Separator
-                        className="mr-2 h-4 shrink-0"
-                        orientation="vertical"
-                    />
+            <AppHeader>
+                <AppHeaderContent>
                     <Breadcrumb className="min-w-0 flex-1">
                         <BreadcrumbList className="min-w-0 flex-nowrap">
                             <BreadcrumbItem className="min-w-0 gap-2">
@@ -196,8 +189,8 @@ export function KnowledgeHeader({
                             </BreadcrumbItem>
                         </BreadcrumbList>
                     </Breadcrumb>
-                </div>
-                <div className="flex shrink-0 items-center gap-2">
+                </AppHeaderContent>
+                <AppHeaderActions>
                     {canShowActions && !isMobile && (
                         <DetailNavigationToolbar<Knowledge>
                             controller={knowledgeNav}
@@ -207,7 +200,7 @@ export function KnowledgeHeader({
                         />
                     )}
                     {canAnonymize && !isMobile && (
-                        <HeaderButton
+                        <AppHeaderAction
                             disabled={isAnonymizeDisabled}
                             icon={isAnonymizing ? <Spinner variant="circle" /> : <HatGlasses aria-hidden="true" />}
                             label="Anonymize"
@@ -302,8 +295,8 @@ export function KnowledgeHeader({
                             </DropdownMenuContent>
                         </DropdownMenu>
                     )}
-                </div>
-            </header>
+                </AppHeaderActions>
+            </AppHeader>
             {isMobile && canShowActions && (
                 <DetailNavigationSheet<Knowledge>
                     controller={knowledgeNav}

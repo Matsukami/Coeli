@@ -15,6 +15,13 @@ import { toast } from 'sonner';
 
 import type { OverwriteConflict } from '@/components/shared/overwrite';
 
+import {
+    AppHeader,
+    AppHeaderAction,
+    AppHeaderActions,
+    AppHeaderContent,
+    AppHeaderTitle,
+} from '@/components/layouts/app/app-header';
 import ConfirmationDialog from '@/components/shared/confirmation-dialog';
 import {
     bulkCopyAction,
@@ -34,9 +41,7 @@ import {
     formatModifiedAbsolute,
     formatModifiedRelative,
 } from '@/components/shared/file-manager';
-import { HeaderButton } from '@/components/shared/header-button';
 import { OverwriteDialog, useOverwrite } from '@/components/shared/overwrite';
-import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage } from '@/components/ui/breadcrumb';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
@@ -48,8 +53,6 @@ import {
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty';
 import { FileDropZone } from '@/components/ui/file-drop-zone';
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '@/components/ui/input-group';
-import { Separator } from '@/components/ui/separator';
-import { SidebarTrigger } from '@/components/ui/sidebar';
 import { ResourcesCopyDialog } from '@/features/resources/resources-copy-dialog';
 import { ResourcesMkdirDialog } from '@/features/resources/resources-mkdir-dialog';
 import { ResourcesMoveDialog } from '@/features/resources/resources-move-dialog';
@@ -393,31 +396,19 @@ function Resources() {
     );
 
     const pageHeader = (
-        <header className="bg-background sticky top-0 z-10 flex h-12 w-full shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear">
-            <div className="flex min-w-0 flex-1 items-center gap-2 px-4">
-                <SidebarTrigger className="-ml-1 shrink-0" />
-                <Separator
-                    className="h-4 shrink-0"
-                    orientation="vertical"
-                />
-                <Breadcrumb className="min-w-0 flex-1">
-                    <BreadcrumbList className="min-w-0 flex-nowrap">
-                        <BreadcrumbItem className="min-w-0">
-                            <Folder className="size-4 shrink-0" />
-                            <BreadcrumbPage className="min-w-0 truncate">Resources</BreadcrumbPage>
-                        </BreadcrumbItem>
-                    </BreadcrumbList>
-                </Breadcrumb>
-            </div>
-            <div className="flex shrink-0 items-center gap-2 px-4">
-                <HeaderButton
+        <AppHeader>
+            <AppHeaderContent>
+                <AppHeaderTitle icon={<Folder className="size-4 shrink-0" />}>Resources</AppHeaderTitle>
+            </AppHeaderContent>
+            <AppHeaderActions>
+                <AppHeaderAction
                     disabled={upload.isUploading}
                     icon={<FolderPlus />}
                     label="New folder"
                     onClick={() => setIsMkdirOpen(true)}
                     variant="outline"
                 />
-                <HeaderButton
+                <AppHeaderAction
                     aria-label={upload.isUploading ? 'Uploading...' : 'Upload files'}
                     disabled={upload.isUploading}
                     icon={upload.isUploading ? <Loader2 className="animate-spin" /> : <Upload />}
@@ -425,8 +416,8 @@ function Resources() {
                     onClick={upload.openFilePicker}
                     variant="secondary"
                 />
-            </div>
-        </header>
+            </AppHeaderActions>
+        </AppHeader>
     );
 
     const hasResources = resources.length > 0;

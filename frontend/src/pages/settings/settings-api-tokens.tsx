@@ -25,7 +25,7 @@ import * as z from 'zod';
 
 import type { ApiTokenFragmentFragment } from '@/graphql/types';
 
-import { SettingsPageHeader } from '@/components/layouts/settings-page-header';
+import { AppHeader, AppHeaderContent, AppHeaderTitle } from '@/components/layouts/app/app-header';
 import ConfirmationDialog from '@/components/shared/confirmation-dialog';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -842,10 +842,11 @@ function SettingsAPITokens() {
     );
 
     const pageHeader = (
-        <SettingsPageHeader
-            icon={<Key className="size-4 shrink-0" />}
-            title="API Tokens"
-        />
+        <AppHeader>
+            <AppHeaderContent>
+                <AppHeaderTitle icon={<Key className="size-4 shrink-0" />}>API Tokens</AppHeaderTitle>
+            </AppHeaderContent>
+        </AppHeader>
     );
 
     if (isLoading) {

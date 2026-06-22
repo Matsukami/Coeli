@@ -13,7 +13,7 @@ import type {
     UpdateKnowledgeDocumentInput,
 } from '@/graphql/types';
 
-import { HeaderButton } from '@/components/shared/header-button';
+import { AppHeaderAction } from '@/components/layouts/app/app-header';
 import { UnsavedChangesDialog, useUnsavedChangesGuard } from '@/components/shared/unsaved-changes';
 import { Form } from '@/components/ui/form';
 import { Spinner } from '@/components/ui/spinner';
@@ -327,7 +327,7 @@ export function KnowledgeForm({ initialValues, isNew, knowledge, onSubmit }: Kno
     const canSubmit = !isSaving && isValid && (isNew || isDirty);
 
     const saveButton = (
-        <HeaderButton
+        <AppHeaderAction
             disabled={!canSubmit}
             icon={isSaving ? <Spinner variant="circle" /> : <Save aria-hidden="true" />}
             label={isNew ? 'Create' : 'Save'}

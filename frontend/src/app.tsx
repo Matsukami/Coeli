@@ -9,10 +9,10 @@ import {
     RouterProvider,
 } from 'react-router-dom';
 
-import AppLayout from '@/components/layouts/app-layout';
-import FlowsLayout from '@/components/layouts/flows-layout';
-import MainLayout from '@/components/layouts/main-layout';
-import SettingsLayout from '@/components/layouts/settings-layout';
+import AppLayout from '@/components/layouts/app/app-layout';
+import FlowsLayout from '@/components/layouts/flows/flows-layout';
+import MainLayout from '@/components/layouts/main/main-layout';
+import SettingsLayout from '@/components/layouts/settings/settings-layout';
 import ProtectedRoute from '@/components/routes/protected-route';
 import PublicRoute from '@/components/routes/public-route';
 import { DocumentTitle } from '@/components/shared/document-title';

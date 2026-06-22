@@ -1,12 +1,12 @@
 import { Outlet } from 'react-router-dom';
 
-import { SettingsSidebar } from '@/components/layouts/settings-sidebar';
+import { MainSidebar } from '@/components/layouts/main/main-sidebar';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 
-function SettingsLayout() {
+function MainLayout() {
     return (
         <SidebarProvider>
-            <SettingsSidebar />
+            <MainSidebar />
             <SidebarInset>
                 <Outlet />
             </SidebarInset>
@@ -14,4 +14,4 @@ function SettingsLayout() {
     );
 }
 
-export default SettingsLayout;
+export default MainLayout;

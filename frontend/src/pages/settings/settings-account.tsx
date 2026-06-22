@@ -3,7 +3,7 @@ import { enUS } from 'date-fns/locale';
 import { Lock, Mail, User } from 'lucide-react';
 import { useState } from 'react';
 
-import { SettingsPageHeader } from '@/components/layouts/settings-page-header';
+import { AppHeader, AppHeaderContent, AppHeaderTitle } from '@/components/layouts/app/app-header';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -51,10 +51,11 @@ function SettingsAccount() {
 
     return (
         <>
-            <SettingsPageHeader
-                icon={<User className="size-4 shrink-0" />}
-                title="Account"
-            />
+            <AppHeader>
+                <AppHeaderContent>
+                    <AppHeaderTitle icon={<User className="size-4 shrink-0" />}>Account</AppHeaderTitle>
+                </AppHeaderContent>
+            </AppHeader>
             <div className="mx-auto flex w-full max-w-2xl flex-col gap-4 p-4">
                 <Card>
                     <CardHeader className="flex-row items-center gap-4">

@@ -15,7 +15,7 @@ import SettingsAccount from './settings-account';
 const localUser = { created_at: '2026-01-15T00:00:00Z', mail: 'local@example.com', name: 'Local User', type: 'local' };
 const githubUser = { mail: 'gh@example.com', name: 'GH User', provider: 'github', type: 'oauth' };
 
-// SettingsAccount renders its own SettingsPageHeader (a SidebarTrigger), which
+// SettingsAccount renders its own AppHeader (a SidebarTrigger), which
 // needs SidebarProvider context — the real app always mounts it inside one.
 const renderAccount = () =>
     render(

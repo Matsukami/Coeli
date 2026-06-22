@@ -25,7 +25,7 @@ import type { DefaultPromptFragmentFragment as DefaultPrompt, PromptType } from 
 type AgentPrompt = AgentPrompts;
 type AgentPrompts = { human?: DefaultPrompt; system: DefaultPrompt };
 
-import { SettingsPageHeader } from '@/components/layouts/settings-page-header';
+import { AppHeader, AppHeaderContent, AppHeaderTitle } from '@/components/layouts/app/app-header';
 import ConfirmationDialog from '@/components/shared/confirmation-dialog';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -780,10 +780,11 @@ function SettingsPrompts() {
     );
 
     const pageHeader = (
-        <SettingsPageHeader
-            icon={<FileText className="size-4 shrink-0" />}
-            title="Prompts"
-        />
+        <AppHeader>
+            <AppHeaderContent>
+                <AppHeaderTitle icon={<FileText className="size-4 shrink-0" />}>Prompts</AppHeaderTitle>
+            </AppHeaderContent>
+        </AppHeader>
     );
 
     if (isLoading) {

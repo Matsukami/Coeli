@@ -33,9 +33,14 @@ import { z } from 'zod';
 
 import type { AgentConfigInput, AgentsConfigInput, ProviderConfigFragmentFragment } from '@/graphql/types';
 
-import { SettingsPageHeader } from '@/components/layouts/settings-page-header';
+import {
+    AppHeader,
+    AppHeaderAction,
+    AppHeaderActions,
+    AppHeaderContent,
+    AppHeaderTitle,
+} from '@/components/layouts/app/app-header';
 import ConfirmationDialog from '@/components/shared/confirmation-dialog';
-import { HeaderButton } from '@/components/shared/header-button';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -1469,10 +1474,13 @@ function SettingsProvider() {
     if (loading) {
         return (
             <>
-                <SettingsPageHeader
-                    icon={<Plug className="size-4 shrink-0" />}
-                    title={isNew ? 'Create Provider' : 'Edit Provider'}
-                />
+                <AppHeader>
+                    <AppHeaderContent>
+                        <AppHeaderTitle icon={<Plug className="size-4 shrink-0" />}>
+                            {isNew ? 'Create Provider' : 'Edit Provider'}
+                        </AppHeaderTitle>
+                    </AppHeaderContent>
+                </AppHeader>
                 <div className="flex flex-1 items-center justify-center p-4">
                     <StatusCard
                         description="Please wait while we fetch provider configuration"
@@ -1487,10 +1495,13 @@ function SettingsProvider() {
     if (error) {
         return (
             <>
-                <SettingsPageHeader
-                    icon={<Plug className="size-4 shrink-0" />}
-                    title={isNew ? 'Create Provider' : 'Edit Provider'}
-                />
+                <AppHeader>
+                    <AppHeaderContent>
+                        <AppHeaderTitle icon={<Plug className="size-4 shrink-0" />}>
+                            {isNew ? 'Create Provider' : 'Edit Provider'}
+                        </AppHeaderTitle>
+                    </AppHeaderContent>
+                </AppHeader>
                 <div className="flex flex-1 items-center justify-center p-4">
                     <StatusCard
                         description={error.message}
@@ -1783,67 +1794,62 @@ function SettingsProvider() {
 
     return (
         <div className={isDesktop ? 'flex h-[100dvh] min-h-0 flex-col' : 'flex min-h-[100dvh] flex-col'}>
-            <SettingsPageHeader
-                actions={
-                    <>
-                        <HeaderButton
-                            disabled={isLoading || isTestLoading || isAgentTestLoading}
-                            icon={
-                                isTestLoading ? (
-                                    <Loader2 className="size-4 animate-spin" />
-                                ) : (
-                                    <Play className="size-4" />
-                                )
-                            }
-                            label={isTestLoading ? 'Testing...' : 'Test'}
-                            onClick={() => handleTest()}
-                            type="button"
-                            variant="outline"
-                        />
-                        <FormSubmitButton
-                            form="provider-form"
-                            icon={<Save className="size-4" />}
-                            loading={isLoading}
-                            size="sm"
-                            variant="secondary"
-                        >
-                            {isNew ? 'Create' : 'Save'}
-                        </FormSubmitButton>
-                        {!isNew && (
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button
-                                        aria-label="Provider actions"
-                                        className="size-8 p-0"
-                                        type="button"
-                                        variant="ghost"
-                                    >
-                                        <Ellipsis />
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent
-                                    align="end"
-                                    className="min-w-24"
+            <AppHeader>
+                <AppHeaderContent>
+                    <AppHeaderTitle icon={<Plug className="size-4 shrink-0" />}>
+                        {isNew ? 'Create Provider' : 'Edit Provider'}
+                    </AppHeaderTitle>
+                </AppHeaderContent>
+                <AppHeaderActions>
+                    <AppHeaderAction
+                        disabled={isLoading || isTestLoading || isAgentTestLoading}
+                        icon={isTestLoading ? <Loader2 className="size-4 animate-spin" /> : <Play className="size-4" />}
+                        label={isTestLoading ? 'Testing...' : 'Test'}
+                        onClick={() => handleTest()}
+                        type="button"
+                        variant="outline"
+                    />
+                    <FormSubmitButton
+                        form="provider-form"
+                        icon={<Save className="size-4" />}
+                        loading={isLoading}
+                        size="sm"
+                        variant="secondary"
+                    >
+                        {isNew ? 'Create' : 'Save'}
+                    </FormSubmitButton>
+                    {!isNew && (
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button
+                                    aria-label="Provider actions"
+                                    className="size-8 p-0"
+                                    type="button"
+                                    variant="ghost"
                                 >
-                                    <DropdownMenuItem
-                                        disabled={isDeleteLoading}
-                                        onClick={handleDelete}
-                                    >
-                                        {isDeleteLoading ? (
-                                            <Loader2 className="size-4 animate-spin" />
-                                        ) : (
-                                            <Trash2 className="size-4" />
-                                        )}
-                                        {isDeleteLoading ? 'Deleting...' : 'Delete'}
-                                    </DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-                        )}
-                    </>
-                }
-                icon={<Plug className="size-4 shrink-0" />}
-                title={isNew ? 'Create Provider' : 'Edit Provider'}
-            />
+                                    <Ellipsis />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent
+                                align="end"
+                                className="min-w-24"
+                            >
+                                <DropdownMenuItem
+                                    disabled={isDeleteLoading}
+                                    onClick={handleDelete}
+                                >
+                                    {isDeleteLoading ? (
+                                        <Loader2 className="size-4 animate-spin" />
+                                    ) : (
+                                        <Trash2 className="size-4" />
+                                    )}
+                                    {isDeleteLoading ? 'Deleting...' : 'Delete'}
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    )}
+                </AppHeaderActions>
+            </AppHeader>
             <Form {...form}>
                 <form
                     className="flex min-h-0 flex-1 flex-col"

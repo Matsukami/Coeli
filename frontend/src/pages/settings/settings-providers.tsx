@@ -8,7 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import type { ProviderConfigFragmentFragment } from '@/graphql/types';
 
 import { providerIcons } from '@/components/icons/provider-icon';
-import { SettingsPageHeader } from '@/components/layouts/settings-page-header';
+import { AppHeader, AppHeaderContent, AppHeaderTitle } from '@/components/layouts/app/app-header';
 import ConfirmationDialog from '@/components/shared/confirmation-dialog';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -342,10 +342,11 @@ function SettingsProviders() {
     );
 
     const pageHeader = (
-        <SettingsPageHeader
-            icon={<Plug className="size-4 shrink-0" />}
-            title="Providers"
-        />
+        <AppHeader>
+            <AppHeaderContent>
+                <AppHeaderTitle icon={<Plug className="size-4 shrink-0" />}>Providers</AppHeaderTitle>
+            </AppHeaderContent>
+        </AppHeader>
     );
 
     if (isLoading) {

@@ -36,7 +36,7 @@ import type {
 type AgentPrompt = AgentPrompts;
 type AgentPrompts = { human?: DefaultPrompt; system: DefaultPrompt };
 
-import { SettingsPageHeader } from '@/components/layouts/settings-page-header';
+import { AppHeader, AppHeaderContent, AppHeaderTitle } from '@/components/layouts/app/app-header';
 import ConfirmationDialog from '@/components/shared/confirmation-dialog';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -580,10 +580,13 @@ function SettingsPrompt() {
 
     const isNew = promptId === 'new';
     const pageHeader = (
-        <SettingsPageHeader
-            icon={<FileText className="size-4 shrink-0" />}
-            title={isNew ? 'Create Prompt' : 'Edit Prompt'}
-        />
+        <AppHeader>
+            <AppHeaderContent>
+                <AppHeaderTitle icon={<FileText className="size-4 shrink-0" />}>
+                    {isNew ? 'Create Prompt' : 'Edit Prompt'}
+                </AppHeaderTitle>
+            </AppHeaderContent>
+        </AppHeader>
     );
 
     if (loading) {
