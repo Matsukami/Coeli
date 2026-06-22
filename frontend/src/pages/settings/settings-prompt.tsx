@@ -800,7 +800,7 @@ function SettingsPrompt() {
 
     const promptMeta = (
         <>
-            <div className="flex flex-col items-center gap-1 text-center">
+            <div className="flex flex-col gap-2 text-center">
                 <h2 className="text-2xl font-semibold">{isNew ? 'Create a prompt' : 'Edit prompt'}</h2>
                 <p className="text-muted-foreground">
                     {promptInfo.type === 'agent'

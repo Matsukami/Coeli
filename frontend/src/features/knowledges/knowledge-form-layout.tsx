@@ -73,25 +73,21 @@ export function KnowledgeFormLayoutDesktop({ control, isNew, isSaving, knowledge
 
 export function KnowledgeFormLayoutMobile({ control, isNew, isSaving, knowledge }: KnowledgeFormLayoutProps) {
     return (
-        <div className="flex min-w-0 flex-1 items-start justify-center p-4">
-            <Card className="w-full max-w-3xl">
-                <CardContent className="flex flex-col gap-6 pt-6">
-                    <KnowledgeIntroBlock
-                        isNew={isNew}
-                        knowledge={knowledge}
-                    />
-                    <KnowledgeMetaFields
-                        control={control}
-                        isNew={isNew}
-                        isSaving={isSaving}
-                    />
-                    <KnowledgeContentField
-                        control={control}
-                        isSaving={isSaving}
-                        showLabel
-                    />
-                </CardContent>
-            </Card>
+        <div className="flex min-h-0 flex-1 flex-col gap-4 p-4">
+            <KnowledgeIntroBlock
+                isNew={isNew}
+                knowledge={knowledge}
+            />
+            <KnowledgeMetaFields
+                control={control}
+                isNew={isNew}
+                isSaving={isSaving}
+            />
+            <KnowledgeContentField
+                control={control}
+                isSaving={isSaving}
+                showLabel
+            />
         </div>
     );
 }
@@ -99,11 +95,11 @@ export function KnowledgeFormLayoutMobile({ control, isNew, isSaving, knowledge 
 function KnowledgeIntroBlock({ isNew, knowledge }: KnowledgeIntroBlockProps) {
     return (
         <div className="flex flex-col gap-4">
-            <div className="text-center">
-                <h1 className="text-2xl font-semibold">
+            <div className="flex flex-col gap-2 text-center">
+                <h2 className="text-2xl font-semibold">
                     {isNew ? 'Create a new knowledge document' : 'Edit knowledge document'}
-                </h1>
-                <p className="text-muted-foreground mt-2">
+                </h2>
+                <p className="text-muted-foreground">
                     {isNew
                         ? 'Add an entry to the vector knowledge base'
                         : 'Edits to content or metadata will trigger re-embedding'}
