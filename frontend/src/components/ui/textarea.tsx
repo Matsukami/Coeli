@@ -4,6 +4,7 @@ import { useImperativeHandle } from 'react';
 import { cn } from '@/lib/utils';
 
 type TextareaProps = React.ComponentProps<'textarea'> & {
+    autoSize?: boolean;
     maxHeight?: number;
     minHeight?: number;
 };
@@ -15,6 +16,7 @@ type TextareaRef = {
 };
 
 interface UseTextareaProps {
+    enabled?: boolean;
     maxHeight?: number;
     minHeight?: number;
     textareaRef: React.MutableRefObject<HTMLTextAreaElement | null>;
@@ -22,6 +24,7 @@ interface UseTextareaProps {
 }
 
 function Textarea({
+    autoSize = true,
     className,
     maxHeight = 118,
     minHeight = 38,
@@ -34,6 +37,7 @@ function Textarea({
     const [triggerAutoSize, setTriggerAutoSize] = React.useState('');
 
     useTextarea({
+        enabled: autoSize,
         maxHeight,
         minHeight,
         textareaRef,
@@ -70,6 +74,7 @@ function Textarea({
 }
 
 function useTextarea({
+    enabled = true,
     maxHeight = Number.MAX_SAFE_INTEGER,
     minHeight = 0,
     textareaRef,
@@ -81,7 +86,7 @@ function useTextarea({
         const offsetBorder = 0;
         const textareaElement = textareaRef.current;
 
-        if (!textareaElement) {
+        if (!enabled || !textareaElement) {
             return;
         }
 
@@ -98,7 +103,7 @@ function useTextarea({
         textareaElement.style.height = `${minHeight + offsetBorder}px`;
         const scrollHeight = textareaElement.scrollHeight;
         textareaElement.style.height = scrollHeight > maxHeight ? `${maxHeight}px` : `${scrollHeight + offsetBorder}px`;
-    }, [triggerAutoSize, maxHeight, minHeight, textareaRef]);
+    }, [enabled, triggerAutoSize, maxHeight, minHeight, textareaRef]);
 }
 
 export { Textarea };

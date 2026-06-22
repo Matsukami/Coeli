@@ -5,8 +5,10 @@ import {
     Bot,
     CheckCircle,
     Code,
+    Ellipsis,
     FileDiff,
     FileText,
+    GripVertical,
     Loader2,
     RotateCcw,
     Save,
@@ -25,6 +27,7 @@ import {
     useFormState,
 } from 'react-hook-form';
 import { useNavigate, useParams } from 'react-router-dom';
+import { toast } from 'sonner';
 import { z } from 'zod';
 
 import type {
@@ -36,13 +39,27 @@ import type {
 type AgentPrompt = AgentPrompts;
 type AgentPrompts = { human?: DefaultPrompt; system: DefaultPrompt };
 
-import { AppHeader, AppHeaderContent, AppHeaderTitle } from '@/components/layouts/app/app-header';
+import {
+    AppHeader,
+    AppHeaderAction,
+    AppHeaderActions,
+    AppHeaderContent,
+    AppHeaderTitle,
+} from '@/components/layouts/app/app-header';
 import ConfirmationDialog from '@/components/shared/confirmation-dialog';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Form, FormControl, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { FormSubmitButton } from '@/components/ui/form-submit-button';
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { StatusCard } from '@/components/ui/status-card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
@@ -53,6 +70,7 @@ import {
     UpdatePromptDocument,
     ValidatePromptDocument,
 } from '@/graphql/types';
+import { useBreakpoint } from '@/hooks/use-breakpoint';
 import { formatPromptId } from '@/lib/route-titles/format-prompt-id';
 import { routes } from '@/lib/routes';
 import { cn } from '@/lib/utils';
@@ -102,12 +120,13 @@ function FormTextareaItem<T extends FieldValues>({
     });
 
     return (
-        <FormItem>
+        <FormItem className="flex min-h-0 flex-1 flex-col">
             {label && <FormLabel>{label}</FormLabel>}
             <FormControl>
                 <Textarea
                     {...field}
-                    className={cn('min-h-[640px]! font-mono text-sm', className)}
+                    autoSize={false}
+                    className={cn('min-h-[640px] flex-1 resize-none font-mono text-sm', className)}
                     disabled={disabled}
                     placeholder={placeholder}
                 />
@@ -147,12 +166,13 @@ interface VariablesProps {
 function SettingsPrompt() {
     const { promptId } = useParams<{ promptId: string }>();
     const navigate = useNavigate();
+    const { isDesktop } = useBreakpoint();
 
     const { data, error, loading } = useQuery(SettingsPromptsDocument);
-    const [createPrompt, { error: createError, loading: isCreateLoading }] = useMutation(CreatePromptDocument);
-    const [updatePrompt, { error: updateError, loading: isUpdateLoading }] = useMutation(UpdatePromptDocument);
-    const [deletePrompt, { error: deleteError, loading: isDeleteLoading }] = useMutation(DeletePromptDocument);
-    const [validatePrompt, { error: validateError, loading: isValidateLoading }] = useMutation(ValidatePromptDocument);
+    const [createPrompt, { loading: isCreateLoading }] = useMutation(CreatePromptDocument);
+    const [updatePrompt, { loading: isUpdateLoading }] = useMutation(UpdatePromptDocument);
+    const [deletePrompt, { loading: isDeleteLoading }] = useMutation(DeletePromptDocument);
+    const [validatePrompt, { loading: isValidateLoading }] = useMutation(ValidatePromptDocument);
 
     const [submitError, setSubmitError] = useState<null | string>(null);
     const [activeTab, setActiveTab] = useState<'human' | 'system'>('system');
@@ -420,6 +440,12 @@ function SettingsPrompt() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [promptInfo]);
 
+    useEffect(() => {
+        if (submitError) {
+            toast.error(submitError);
+        }
+    }, [submitError]);
+
     // Push a synthetic history entry while the form is dirty so a browser-back can be intercepted
     // by popstate below — react-router's blocker doesn't cover the native back gesture.
     useEffect(() => {
@@ -452,16 +478,6 @@ function SettingsPrompt() {
             window.removeEventListener('popstate', handlePopState, { capture: true });
         };
     }, [isDirty]);
-
-    const handleBack = () => {
-        if (isDirty) {
-            setIsLeaveDialogOpen(true);
-
-            return;
-        }
-
-        navigate(routes.settings.prompts);
-    };
 
     const handleConfirmLeave = () => {
         if (pendingBrowserBack) {
@@ -579,6 +595,10 @@ function SettingsPrompt() {
     };
 
     const isNew = promptId === 'new';
+    const hasOverride =
+        (activeTab === 'system' && !!promptInfo?.userSystemPrompt) ||
+        (activeTab === 'human' && !!promptInfo?.userHumanPrompt);
+    const activeFormId = activeTab === 'system' ? 'system-prompt-form' : 'human-prompt-form';
     const pageHeader = (
         <AppHeader>
             <AppHeaderContent>
@@ -586,6 +606,67 @@ function SettingsPrompt() {
                     {isNew ? 'Create Prompt' : 'Edit Prompt'}
                 </AppHeaderTitle>
             </AppHeaderContent>
+            {promptInfo && (
+                <AppHeaderActions>
+                    <AppHeaderAction
+                        disabled={isLoading}
+                        icon={
+                            isValidateLoading ? (
+                                <Loader2 className="size-4 animate-spin" />
+                            ) : (
+                                <CheckCircle className="size-4" />
+                            )
+                        }
+                        label={isValidateLoading ? 'Validating...' : 'Validate'}
+                        onClick={handleValidate}
+                        type="button"
+                        variant="outline"
+                    />
+                    <FormSubmitButton
+                        form={activeFormId}
+                        icon={<Save className="size-4" />}
+                        loading={isLoading}
+                        size="sm"
+                        variant="secondary"
+                    >
+                        {isNew ? 'Create' : 'Save'}
+                    </FormSubmitButton>
+                    {hasOverride && (
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button
+                                    aria-label="Prompt actions"
+                                    className="size-8 p-0"
+                                    type="button"
+                                    variant="ghost"
+                                >
+                                    <Ellipsis />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent
+                                align="end"
+                                className="min-w-24"
+                            >
+                                <DropdownMenuItem onClick={() => setIsDiffDialogOpen(true)}>
+                                    <FileDiff className="size-4" />
+                                    Diff
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                    disabled={isLoading}
+                                    onClick={handleReset}
+                                >
+                                    {isDeleteLoading ? (
+                                        <Loader2 className="size-4 animate-spin" />
+                                    ) : (
+                                        <RotateCcw className="size-4" />
+                                    )}
+                                    {isDeleteLoading ? 'Resetting...' : 'Reset'}
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    )}
+                </AppHeaderActions>
+            )}
         </AppHeader>
     );
 
@@ -593,7 +674,7 @@ function SettingsPrompt() {
         return (
             <>
                 {pageHeader}
-                <div className="flex flex-1 flex-col gap-4 p-4">
+                <div className="flex flex-1 items-center justify-center p-4">
                     <StatusCard
                         description="Please wait while we fetch prompt information"
                         icon={<Loader2 className="text-muted-foreground size-16 animate-spin" />}
@@ -608,12 +689,12 @@ function SettingsPrompt() {
         return (
             <>
                 {pageHeader}
-                <div className="flex flex-1 flex-col gap-4 p-4">
-                    <Alert variant="destructive">
-                        <AlertCircle className="size-4" />
-                        <AlertTitle>Error loading prompt data</AlertTitle>
-                        <AlertDescription>{error.message}</AlertDescription>
-                    </Alert>
+                <div className="flex flex-1 items-center justify-center p-4">
+                    <StatusCard
+                        description={error.message}
+                        icon={<AlertCircle className="text-destructive size-16" />}
+                        title="Error loading prompt data"
+                    />
                 </div>
             </>
         );
@@ -623,14 +704,12 @@ function SettingsPrompt() {
         return (
             <>
                 {pageHeader}
-                <div className="flex flex-1 flex-col gap-4 p-4">
-                    <Alert variant="destructive">
-                        <AlertCircle className="size-4" />
-                        <AlertTitle>Prompt not found</AlertTitle>
-                        <AlertDescription>
-                            The prompt "{promptId}" could not be found or is not supported for editing.
-                        </AlertDescription>
-                    </Alert>
+                <div className="flex flex-1 items-center justify-center p-4">
+                    <StatusCard
+                        description={`The prompt "${promptId}" could not be found or is not supported for editing.`}
+                        icon={<AlertCircle className="text-destructive size-16" />}
+                        title="Prompt not found"
+                    />
                 </div>
             </>
         );
@@ -719,324 +798,257 @@ function SettingsPrompt() {
         },
     };
 
-    const mutationError = createError || updateError || deleteError || validateError || submitError;
+    const promptMeta = (
+        <>
+            <div className="flex flex-col items-center gap-1 text-center">
+                <h2 className="text-2xl font-semibold">{isNew ? 'Create a prompt' : 'Edit prompt'}</h2>
+                <p className="text-muted-foreground">
+                    {promptInfo.type === 'agent'
+                        ? 'Customize the templates this agent uses'
+                        : 'Customize the template this tool uses'}
+                </p>
+            </div>
+
+            <div className="flex flex-col gap-1">
+                <h3 className="flex items-center gap-2 text-base font-semibold">
+                    {promptInfo.type === 'agent' ? (
+                        <Bot className="text-muted-foreground size-5" />
+                    ) : (
+                        <Wrench className="text-muted-foreground size-5" />
+                    )}
+                    {promptInfo.displayName}
+                </h3>
+                <p className="text-muted-foreground text-sm">
+                    {promptInfo.type === 'agent'
+                        ? 'Configure prompts for this AI agent'
+                        : 'Configure the prompt for this tool'}
+                </p>
+            </div>
+
+            <TabsList className="bg-background w-full">
+                <TabsTrigger
+                    className="data-[state=active]:bg-card flex-1"
+                    value="system"
+                >
+                    <Code className="size-4" />
+                    System Prompt
+                </TabsTrigger>
+                {promptInfo.type === 'agent' && promptInfo.hasHuman && (
+                    <TabsTrigger
+                        className="data-[state=active]:bg-card flex-1"
+                        value="human"
+                    >
+                        <User className="size-4" />
+                        Human Prompt
+                    </TabsTrigger>
+                )}
+            </TabsList>
+
+            {variablesData && (
+                <Variables
+                    currentTemplate={variablesData.currentTemplate}
+                    onVariableClick={handleVariableClickCallback}
+                    variables={variablesData.variables}
+                />
+            )}
+        </>
+    );
+
+    const promptEditor = (
+        <>
+            <TabsContent
+                className="mt-0 flex min-h-0 flex-1 flex-col"
+                value="system"
+            >
+                <Form {...systemForm}>
+                    <form
+                        className="flex min-h-0 flex-1 flex-col"
+                        id="system-prompt-form"
+                        onSubmit={systemForm.handleSubmit(handleSystemSubmit)}
+                    >
+                        <FormTextareaItem
+                            control={systemForm.control}
+                            disabled={isLoading}
+                            name="template"
+                            placeholder={
+                                promptInfo.type === 'tool'
+                                    ? 'Enter the tool template...'
+                                    : 'Enter the system prompt template...'
+                            }
+                        />
+                    </form>
+                </Form>
+            </TabsContent>
+
+            {promptInfo.type === 'agent' && promptInfo.hasHuman && (
+                <TabsContent
+                    className="mt-0 flex min-h-0 flex-1 flex-col"
+                    value="human"
+                >
+                    <Form {...humanForm}>
+                        <form
+                            className="flex min-h-0 flex-1 flex-col"
+                            id="human-prompt-form"
+                            onSubmit={humanForm.handleSubmit(handleHumanSubmit)}
+                        >
+                            <FormTextareaItem
+                                control={humanForm.control}
+                                disabled={isLoading}
+                                name="template"
+                                placeholder="Enter the human prompt template..."
+                            />
+                        </form>
+                    </Form>
+                </TabsContent>
+            )}
+        </>
+    );
 
     return (
-        <>
+        <div className={isDesktop ? 'flex h-[100dvh] min-h-0 flex-col' : 'flex min-h-[100dvh] flex-col'}>
             {pageHeader}
-            <div className="flex flex-1 flex-col gap-4 p-4">
-                <div className="flex flex-col gap-2">
-                    <h2 className="flex items-center gap-2 text-lg font-semibold">
-                        {promptInfo.type === 'agent' ? (
-                            <Bot className="text-muted-foreground size-5" />
-                        ) : (
-                            <Wrench className="text-muted-foreground size-5" />
-                        )}
-                        {promptInfo.displayName}
-                    </h2>
-
-                    <div className="text-muted-foreground">
-                        {promptInfo.type === 'agent'
-                            ? 'Configure prompts for this AI agent'
-                            : 'Configure the prompt for this tool'}
-                    </div>
-                </div>
-
-                <Tabs
-                    className="w-full"
-                    defaultValue="system"
-                    onValueChange={(value) => setActiveTab(value as 'human' | 'system')}
-                >
-                    <TabsList>
-                        <TabsTrigger value="system">
-                            <div className="flex items-center gap-2">
-                                <Code className="size-4" />
-                                System Prompt
-                            </div>
-                        </TabsTrigger>
-                        {promptInfo.type === 'agent' && promptInfo.hasHuman && (
-                            <TabsTrigger value="human">
-                                <div className="flex items-center gap-2">
-                                    <User className="size-4" />
-                                    Human Prompt
-                                </div>
-                            </TabsTrigger>
-                        )}
-                    </TabsList>
-
-                    <TabsContent
-                        className="mt-4"
-                        value="system"
-                    >
-                        <Form {...systemForm}>
-                            <form
-                                className="flex flex-col gap-6"
-                                id="system-prompt-form"
-                                onSubmit={systemForm.handleSubmit(handleSystemSubmit)}
-                            >
-                                {/* Error Alert */}
-                                {mutationError && (
-                                    <Alert variant="destructive">
-                                        <AlertCircle className="size-4" />
-                                        <AlertTitle>Error</AlertTitle>
-                                        <AlertDescription>
-                                            {typeof mutationError !== 'string' ? (
-                                                mutationError.message
-                                            ) : (
-                                                <div className="whitespace-pre-line">{mutationError}</div>
-                                            )}
-                                        </AlertDescription>
-                                    </Alert>
-                                )}
-
-                                {/* System Template Field */}
-                                <FormTextareaItem
-                                    control={systemForm.control}
-                                    disabled={isLoading}
-                                    name="template"
-                                    placeholder={
-                                        promptInfo.type === 'tool'
-                                            ? 'Enter the tool template...'
-                                            : 'Enter the system prompt template...'
-                                    }
-                                />
-                            </form>
-                        </Form>
-                    </TabsContent>
-
-                    {promptInfo.type === 'agent' && promptInfo.hasHuman && (
-                        <TabsContent
-                            className="mt-6"
-                            value="human"
+            <Tabs
+                className="flex min-h-0 flex-1 flex-col"
+                onValueChange={(value) => setActiveTab(value as 'human' | 'system')}
+                value={activeTab}
+            >
+                {isDesktop ? (
+                    <div className="flex min-h-0 w-full max-w-full flex-1 overflow-hidden">
+                        <ResizablePanelGroup
+                            className="w-full"
+                            orientation="horizontal"
                         >
-                            <Form {...humanForm}>
-                                <form
-                                    className="flex flex-col gap-6"
-                                    id="human-prompt-form"
-                                    onSubmit={humanForm.handleSubmit(handleHumanSubmit)}
-                                >
-                                    {/* Error Alert */}
-                                    {mutationError && (
-                                        <Alert variant="destructive">
-                                            <AlertCircle className="size-4" />
-                                            <AlertTitle>Error</AlertTitle>
-                                            <AlertDescription>
-                                                {typeof mutationError !== 'string' ? (
-                                                    mutationError.message
-                                                ) : (
-                                                    <div className="whitespace-pre-line">{mutationError}</div>
-                                                )}
-                                            </AlertDescription>
-                                        </Alert>
-                                    )}
-
-                                    {/* Human Template Field */}
-                                    <FormTextareaItem
-                                        control={humanForm.control}
-                                        disabled={isLoading}
-                                        name="template"
-                                        placeholder="Enter the human prompt template..."
-                                    />
-                                </form>
-                            </Form>
-                        </TabsContent>
-                    )}
-                </Tabs>
-
-                {/* Sticky footer with variables and buttons */}
-                <div className="bg-background sticky -bottom-4 -mx-4 mt-4 -mb-4 border-t p-4 shadow-lg">
-                    {/* Variables */}
-                    {variablesData && (
-                        <Variables
-                            currentTemplate={variablesData.currentTemplate}
-                            onVariableClick={handleVariableClickCallback}
-                            variables={variablesData.variables}
-                        />
-                    )}
-
-                    {/* Action buttons */}
-                    <div className="flex items-center">
-                        <div className="flex gap-2">
-                            {/* Reset button - only show when user has custom prompt */}
-                            {((activeTab === 'system' && promptInfo?.userSystemPrompt) ||
-                                (activeTab === 'human' && promptInfo?.userHumanPrompt)) && (
-                                <>
-                                    <Button
-                                        disabled={isLoading}
-                                        onClick={handleReset}
-                                        type="button"
-                                        variant="destructive"
-                                    >
-                                        {isDeleteLoading ? <Loader2 className="size-4 animate-spin" /> : <RotateCcw />}
-                                        {isDeleteLoading ? 'Resetting...' : 'Reset'}
-                                    </Button>
-
-                                    <Button
-                                        disabled={isLoading}
-                                        onClick={() => setIsDiffDialogOpen(true)}
-                                        type="button"
-                                        variant="outline"
-                                    >
-                                        <FileDiff className="size-4" />
-                                        Diff
-                                    </Button>
-                                </>
-                            )}
-                            <Button
-                                disabled={isLoading}
-                                onClick={handleValidate}
-                                type="button"
-                                variant="outline"
+                            <ResizablePanel
+                                defaultSize={45}
+                                minSize={30}
                             >
-                                {isValidateLoading ? (
-                                    <Loader2 className="size-4 animate-spin" />
-                                ) : (
-                                    <CheckCircle className="size-4" />
-                                )}
-                                {isValidateLoading ? 'Validating...' : 'Validate'}
-                            </Button>
-                        </div>
-
-                        <div className="ml-auto flex gap-2">
-                            <Button
-                                disabled={isLoading}
-                                onClick={handleBack}
-                                type="button"
-                                variant="outline"
-                            >
-                                Cancel
-                            </Button>
-                            {activeTab === 'system' && (
-                                <FormSubmitButton
-                                    form="system-prompt-form"
-                                    icon={<Save className="size-4" />}
-                                    loading={isLoading}
-                                    variant="secondary"
-                                >
-                                    {isLoading ? 'Saving...' : 'Save Changes'}
-                                </FormSubmitButton>
-                            )}
-                            {activeTab === 'human' && promptInfo?.type === 'agent' && promptInfo?.hasHuman && (
-                                <FormSubmitButton
-                                    form="human-prompt-form"
-                                    icon={<Save className="size-4" />}
-                                    loading={isLoading}
-                                    variant="secondary"
-                                >
-                                    {isLoading ? 'Saving...' : 'Save Changes'}
-                                </FormSubmitButton>
-                            )}
-                        </div>
-                    </div>
-                </div>
-
-                {/* Reset Confirmation Dialog */}
-                <ConfirmationDialog
-                    cancelText="Cancel"
-                    cancelVariant="outline"
-                    confirmIcon={<RotateCcw />}
-                    confirmText="Reset"
-                    confirmVariant="destructive"
-                    description="Are you sure you want to reset this prompt to its default value? This action cannot be undone."
-                    handleConfirm={handleConfirmReset}
-                    handleOpenChange={setResetDialogOpen}
-                    isOpen={resetDialogOpen}
-                    itemName={`${activeTab} prompt`}
-                    itemType="template"
-                    title="Reset Prompt"
-                />
-
-                {/* Leave Confirmation Dialog */}
-                <ConfirmationDialog
-                    cancelText="Stay"
-                    confirmIcon={undefined}
-                    confirmText="Leave"
-                    confirmVariant="destructive"
-                    description="You have unsaved changes. Are you sure you want to leave without saving?"
-                    handleConfirm={handleConfirmLeave}
-                    handleOpenChange={handleLeaveDialogOpenChange}
-                    isOpen={isLeaveDialogOpen}
-                    title="Discard changes?"
-                />
-
-                {/* Validation Results Dialog */}
-                <Dialog
-                    onOpenChange={setValidationDialogOpen}
-                    open={validationDialogOpen}
-                >
-                    <DialogContent className="max-w-2xl">
-                        <DialogHeader>
-                            <DialogTitle className="flex items-center gap-2">
-                                <AlertCircle className="size-5" />
-                                Validation Results
-                            </DialogTitle>
-                            <DialogDescription>
-                                The validation result for the {activeTab} prompt template.
-                            </DialogDescription>
-                        </DialogHeader>
-
-                        {validationResult && (
-                            <div className="flex flex-col gap-4">
-                                <Alert variant={validationResult.result ? 'default' : 'destructive'}>
-                                    {validationResult.result === 'success' ? (
-                                        <CheckCircle className="size-4 text-green-500!" />
-                                    ) : (
-                                        <XCircle className="size-4 text-red-500!" />
-                                    )}
-                                    <AlertTitle>
-                                        {validationResult.result === 'success' ? 'Valid Template' : 'Validation Error'}
-                                    </AlertTitle>
-                                    <AlertDescription>
-                                        <div className="whitespace-pre-line">
-                                            {validationResult.message}
-                                            {validationResult.details && (
-                                                <div className="mt-2">
-                                                    <strong>Details:</strong> {validationResult.details}
-                                                </div>
-                                            )}
-                                            {validationResult.line && (
-                                                <div className="mt-1">
-                                                    <strong>Line:</strong> {validationResult.line}
-                                                </div>
-                                            )}
-                                        </div>
-                                    </AlertDescription>
-                                </Alert>
-
-                                <div className="flex justify-end">
-                                    <Button onClick={() => setValidationDialogOpen(false)}>Close</Button>
+                                <div className="h-full min-h-0 overflow-y-auto">
+                                    <Card className="mx-auto min-h-full w-full max-w-2xl rounded-none border-0">
+                                        <CardContent className="flex flex-col gap-6 py-6">{promptMeta}</CardContent>
+                                    </Card>
                                 </div>
-                            </div>
-                        )}
-                    </DialogContent>
-                </Dialog>
+                            </ResizablePanel>
+                            <ResizableHandle withHandle>
+                                <GripVertical className="size-4" />
+                            </ResizableHandle>
+                            <ResizablePanel
+                                defaultSize={55}
+                                minSize={30}
+                            >
+                                <div className="flex h-full min-h-0 flex-col overflow-y-auto p-4">{promptEditor}</div>
+                            </ResizablePanel>
+                        </ResizablePanelGroup>
+                    </div>
+                ) : (
+                    <div className="flex min-h-0 flex-1 flex-col gap-4 p-4">
+                        {promptMeta}
+                        {promptEditor}
+                    </div>
+                )}
+            </Tabs>
 
-                {/* Diff Dialog */}
-                <Dialog
-                    onOpenChange={setIsDiffDialogOpen}
-                    open={isDiffDialogOpen}
-                >
-                    <DialogContent className="max-w-7xl">
-                        <DialogHeader>
-                            <DialogTitle className="flex items-center gap-2">
-                                <FileDiff className="size-5" />
-                                Diff
-                            </DialogTitle>
-                            <DialogDescription>Changes between current value and default template.</DialogDescription>
-                        </DialogHeader>
-                        <div className="max-h-[70vh] overflow-auto">
-                            <ReactDiffViewer
-                                newValue={currentTemplate}
-                                oldValue={defaultTemplate}
-                                splitView
-                                styles={diffStyles}
-                                useDarkTheme
-                            />
+            <ConfirmationDialog
+                cancelText="Cancel"
+                cancelVariant="outline"
+                confirmIcon={<RotateCcw />}
+                confirmText="Reset"
+                confirmVariant="destructive"
+                description="Are you sure you want to reset this prompt to its default value? This action cannot be undone."
+                handleConfirm={handleConfirmReset}
+                handleOpenChange={setResetDialogOpen}
+                isOpen={resetDialogOpen}
+                itemName={`${activeTab} prompt`}
+                itemType="template"
+                title="Reset Prompt"
+            />
+
+            <ConfirmationDialog
+                cancelText="Stay"
+                confirmIcon={undefined}
+                confirmText="Leave"
+                confirmVariant="destructive"
+                description="You have unsaved changes. Are you sure you want to leave without saving?"
+                handleConfirm={handleConfirmLeave}
+                handleOpenChange={handleLeaveDialogOpenChange}
+                isOpen={isLeaveDialogOpen}
+                title="Discard changes?"
+            />
+
+            <Dialog
+                onOpenChange={setValidationDialogOpen}
+                open={validationDialogOpen}
+            >
+                <DialogContent className="max-w-2xl">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                            <AlertCircle className="size-5" />
+                            Validation Results
+                        </DialogTitle>
+                        <DialogDescription>
+                            The validation result for the {activeTab} prompt template.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    {validationResult && (
+                        <div className="flex flex-col gap-4">
+                            <Alert variant={validationResult.result ? 'default' : 'destructive'}>
+                                {validationResult.result === 'success' ? (
+                                    <CheckCircle className="size-4 text-green-500!" />
+                                ) : (
+                                    <XCircle className="size-4 text-red-500!" />
+                                )}
+                                <AlertTitle>
+                                    {validationResult.result === 'success' ? 'Valid Template' : 'Validation Error'}
+                                </AlertTitle>
+                                <AlertDescription>
+                                    <div className="whitespace-pre-line">
+                                        {validationResult.message}
+                                        {validationResult.details && (
+                                            <div className="mt-2">
+                                                <strong>Details:</strong> {validationResult.details}
+                                            </div>
+                                        )}
+                                        {validationResult.line && (
+                                            <div className="mt-1">
+                                                <strong>Line:</strong> {validationResult.line}
+                                            </div>
+                                        )}
+                                    </div>
+                                </AlertDescription>
+                            </Alert>
+
+                            <div className="flex justify-end">
+                                <Button onClick={() => setValidationDialogOpen(false)}>Close</Button>
+                            </div>
                         </div>
-                    </DialogContent>
-                </Dialog>
-            </div>
-        </>
+                    )}
+                </DialogContent>
+            </Dialog>
+
+            <Dialog
+                onOpenChange={setIsDiffDialogOpen}
+                open={isDiffDialogOpen}
+            >
+                <DialogContent className="max-w-7xl">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                            <FileDiff className="size-5" />
+                            Diff
+                        </DialogTitle>
+                        <DialogDescription>Changes between current value and default template.</DialogDescription>
+                    </DialogHeader>
+                    <div className="max-h-[70vh] overflow-auto">
+                        <ReactDiffViewer
+                            newValue={currentTemplate}
+                            oldValue={defaultTemplate}
+                            splitView
+                            styles={diffStyles}
+                            useDarkTheme
+                        />
+                    </div>
+                </DialogContent>
+            </Dialog>
+        </div>
     );
 }
 
@@ -1048,7 +1060,7 @@ function Variables({ currentTemplate, onVariableClick, variables }: VariablesPro
     const usedVariables = getUsedVariables(currentTemplate);
 
     return (
-        <div className="bg-muted/50 mb-4 rounded-md border p-3">
+        <div className="bg-muted/50 rounded-md border p-3">
             <h4 className="text-muted-foreground mb-2 text-sm font-medium">Available Variables:</h4>
             <div className="flex flex-wrap gap-1">
                 {variables.map((variable) => {
