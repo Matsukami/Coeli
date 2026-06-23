@@ -1323,6 +1323,7 @@ function SettingsProvider() {
     };
 
     const onSaveAndLeave = async (): Promise<boolean> => {
+        setSubmitError(null);
         const valid = await trigger();
 
         if (!valid) {
@@ -1380,6 +1381,7 @@ function SettingsProvider() {
     };
 
     const handleTest = async () => {
+        setSubmitError(null);
         const isValid = await trigger();
 
         if (!isValid) {
@@ -1411,6 +1413,7 @@ function SettingsProvider() {
     };
 
     const handleTestAgent = async (agentKey: string) => {
+        setSubmitError(null);
         const isValid = await trigger();
 
         if (!isValid) {

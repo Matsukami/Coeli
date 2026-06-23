@@ -18,7 +18,7 @@ import {
 import { routes } from '@/lib/routes';
 import { getSafeReturnUrl } from '@/lib/utils/auth';
 
-export interface MenuItem {
+interface MenuItem {
     icon?: ReactNode;
     id: string;
     path: string;

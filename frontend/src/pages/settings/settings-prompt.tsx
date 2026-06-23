@@ -3,6 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import {
     AlertCircle,
     Bot,
+    Check,
     CheckCircle,
     Code,
     Ellipsis,
@@ -1090,6 +1091,7 @@ function Variables({ currentTemplate, onVariableClick, variables }: VariablesPro
                             title={action}
                             variant={isUsed ? 'green' : 'secondary'}
                         >
+                            {isUsed ? <Check className="size-3" /> : null}
                             {`{{.${variable}}}`}
                         </Badge>
                     );
