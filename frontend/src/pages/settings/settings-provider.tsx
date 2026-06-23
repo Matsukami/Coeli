@@ -16,7 +16,7 @@ import {
     Trash2,
     XCircle,
 } from 'lucide-react';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
     type Control,
     type FieldPath,
@@ -41,6 +41,7 @@ import {
     AppHeaderTitle,
 } from '@/components/layouts/app/app-header';
 import ConfirmationDialog from '@/components/shared/confirmation-dialog';
+import { UnsavedChangesDialog, useUnsavedChangesGuard } from '@/components/shared/unsaved-changes';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -1074,10 +1075,6 @@ function SettingsProvider() {
     const [isTestDialogOpen, setIsTestDialogOpen] = useState(false);
     const [testResults, setTestResults] = useState<null | ProviderTestResults>(null);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-    const [isLeaveDialogOpen, setIsLeaveDialogOpen] = useState(false);
-    const [pendingBrowserBack, setPendingBrowserBack] = useState(false);
-    const allowBrowserLeaveRef = useRef(false);
-    const hasPushedBlockerStateRef = useRef(false);
 
     const isNew = providerId === 'new';
     const isLoading = isCreateLoading || isUpdateLoading || isDeleteLoading;
@@ -1089,46 +1086,13 @@ function SettingsProvider() {
             name: undefined,
             type: undefined,
         },
+        mode: 'onTouched',
         resolver: zodResolver(formSchema),
     });
 
     const { control, formState, handleSubmit: handleFormSubmit, reset, setValue, trigger, watch } = form;
 
-    const { isDirty } = useFormState({ control });
-
-    // Push a synthetic history entry while the form is dirty so a browser-back can be intercepted
-    // by popstate below — react-router's blocker doesn't cover the native back gesture.
-    useEffect(() => {
-        if (isDirty && !hasPushedBlockerStateRef.current) {
-            window.history.pushState({ __pentagiBlock__: true }, '');
-            hasPushedBlockerStateRef.current = true;
-        }
-    }, [isDirty]);
-
-    useEffect(() => {
-        const handlePopState = () => {
-            if (!isDirty) {
-                return;
-            }
-
-            if (allowBrowserLeaveRef.current) {
-                allowBrowserLeaveRef.current = false;
-
-                return;
-            }
-
-            setPendingBrowserBack(true);
-            setIsLeaveDialogOpen(true);
-            // Restore the blocker entry so the user stays on the page until they confirm.
-            window.history.forward();
-        };
-
-        window.addEventListener('popstate', handlePopState, { capture: true });
-
-        return () => {
-            window.removeEventListener('popstate', handlePopState, { capture: true });
-        };
-    }, [isDirty]);
+    const { isDirty, isValid } = useFormState({ control });
 
     useEffect(() => {
         if (submitError) {
@@ -1325,7 +1289,7 @@ function SettingsProvider() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [data, formQueryParams, isNew, providerId, selectedType]);
 
-    const handleSubmit = async () => {
+    const performSave = async (): Promise<boolean> => {
         // watch() — not getValues() — because disabled fields must be included in the payload.
         const formData = watch();
 
@@ -1349,10 +1313,41 @@ function SettingsProvider() {
                 });
             }
 
-            navigate(routes.settings.providers);
+            return true;
         } catch (error) {
             console.error('Submit error:', error);
             setSubmitError(error instanceof Error ? error.message : 'An error occurred while saving');
+
+            return false;
+        }
+    };
+
+    const onSaveAndLeave = async (): Promise<boolean> => {
+        const valid = await trigger();
+
+        if (!valid) {
+            setSubmitError(
+                `Please fix the following validation errors:\n\n${formatFormErrors(formState.errors as Record<string, unknown>)}`,
+            );
+
+            return false;
+        }
+
+        return performSave();
+    };
+
+    const unsavedGuard = useUnsavedChangesGuard({
+        isDirty,
+        isFormValid: isValid,
+        onSave: onSaveAndLeave,
+    });
+
+    const handleSubmit = async () => {
+        const saved = await performSave();
+
+        if (saved) {
+            unsavedGuard.skipNextBlock();
+            navigate(routes.settings.providers);
         }
     };
 
@@ -1448,27 +1443,6 @@ function SettingsProvider() {
             setSubmitError(error instanceof Error ? error.message : 'An error occurred while testing');
             setCurrentAgentKey(null);
         }
-    };
-
-    const handleConfirmLeave = () => {
-        if (pendingBrowserBack) {
-            allowBrowserLeaveRef.current = true;
-            setPendingBrowserBack(false);
-            // Step over the synthetic blocker entry into the actual previous page.
-            window.history.go(-2);
-
-            return;
-        }
-
-        navigate(routes.settings.providers);
-    };
-
-    const handleLeaveDialogOpenChange = (open: boolean) => {
-        if (!open && pendingBrowserBack) {
-            setPendingBrowserBack(false);
-        }
-
-        setIsLeaveDialogOpen(open);
     };
 
     if (loading) {
@@ -1908,16 +1882,14 @@ function SettingsProvider() {
                 itemType="provider"
             />
 
-            <ConfirmationDialog
-                cancelText="Stay"
-                confirmIcon={undefined}
-                confirmText="Leave"
-                confirmVariant="destructive"
-                description="You have unsaved changes. Are you sure you want to leave without saving?"
-                handleConfirm={handleConfirmLeave}
-                handleOpenChange={handleLeaveDialogOpenChange}
-                isOpen={isLeaveDialogOpen}
-                title="Discard changes?"
+            <UnsavedChangesDialog
+                canSave={isValid}
+                handleCancel={unsavedGuard.handleCancel}
+                handleDiscard={unsavedGuard.handleDiscard}
+                handleOpenChange={unsavedGuard.handleOpenChange}
+                handleSaveAndLeave={unsavedGuard.handleSaveAndLeave}
+                isOpen={unsavedGuard.isOpen}
+                isSavingFromDialog={unsavedGuard.isSavingFromDialog}
             />
         </div>
     );

@@ -16,7 +16,7 @@ import {
     Wrench,
     XCircle,
 } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import ReactDiffViewer from 'react-diff-viewer-continued';
 import {
     type Control,
@@ -26,7 +26,7 @@ import {
     useForm,
     useFormState,
 } from 'react-hook-form';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { z } from 'zod';
 
@@ -47,6 +47,7 @@ import {
     AppHeaderTitle,
 } from '@/components/layouts/app/app-header';
 import ConfirmationDialog from '@/components/shared/confirmation-dialog';
+import { UnsavedChangesDialog, useUnsavedChangesGuard } from '@/components/shared/unsaved-changes';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -73,7 +74,6 @@ import {
 } from '@/graphql/types';
 import { useBreakpoint } from '@/hooks/use-breakpoint';
 import { formatPromptId } from '@/lib/route-titles/format-prompt-id';
-import { routes } from '@/lib/routes';
 import { cn } from '@/lib/utils';
 
 const systemFormSchema = z.object({
@@ -186,7 +186,6 @@ interface VariablesProps {
 
 function SettingsPrompt() {
     const { promptId } = useParams<{ promptId: string }>();
-    const navigate = useNavigate();
     const { isDesktop } = useBreakpoint();
 
     const { data, error, loading } = useQuery(SettingsPromptsDocument);
@@ -201,10 +200,6 @@ function SettingsPrompt() {
     const [validationResult, setValidationResult] = useState<null | ValidatePromptMutation['validatePrompt']>(null);
     const [validationDialogOpen, setValidationDialogOpen] = useState(false);
     const [isDiffDialogOpen, setIsDiffDialogOpen] = useState(false);
-    const [isLeaveDialogOpen, setIsLeaveDialogOpen] = useState(false);
-    const [pendingBrowserBack, setPendingBrowserBack] = useState(false);
-    const allowBrowserLeaveRef = useRef(false);
-    const hasPushedBlockerStateRef = useRef(false);
 
     const isLoading = isCreateLoading || isUpdateLoading || isDeleteLoading || isValidateLoading;
 
@@ -321,6 +316,7 @@ function SettingsPrompt() {
         defaultValues: {
             template: '',
         },
+        mode: 'onTouched',
         resolver: zodResolver(systemFormSchema),
     });
 
@@ -328,11 +324,12 @@ function SettingsPrompt() {
         defaultValues: {
             template: '',
         },
+        mode: 'onTouched',
         resolver: zodResolver(humanFormSchema),
     });
 
-    const { isDirty: isSystemDirty } = useFormState({ control: systemForm.control });
-    const { isDirty: isHumanDirty } = useFormState({ control: humanForm.control });
+    const { isDirty: isSystemDirty, isValid: isSystemValid } = useFormState({ control: systemForm.control });
+    const { isDirty: isHumanDirty, isValid: isHumanValid } = useFormState({ control: humanForm.control });
     const isDirty = isSystemDirty || isHumanDirty;
 
     const systemTemplate = systemForm.watch('template');
@@ -458,69 +455,16 @@ function SettingsPrompt() {
         }
     }, [submitError]);
 
-    // Push a synthetic history entry while the form is dirty so a browser-back can be intercepted
-    // by popstate below — react-router's blocker doesn't cover the native back gesture.
-    useEffect(() => {
-        if (isDirty && !hasPushedBlockerStateRef.current) {
-            window.history.pushState({ __pentagiBlock__: true }, '');
-            hasPushedBlockerStateRef.current = true;
-        }
-    }, [isDirty]);
-
-    useEffect(() => {
-        const handlePopState = () => {
-            if (!isDirty) {
-                return;
-            }
-
-            if (allowBrowserLeaveRef.current) {
-                allowBrowserLeaveRef.current = false;
-
-                return;
-            }
-
-            setPendingBrowserBack(true);
-            setIsLeaveDialogOpen(true);
-            window.history.forward();
-        };
-
-        window.addEventListener('popstate', handlePopState, { capture: true });
-
-        return () => {
-            window.removeEventListener('popstate', handlePopState, { capture: true });
-        };
-    }, [isDirty]);
-
-    const handleConfirmLeave = () => {
-        if (pendingBrowserBack) {
-            allowBrowserLeaveRef.current = true;
-            setPendingBrowserBack(false);
-            window.history.go(-2);
-
-            return;
-        }
-
-        navigate(routes.settings.prompts);
-    };
-
-    const handleLeaveDialogOpenChange = (open: boolean) => {
-        if (!open && pendingBrowserBack) {
-            setPendingBrowserBack(false);
-        }
-
-        setIsLeaveDialogOpen(open);
-    };
-
-    const handleSystemSubmit = async (formData: SystemFormData) => {
+    const handleSystemSubmit = async (formData: SystemFormData): Promise<boolean> => {
         if (!promptInfo) {
-            return;
+            return false;
         }
 
         const isUpdate = !!promptInfo.userSystemPrompt;
 
         // Submitting an unchanged template would create a no-op userDefined row that masks the default.
         if (!isUpdate && formData.template === promptInfo.defaultSystemTemplate) {
-            return;
+            return true;
         }
 
         try {
@@ -553,22 +497,26 @@ function SettingsPrompt() {
                     },
                 });
             }
+
+            return true;
         } catch (error) {
             console.error('Submit error:', error);
             setSubmitError(error instanceof Error ? error.message : 'An error occurred while saving');
+
+            return false;
         }
     };
 
-    const handleHumanSubmit = async (formData: HumanFormData) => {
+    const handleHumanSubmit = async (formData: HumanFormData): Promise<boolean> => {
         if (!promptInfo) {
-            return;
+            return false;
         }
 
         const isUpdate = !!promptInfo.userHumanPrompt;
 
         // Submitting an unchanged template would create a no-op userDefined row that masks the default.
         if (!isUpdate && formData.template === promptInfo.defaultHumanTemplate) {
-            return;
+            return true;
         }
 
         try {
@@ -580,7 +528,7 @@ function SettingsPrompt() {
             if (!humanPromptType) {
                 setSubmitError('Human prompt type not found');
 
-                return;
+                return false;
             }
 
             if (isUpdate) {
@@ -600,11 +548,52 @@ function SettingsPrompt() {
                     },
                 });
             }
+
+            return true;
         } catch (error) {
             console.error('Submit error:', error);
             setSubmitError(error instanceof Error ? error.message : 'An error occurred while saving');
+
+            return false;
         }
     };
+
+    const isFormValid = (!isSystemDirty || isSystemValid) && (!isHumanDirty || isHumanValid);
+
+    const onSaveAndLeave = async (): Promise<boolean> => {
+        const systemDirty = isSystemDirty;
+        const humanDirty = isHumanDirty;
+
+        if (systemDirty && !(await systemForm.trigger())) {
+            return false;
+        }
+
+        if (humanDirty && !(await humanForm.trigger())) {
+            return false;
+        }
+
+        // Snapshot both tabs before awaiting: a save refetch resets the forms, which would
+        // otherwise clobber the still-unsaved other tab's value mid-flight.
+        const systemValues = systemForm.getValues();
+        const humanValues = humanForm.getValues();
+        let saved = true;
+
+        if (systemDirty) {
+            saved = (await handleSystemSubmit(systemValues)) && saved;
+        }
+
+        if (humanDirty) {
+            saved = (await handleHumanSubmit(humanValues)) && saved;
+        }
+
+        return saved;
+    };
+
+    const unsavedGuard = useUnsavedChangesGuard({
+        isDirty,
+        isFormValid,
+        onSave: onSaveAndLeave,
+    });
 
     const isNew = promptId === 'new';
     const hasOverride =
@@ -978,16 +967,14 @@ function SettingsPrompt() {
                 title="Reset Prompt"
             />
 
-            <ConfirmationDialog
-                cancelText="Stay"
-                confirmIcon={undefined}
-                confirmText="Leave"
-                confirmVariant="destructive"
-                description="You have unsaved changes. Are you sure you want to leave without saving?"
-                handleConfirm={handleConfirmLeave}
-                handleOpenChange={handleLeaveDialogOpenChange}
-                isOpen={isLeaveDialogOpen}
-                title="Discard changes?"
+            <UnsavedChangesDialog
+                canSave={isFormValid}
+                handleCancel={unsavedGuard.handleCancel}
+                handleDiscard={unsavedGuard.handleDiscard}
+                handleOpenChange={unsavedGuard.handleOpenChange}
+                handleSaveAndLeave={unsavedGuard.handleSaveAndLeave}
+                isOpen={unsavedGuard.isOpen}
+                isSavingFromDialog={unsavedGuard.isSavingFromDialog}
             />
 
             <Dialog
