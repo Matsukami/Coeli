@@ -137,25 +137,45 @@ function FormTextareaItem<T extends FieldValues>({
     );
 }
 
-const getUsedVariables = (template: string | undefined): Set<string> => {
-    const usedVariables = new Set<string>();
+// .<variable> used in any {{ }} form (bare, if/range/with, nested) — intentionally broader than bare {{.X}}.
+const variableActionRegex = (variable: string): RegExp => new RegExp(`\\{\\{[^}]*?\\.${variable}\\b[^}]*?\\}\\}`);
 
-    if (!template) {
-        return usedVariables;
-    }
+// Pixel offset of `position` from the textarea content top, measured via a hidden mirror so
+// soft-wrapped lines count — a logical-line count undershoots the scroll badly for wrapped templates.
+const caretOffsetTop = (textarea: HTMLTextAreaElement, position: number): number => {
+    const cs = getComputedStyle(textarea);
+    const mirror = document.createElement('div');
 
-    const variableRegex = /\{\{\.(\w+)\}\}/g;
-    let match;
+    mirror.style.fontFamily = cs.fontFamily;
+    mirror.style.fontSize = cs.fontSize;
+    mirror.style.fontWeight = cs.fontWeight;
+    mirror.style.fontStyle = cs.fontStyle;
+    mirror.style.lineHeight = cs.lineHeight;
+    mirror.style.letterSpacing = cs.letterSpacing;
+    mirror.style.wordSpacing = cs.wordSpacing;
+    mirror.style.paddingTop = cs.paddingTop;
+    mirror.style.paddingRight = cs.paddingRight;
+    mirror.style.paddingBottom = cs.paddingBottom;
+    mirror.style.paddingLeft = cs.paddingLeft;
+    mirror.style.width = `${textarea.clientWidth}px`;
+    mirror.style.boxSizing = 'border-box';
+    mirror.style.whiteSpace = 'pre-wrap';
+    mirror.style.overflowWrap = 'break-word';
+    mirror.style.position = 'absolute';
+    mirror.style.visibility = 'hidden';
+    mirror.style.top = '-9999px';
+    mirror.style.left = '-9999px';
 
-    while ((match = variableRegex.exec(template)) !== null) {
-        const variable = match[1];
+    mirror.textContent = textarea.value.slice(0, position);
+    const marker = document.createElement('span');
+    marker.textContent = textarea.value.charAt(position) || '.';
+    mirror.appendChild(marker);
 
-        if (variable) {
-            usedVariables.add(variable);
-        }
-    }
+    document.body.appendChild(mirror);
+    const offset = marker.offsetTop;
+    mirror.remove();
 
-    return usedVariables;
+    return offset;
 };
 
 interface VariablesProps {
@@ -198,21 +218,13 @@ function SettingsPrompt() {
         if (textarea) {
             const currentValue = field.value || '';
             const variablePattern = `{{.${variable}}}`;
+            const existing = currentValue.match(variableActionRegex(variable));
 
-            const variableIndex = currentValue.indexOf(variablePattern);
-
-            if (variableIndex !== -1) {
+            if (existing && existing.index !== undefined) {
+                const matchStart = existing.index;
                 textarea.focus();
-                textarea.setSelectionRange(variableIndex, variableIndex + variablePattern.length);
-
-                const lineHeight = 20;
-                const textBeforeSelection = currentValue.slice(0, Math.max(0, variableIndex));
-                const linesBeforeSelection = textBeforeSelection.split('\n').length - 1;
-                const selectionTop = linesBeforeSelection * lineHeight;
-                const textareaHeight = textarea.clientHeight;
-                const scrollTop = Math.max(0, selectionTop - textareaHeight / 2);
-
-                textarea.scrollTop = scrollTop;
+                textarea.setSelectionRange(matchStart, matchStart + existing[0].length);
+                textarea.scrollTop = Math.max(0, caretOffsetTop(textarea, matchStart) - textarea.clientHeight / 2);
             } else {
                 const start = textarea.selectionStart;
                 const end = textarea.selectionEnd;
@@ -220,7 +232,6 @@ function SettingsPrompt() {
                     currentValue.slice(0, Math.max(0, start)) + variablePattern + currentValue.slice(Math.max(0, end));
                 field.onChange(newValue);
 
-                // preventScroll: avoid yanking the user away from where they were typing.
                 setTimeout(() => {
                     textarea.focus({ preventScroll: true });
                     textarea.setSelectionRange(start + variablePattern.length, start + variablePattern.length);
@@ -417,11 +428,11 @@ function SettingsPrompt() {
             const field =
                 activeTab === 'system'
                     ? {
-                          onChange: (value: string) => systemForm.setValue('template', value),
+                          onChange: (value: string) => systemForm.setValue('template', value, { shouldDirty: true }),
                           value: systemTemplate,
                       }
                     : {
-                          onChange: (value: string) => humanForm.setValue('template', value),
+                          onChange: (value: string) => humanForm.setValue('template', value, { shouldDirty: true }),
                           value: humanTemplate,
                       };
             handleVariableClick(variable, field, variablesData.formId);
@@ -1062,8 +1073,6 @@ function Variables({ currentTemplate, onVariableClick, variables }: VariablesPro
         return null;
     }
 
-    const usedVariables = getUsedVariables(currentTemplate);
-
     return (
         <div className="bg-card overflow-hidden rounded-lg border">
             <div className="border-b px-4 py-3">
@@ -1072,13 +1081,26 @@ function Variables({ currentTemplate, onVariableClick, variables }: VariablesPro
             </div>
             <div className="bg-background flex flex-wrap gap-1.5 px-4 py-3">
                 {variables.map((variable) => {
-                    const isUsed = usedVariables.has(variable);
+                    const isUsed = variableActionRegex(variable).test(currentTemplate);
+                    const action = isUsed
+                        ? `Go to {{.${variable}}} in the template`
+                        : `Insert {{.${variable}}} at the cursor`;
 
                     return (
                         <Badge
+                            aria-label={action}
                             className="cursor-pointer font-mono font-normal"
                             key={variable}
                             onClick={() => onVariableClick(variable)}
+                            onKeyDown={(event) => {
+                                if (event.key === 'Enter' || event.key === ' ') {
+                                    event.preventDefault();
+                                    onVariableClick(variable);
+                                }
+                            }}
+                            role="button"
+                            tabIndex={0}
+                            title={action}
                             variant={isUsed ? 'green' : 'secondary'}
                         >
                             {`{{.${variable}}}`}
