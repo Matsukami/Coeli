@@ -390,21 +390,9 @@ const createApolloClient = () => {
                 error: (error) => {
                     Log.error('GraphQL WebSocket error:', error);
 
-                    if (error && typeof error === 'object') {
-                        const errorMessage = 'message' in error ? String(error.message) : '';
-                        const errorString = errorMessage.toLowerCase();
-
-                        if (
-                            errorString.includes('403') ||
-                            errorString.includes('401') ||
-                            errorString.includes('unauthorized') ||
-                            errorString.includes('auth required') ||
-                            errorString.includes('forbidden')
-                        ) {
-                            Log.warn('WebSocket authorization error detected, refreshing auth info');
-                            window.dispatchEvent(new Event('auth:refresh'));
-                        }
-                    }
+                    // A WebSocket error event doesn't expose the handshake HTTP status, so a
+                    // 403 can't be detected here — let /info classify it via auth:refresh.
+                    window.dispatchEvent(new Event('auth:refresh'));
                 },
                 ping: () => Log.debug('GraphQL WebSocket ping'),
                 pong: () => Log.debug('GraphQL WebSocket pong'),
