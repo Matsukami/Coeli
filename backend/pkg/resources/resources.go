@@ -322,9 +322,13 @@ func CommitBlob(dataDir, hash, tmpPath string) error {
 
 // ZipResources writes a ZIP archive to w containing all entries in files.
 // Each ZipEntry maps a .blob file on disk to a path inside the archive.
-func ZipResources(w io.Writer, entries []ZipEntry) error {
+func ZipResources(w io.Writer, entries []ZipEntry) (err error) {
 	zw := zip.NewWriter(w)
-	defer zw.Close()
+	defer func() {
+		if cerr := zw.Close(); err == nil {
+			err = cerr
+		}
+	}()
 
 	for _, e := range entries {
 		info, err := os.Lstat(e.BlobPath)
@@ -367,9 +371,13 @@ func ZipResources(w io.Writer, entries []ZipEntry) error {
 // ZipDirectory is kept for symmetry with flowfiles and wraps ZipResources by
 // walking a real FS directory.  In the resources service, use ZipResources
 // instead since files are stored as blobs, not in a directory structure.
-func ZipDirectory(w io.Writer, dirPath string) error {
+func ZipDirectory(w io.Writer, dirPath string) (err error) {
 	zw := zip.NewWriter(w)
-	defer zw.Close()
+	defer func() {
+		if cerr := zw.Close(); err == nil {
+			err = cerr
+		}
+	}()
 
 	return filepath.WalkDir(dirPath, func(entryPath string, d fs.DirEntry, err error) error {
 		if err != nil {

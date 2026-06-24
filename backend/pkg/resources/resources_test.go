@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"crypto/md5"
 	"encoding/hex"
+	"errors"
 	"io"
 	"os"
 	"path/filepath"
@@ -14,6 +15,21 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+type errWriter struct{}
+
+func (errWriter) Write([]byte) (int, error) { return 0, errors.New("write failed") }
+
+// With no entries, the only bytes written to w happen during zip.Writer.Close()'s
+// final central-directory flush, so a failing writer here exercises exactly the
+// Close() error path that must surface instead of being dropped as a success.
+func TestZipResourcesPropagatesCloseError(t *testing.T) {
+	require.Error(t, ZipResources(errWriter{}, nil))
+}
+
+func TestZipDirectoryPropagatesCloseError(t *testing.T) {
+	require.Error(t, ZipDirectory(errWriter{}, t.TempDir()))
+}
 
 func TestResourceDirsAndBlobPath(t *testing.T) {
 	assert.Equal(t, "/data/resources", ResourcesDir("/data"))
