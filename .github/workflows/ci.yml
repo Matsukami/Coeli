@@ -60,7 +60,6 @@ jobs:
       - name: Frontend - Install dependencies
         working-directory: frontend
         run: pnpm install --frozen-lockfile
-        continue-on-error: true
 
       - name: Frontend - Prettier
         working-directory: frontend
