@@ -1,6 +1,7 @@
 package pconfig
 
 import (
+	"context"
 	"encoding/json"
 	"os"
 	"path/filepath"
@@ -12,6 +13,89 @@ import (
 	"github.com/vxcontrol/langchaingo/llms"
 	"gopkg.in/yaml.v3"
 )
+
+func TestProviderConfig_UsesAdaptiveThinking(t *testing.T) {
+	adaptiveOnly := ModelsConfig{{Name: "opus-4-8", Reasoning: &ModelReasoningInfo{Mode: ModelReasoningAdaptiveOnly}}}
+	adaptiveCapable := ModelsConfig{{Name: "opus-4-6", Reasoning: &ModelReasoningInfo{Mode: ModelReasoningAdaptive}}}
+	budgetOnly := ModelsConfig{{Name: "sonnet-4-5", Reasoning: &ModelReasoningInfo{Mode: ModelReasoningBudget}}}
+
+	tests := []struct {
+		name   string
+		models ModelsConfig
+		agent  *AgentConfig
+		want   bool
+	}{
+		{"adaptive-only model forces adaptive with no agent reasoning",
+			adaptiveOnly, &AgentConfig{Model: "opus-4-8"}, true},
+		{"adaptive-only model overrides an agent budget choice",
+			adaptiveOnly, &AgentConfig{Model: "opus-4-8", Reasoning: ReasoningConfig{Mode: ReasoningModeBudget, MaxTokens: 4096}}, true},
+		{"agent selects adaptive on an adaptive-capable model",
+			adaptiveCapable, &AgentConfig{Model: "opus-4-6", Reasoning: ReasoningConfig{Mode: ReasoningModeAdaptive}}, true},
+		{"agent selects budget on an adaptive-capable model",
+			adaptiveCapable, &AgentConfig{Model: "opus-4-6", Reasoning: ReasoningConfig{Mode: ReasoningModeBudget, MaxTokens: 4096}}, false},
+		{"budget-only model with a budget agent",
+			budgetOnly, &AgentConfig{Model: "sonnet-4-5", Reasoning: ReasoningConfig{Mode: ReasoningModeBudget, MaxTokens: 4096}}, false},
+		{"no reasoning anywhere",
+			budgetOnly, &AgentConfig{Model: "sonnet-4-5"}, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			pc := &ProviderConfig{Simple: tt.agent}
+			assert.Equal(t, tt.want, pc.UsesAdaptiveThinking(tt.models, OptionsTypeSimple))
+		})
+	}
+}
+
+func TestProviderConfig_PrepareAdaptiveCallOptions(t *testing.T) {
+	adaptiveOnly := ModelsConfig{{Name: "opus-4-8", Reasoning: &ModelReasoningInfo{Mode: ModelReasoningAdaptiveOnly}}}
+
+	// adaptiveReasoning applies the returned options to a CallOptions and reports
+	// the reasoning the provider would emit (nil if no adaptive option was added).
+	adaptiveReasoning := func(options []llms.CallOption) *llms.ReasoningConfig {
+		var co llms.CallOptions
+		for _, o := range options {
+			o(&co)
+		}
+		return co.Reasoning
+	}
+
+	t.Run("overrides an agent budget choice on an adaptive-only model", func(t *testing.T) {
+		pc := &ProviderConfig{Simple: &AgentConfig{
+			Model:     "opus-4-8",
+			Reasoning: ReasoningConfig{Mode: ReasoningModeBudget, Effort: llms.ReasoningHigh, MaxTokens: 4096},
+		}}
+		_, options := pc.PrepareAdaptiveCallOptions(context.Background(), adaptiveOnly, OptionsTypeSimple, nil)
+		require.Len(t, options, 1, "the adaptive call option must be appended")
+
+		r := adaptiveReasoning(options)
+		require.NotNil(t, r)
+		assert.True(t, r.Adaptive, "a budget choice must be overridden to adaptive for an adaptive-only model")
+		assert.Equal(t, llms.ReasoningHigh, r.Effort)
+	})
+
+	t.Run("forces adaptive on an adaptive-only model with no agent reasoning block", func(t *testing.T) {
+		pc := &ProviderConfig{Simple: &AgentConfig{Model: "opus-4-8"}}
+		_, options := pc.PrepareAdaptiveCallOptions(context.Background(), adaptiveOnly, OptionsTypeSimple, nil)
+		require.Len(t, options, 1)
+
+		r := adaptiveReasoning(options)
+		require.NotNil(t, r)
+		assert.True(t, r.Adaptive)
+		assert.Equal(t, llms.ReasoningNone, r.Effort, "empty effort is left for the provider to default to high")
+	})
+
+	t.Run("no-op for a budget-only model, preserving existing options", func(t *testing.T) {
+		budgetOnly := ModelsConfig{{Name: "sonnet-4-5", Reasoning: &ModelReasoningInfo{Mode: ModelReasoningBudget}}}
+		pc := &ProviderConfig{Simple: &AgentConfig{
+			Model:     "sonnet-4-5",
+			Reasoning: ReasoningConfig{Mode: ReasoningModeBudget, MaxTokens: 4096},
+		}}
+		existing := []llms.CallOption{llms.WithTemperature(1)}
+		_, options := pc.PrepareAdaptiveCallOptions(context.Background(), budgetOnly, OptionsTypeSimple, existing)
+		require.Len(t, options, 1, "a non-adaptive call must not append the adaptive option")
+		assert.Nil(t, adaptiveReasoning(options), "no adaptive reasoning option should be present")
+	})
+}
 
 func TestReasoningConfig_UnmarshalJSON(t *testing.T) {
 	tests := []struct {
