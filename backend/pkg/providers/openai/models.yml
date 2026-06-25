@@ -2,6 +2,8 @@
 - name: gpt-5.4
   description: Best intelligence at scale for agentic, coding, and professional workflows. Flagship model with 1M context window and configurable reasoning effort (none/low/medium/high/xhigh). Excels at complex professional work, sophisticated security research, and advanced autonomous penetration testing requiring maximum cognitive depth and accuracy.
   thinking: true
+  reasoning:
+    efforts: [low, medium, high, xhigh]
   release_date: 2026-01-15
   price:
     input: 2.5

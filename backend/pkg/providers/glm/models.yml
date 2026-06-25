@@ -2,6 +2,8 @@
 - name: glm-5.2
   description: GLM-5.2 - Newest flagship (improves on GLM-5.1), 200K context, hybrid thinking; supports reasoning_effort (high/max).
   thinking: true
+  reasoning:
+    efforts: [high, max]
   price:
     input: 1.40
     output: 4.40
