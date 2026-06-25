@@ -148,6 +148,25 @@ type providerController struct {
 	provider.Providers
 }
 
+func buildDefaultConfigs(cfg *config.Config) (provider.ProvidersConfig, error) {
+	defaultConfigs := make(provider.ProvidersConfig)
+	for _, e := range providerRegistry {
+		config, err := e.NewConfig(cfg)
+		if err != nil {
+			// A disabled provider pointed at an unreadable external config path
+			// must not abort startup — fail loudly only for providers the
+			// operator actually enabled.
+			if !e.Enabled(cfg) {
+				logrus.WithError(err).Warnf("skipping config for disabled %s provider", e.Type)
+				continue
+			}
+			return nil, fmt.Errorf("failed to create %s provider config: %w", e.Type, err)
+		}
+		defaultConfigs[e.Type] = config
+	}
+	return defaultConfigs, nil
+}
+
 func NewProviderController(
 	cfg *config.Config,
 	db database.Querier,
@@ -163,15 +182,10 @@ func NewProviderController(
 	}
 
 	providers := make(provider.Providers)
-	defaultConfigs := make(provider.ProvidersConfig)
 
-	for _, e := range providerRegistry {
-		config, err := e.NewConfig(cfg)
-		if err != nil {
-			return nil, fmt.Errorf("failed to create %s provider config: %w", e.Type, err)
-		}
-
-		defaultConfigs[e.Type] = config
+	defaultConfigs, err := buildDefaultConfigs(cfg)
+	if err != nil {
+		return nil, err
 	}
 
 	for _, e := range providerRegistry {
