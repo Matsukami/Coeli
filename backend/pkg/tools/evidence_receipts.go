@@ -194,6 +194,10 @@ func (r *fileEvidenceReceiptRecorder) record(ctx context.Context, event evidence
 		return fmt.Errorf("failed to write evidence receipt: %w", err)
 	}
 
+	if err := file.Sync(); err != nil {
+		return fmt.Errorf("failed to flush evidence receipt: %w", err)
+	}
+
 	return nil
 }
 
