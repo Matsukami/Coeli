@@ -406,6 +406,78 @@ func TestFileEvidenceReceiptRecorderKeepsChainsIntactWhenPathsShareAStripe(t *te
 	}
 }
 
+func TestReadLastEvidenceReceiptHashMatchesFullReadTail(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	const flowID = int64(555)
+	const receipts = 500
+
+	recorder := newTestEvidenceReceiptRecorder(dir, flowID)
+	for i := 0; i < receipts; i++ {
+		if err := recorder.RecordFinished(t.Context(), testEvidenceReceiptEvent()); err != nil {
+			t.Fatalf("RecordFinished() error: %v", err)
+		}
+	}
+
+	path, err := evidenceReceiptsPath(dir, flowID)
+	if err != nil {
+		t.Fatalf("evidenceReceiptsPath() error: %v", err)
+	}
+
+	info, err := os.Stat(path)
+	if err != nil {
+		t.Fatalf("stat error: %v", err)
+	}
+	if info.Size() <= 64*1024 {
+		t.Fatalf("file is %d bytes; need > 64KiB to exercise the windowed tail read", info.Size())
+	}
+
+	full := readEvidenceReceiptLines(t, path)
+	want := full[len(full)-1].ReceiptHash
+
+	got, err := readLastEvidenceReceiptHash(path)
+	if err != nil {
+		t.Fatalf("readLastEvidenceReceiptHash() error: %v", err)
+	}
+	if got != want {
+		t.Fatalf("tail hash = %q, want %q (must equal the last line of a full read)", got, want)
+	}
+}
+
+func TestReadLastEvidenceReceiptHashEmptyOrMissingFile(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	path, err := evidenceReceiptsPath(dir, 556)
+	if err != nil {
+		t.Fatalf("evidenceReceiptsPath() error: %v", err)
+	}
+
+	got, err := readLastEvidenceReceiptHash(path)
+	if err != nil {
+		t.Fatalf("missing file: unexpected error: %v", err)
+	}
+	if got != "" {
+		t.Fatalf("missing file tail = %q, want empty", got)
+	}
+
+	if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
+		t.Fatalf("failed to create evidence dir: %v", err)
+	}
+	if err := os.WriteFile(path, nil, 0644); err != nil {
+		t.Fatalf("failed to create empty file: %v", err)
+	}
+
+	got, err = readLastEvidenceReceiptHash(path)
+	if err != nil {
+		t.Fatalf("empty file: unexpected error: %v", err)
+	}
+	if got != "" {
+		t.Fatalf("empty file tail = %q, want empty", got)
+	}
+}
+
 func collidingStripeFlowIDs(t *testing.T, dir string) (int64, int64) {
 	t.Helper()
 

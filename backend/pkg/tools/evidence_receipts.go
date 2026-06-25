@@ -1,7 +1,6 @@
 package tools
 
 import (
-	"bufio"
 	"bytes"
 	"context"
 	"crypto/sha256"
@@ -227,53 +226,73 @@ func evidenceReceiptPathLock(path string) *sync.Mutex {
 }
 
 func readLastEvidenceReceiptHash(path string) (string, error) {
-	file, err := os.Open(path)
-	if os.IsNotExist(err) {
+	line, err := readLastEvidenceReceiptLine(path)
+	if err != nil {
+		return "", err
+	}
+	if line == nil {
 		return "", nil
 	}
+
+	var receipt evidenceReceipt
+	if err := json.Unmarshal(line, &receipt); err != nil {
+		return "", fmt.Errorf("failed to parse last evidence receipt: %w", err)
+	}
+	if receipt.Schema != evidenceReceiptSchema || receipt.Version != evidenceReceiptVersion {
+		return "", fmt.Errorf("unsupported evidence receipt schema or version on last line")
+	}
+
+	hash, err := computeEvidenceReceiptHash(receipt)
 	if err != nil {
-		return "", fmt.Errorf("failed to read evidence receipt file: %w", err)
+		return "", fmt.Errorf("failed to hash last evidence receipt: %w", err)
+	}
+	if receipt.ReceiptHash != hash {
+		return "", fmt.Errorf("evidence receipt hash mismatch on last line")
+	}
+
+	return receipt.ReceiptHash, nil
+}
+
+func readLastEvidenceReceiptLine(path string) ([]byte, error) {
+	file, err := os.Open(path)
+	if os.IsNotExist(err) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("failed to read evidence receipt file: %w", err)
 	}
 	defer file.Close()
 
-	scanner := bufio.NewScanner(file)
-	scanner.Buffer(make([]byte, 0, 64*1024), 1024*1024)
-
-	previousHash := ""
-	lineNumber := 0
-	for scanner.Scan() {
-		line := bytes.TrimSpace(scanner.Bytes())
-		if len(line) == 0 {
-			continue
-		}
-		lineNumber++
-
-		var receipt evidenceReceipt
-		if err := json.Unmarshal(line, &receipt); err != nil {
-			return "", fmt.Errorf("failed to parse evidence receipt line %d: %w", lineNumber, err)
-		}
-		if receipt.Schema != evidenceReceiptSchema || receipt.Version != evidenceReceiptVersion {
-			return "", fmt.Errorf("unsupported evidence receipt schema or version on line %d", lineNumber)
-		}
-		if receipt.PreviousReceiptHash != previousHash {
-			return "", fmt.Errorf("evidence receipt chain mismatch on line %d", lineNumber)
-		}
-
-		hash, err := computeEvidenceReceiptHash(receipt)
-		if err != nil {
-			return "", fmt.Errorf("failed to hash evidence receipt line %d: %w", lineNumber, err)
-		}
-		if receipt.ReceiptHash != hash {
-			return "", fmt.Errorf("evidence receipt hash mismatch on line %d", lineNumber)
-		}
-
-		previousHash = receipt.ReceiptHash
+	info, err := file.Stat()
+	if err != nil {
+		return nil, fmt.Errorf("failed to stat evidence receipt file: %w", err)
 	}
-	if err := scanner.Err(); err != nil {
-		return "", fmt.Errorf("failed to scan evidence receipt file: %w", err)
+	if info.Size() == 0 {
+		return nil, nil
 	}
 
-	return previousHash, nil
+	const maxReceiptLineWindow = 64 * 1024
+	start := info.Size() - maxReceiptLineWindow
+	if start < 0 {
+		start = 0
+	}
+
+	window := make([]byte, info.Size()-start)
+	if _, err := file.ReadAt(window, start); err != nil && err != io.EOF {
+		return nil, fmt.Errorf("failed to read evidence receipt tail: %w", err)
+	}
+
+	trimmed := bytes.TrimRight(window, "\n")
+	if len(trimmed) == 0 {
+		return nil, nil
+	}
+	if idx := bytes.LastIndexByte(trimmed, '\n'); idx >= 0 {
+		return trimmed[idx+1:], nil
+	}
+	if start > 0 {
+		return nil, fmt.Errorf("last evidence receipt line exceeds %d bytes", maxReceiptLineWindow)
+	}
+	return trimmed, nil
 }
 
 func computeEvidenceReceiptHash(receipt evidenceReceipt) (string, error) {
