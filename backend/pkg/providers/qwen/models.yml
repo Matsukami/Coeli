@@ -15,7 +15,7 @@
   price:
     input: 2.5
     output: 7.5
-    cache_read: 0.5
+    cache_read: 1.25
 
 # Qwen3.6 Series - Native vision-language models with enhanced agentic coding (April 2026)
 - name: qwen3.6-max-preview
