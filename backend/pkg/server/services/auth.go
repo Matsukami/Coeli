@@ -483,10 +483,16 @@ func (s *AuthService) authLoginCallback(c *gin.Context, stateData map[string]str
 		return
 	}
 
-	email, err := oauthClient.ResolveEmail(ctx, nonce.Value, oauth2Token)
+	email, verified, err := oauthClient.ResolveEmail(ctx, nonce.Value, oauth2Token)
 	if err != nil {
 		logger.FromContext(c).WithError(err).Errorf("failed to resolve email")
 		response.Error(c, response.ErrAuthInvalidUserData, err)
+		return
+	}
+
+	if !verified {
+		logger.FromContext(c).Errorf("provider returned an unverified email '%s'", email)
+		response.Error(c, response.ErrAuthInvalidUserData, fmt.Errorf("email not verified by provider"))
 		return
 	}
 

@@ -20,17 +20,16 @@ import (
 	"pentagi/pkg/server/oauth"
 )
 
-// fakeOAuthClient is an OAuthClient stub that returns a fixed, already-verified email
-// (the real google/github resolvers reject unverified addresses upstream).
 type fakeOAuthClient struct {
-	name  string
-	email string
+	name     string
+	email    string
+	verified bool
 }
 
 func (f *fakeOAuthClient) ProviderName() string { return f.name }
 
-func (f *fakeOAuthClient) ResolveEmail(context.Context, string, *oauth2.Token) (string, error) {
-	return f.email, nil
+func (f *fakeOAuthClient) ResolveEmail(context.Context, string, *oauth2.Token) (string, bool, error) {
+	return f.email, f.verified, nil
 }
 
 func (f *fakeOAuthClient) TokenSource(context.Context, *oauth2.Token) oauth2.TokenSource { return nil }
@@ -46,11 +45,15 @@ func (f *fakeOAuthClient) RefreshToken(context.Context, string) (*oauth2.Token, 
 func (f *fakeOAuthClient) AuthCodeURL(string, ...oauth2.AuthCodeOption) string { return "" }
 
 func newOAuthService(db *gorm.DB, email string) *AuthService {
+	return newOAuthServiceVerified(db, email, true)
+}
+
+func newOAuthServiceVerified(db *gorm.DB, email string, verified bool) *AuthService {
 	return &AuthService{
 		cfg:   AuthServiceConfig{BaseURL: "/", SessionTimeout: 3600},
 		db:    db,
 		key:   []byte("0123456789abcdef0123456789abcdef"),
-		oauth: map[string]oauth.OAuthClient{"github": &fakeOAuthClient{name: "github", email: email}},
+		oauth: map[string]oauth.OAuthClient{"github": &fakeOAuthClient{name: "github", email: email, verified: verified}},
 	}
 }
 
@@ -106,6 +109,30 @@ func TestAuthLoginCallback_LinksExistingLocalAccount(t *testing.T) {
 	assert.Equal(t, "github", *linked.Provider, "the provider is backfilled on link")
 
 	assert.Equal(t, uint64(10), sessions.Default(c).Get("uid"), "session is issued for the linked account")
+}
+
+func TestAuthLoginCallback_RejectsUnverifiedEmail(t *testing.T) {
+	db := setupTestDB(t)
+	defer db.Close()
+
+	require.NoError(t, db.Exec(
+		"INSERT INTO users (id, hash, type, mail, name, status, role_id, provider) VALUES (10, ?, 'local', 'victim@corp.com', 'Victim', 'active', 2, NULL)",
+		"1234567890abcdef1234567890abcdef",
+	).Error)
+
+	before := countUsers(t, db)
+
+	svc := newOAuthServiceVerified(db, "victim@corp.com", false)
+	c, w := newCallbackContext(t)
+	svc.authLoginCallback(c, map[string]string{"provider": "github"}, "test-code")
+
+	assert.NotEqual(t, http.StatusOK, w.Code, "an unverified email must be rejected, not linked")
+	assert.Equal(t, before, countUsers(t, db), "no account is created")
+
+	var victim models.User
+	require.NoError(t, db.Where("id = ?", 10).First(&victim).Error)
+	assert.Nil(t, victim.Provider, "the victim account is not linked to the provider")
+	assert.Nil(t, sessions.Default(c).Get("uid"), "no session is issued")
 }
 
 func TestAuthLoginCallback_CreatesUserWhenEmailFree(t *testing.T) {
