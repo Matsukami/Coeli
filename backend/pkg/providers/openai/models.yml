@@ -13,6 +13,8 @@
 - name: gpt-5.4-mini
   description: Strongest mini model yet for coding, computer use, and subagents. Enhanced agentic capabilities with 400K context window and configurable reasoning levels. Ideal for high-volume security workloads, systematic vulnerability analysis, and coordinated multi-tool penetration testing with optimal cost-to-intelligence ratio.
   thinking: true
+  reasoning:
+    efforts: [low, medium, high, xhigh]
   release_date: 2026-01-15
   price:
     input: 0.75
@@ -22,6 +24,8 @@
 - name: gpt-5.4-nano
   description: Cheapest GPT-5.4-class model for simple high-volume tasks like classification, data extraction, ranking, and sub-agents. Optimized for speed and cost with 400K context window. Perfect for rapid reconnaissance, bulk vulnerability scanning, and real-time security monitoring with minimal latency.
   thinking: true
+  reasoning:
+    efforts: [low, medium, high, xhigh]
   release_date: 2026-01-15
   price:
     input: 0.2
@@ -32,6 +36,8 @@
 - name: gpt-5.2
   description: Latest flagship agentic model with enhanced reasoning and tool integration. Excels at autonomous security research, complex exploit chain development, and coordinating multi-tool penetration testing workflows. Optimal for sophisticated threat modeling and adaptive attack strategies.
   thinking: true
+  reasoning:
+    efforts: [low, medium, high, xhigh]
   release_date: 2025-12-11
   price:
     input: 1.75
@@ -41,6 +47,8 @@
 - name: gpt-5.2-pro
   description: Premium version of GPT-5.2 with superior agentic coding capabilities and long-context performance. Designed for mission-critical security research, advanced zero-day discovery, and complex autonomous penetration testing requiring maximum reasoning depth, accuracy, and reduced hallucinations in high-stakes scenarios.
   thinking: true
+  reasoning:
+    efforts: [medium, high, xhigh]
   release_date: 2025-12-11
   price:
     input: 21.0
