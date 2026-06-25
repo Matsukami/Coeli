@@ -724,7 +724,7 @@ func (ac *AgentConfig) BuildOptions() []llms.CallOption {
 			}
 		default:
 			switch ac.Reasoning.Effort {
-			case llms.ReasoningLow, llms.ReasoningMedium, llms.ReasoningHigh:
+			case llms.ReasoningLow, llms.ReasoningMedium, llms.ReasoningHigh, llms.ReasoningXHigh, llms.ReasoningMax:
 				options = append(options, llms.WithReasoning(ac.Reasoning.Effort, 0))
 			}
 		}
