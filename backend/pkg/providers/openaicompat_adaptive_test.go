@@ -41,5 +41,14 @@ func TestOpenAICompatProvidersDoNotUseAdaptiveThinking(t *testing.T) {
 				t.Errorf("%s/%s resolves to adaptive thinking, but the openaicompat transport never emits it (M7): adaptive thinking is Anthropic/Bedrock-only", p.name, opt)
 			}
 		}
+
+		for _, m := range models {
+			if m.Reasoning == nil {
+				continue
+			}
+			if mode := m.Reasoning.Mode; mode == pconfig.ModelReasoningAdaptive || mode == pconfig.ModelReasoningAdaptiveOnly {
+				t.Errorf("%s catalog model %q declares reasoning mode %q, but the openaicompat transport never emits adaptive thinking (M7): adaptive thinking is Anthropic/Bedrock-only", p.name, m.Name, mode)
+			}
+		}
 	}
 }
