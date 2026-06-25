@@ -141,10 +141,9 @@ export function DetailNavigationSheet<T extends { id: string }>({
     if (lastOpen !== open) {
         setLastOpen(open);
 
-        // Re-seed the input mirror from the controller on open so a controlled
-        // searchQuery changed from outside isn't shown stale. The sheet is modal,
-        // so searchQuery only changes externally while closed — on-open re-seed
-        // suffices and never clobbers in-progress typing.
+        // Re-sync the mirror on open only: the sheet is modal, so a controlled
+        // searchQuery can change externally only while closed. A searchQuery-watching
+        // effect would instead clobber in-progress typing.
         if (open) {
             setLocalQuery(searchQuery);
         }

@@ -506,9 +506,6 @@ describe('DetailNavigationSheet — virtualization (>100 items)', () => {
     });
 });
 
-// Controlled mode (the documented "page-level search box" use case): the parent
-// owns searchQuery, so the sheet's local input mirror must re-seed from the
-// controller when it changes outside the sheet.
 const ControlledSheet = ({ open, query }: { open: boolean; query: string }) => {
     const nav = useDetailNavigation<Item>({
         currentId: 'c',
