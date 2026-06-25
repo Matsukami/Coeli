@@ -478,6 +478,72 @@ func TestReadLastEvidenceReceiptHashEmptyOrMissingFile(t *testing.T) {
 	}
 }
 
+func TestReadLastEvidenceReceiptHashHandlesUnterminatedTail(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	const flowID = int64(557)
+
+	recorder := newTestEvidenceReceiptRecorder(dir, flowID)
+	if err := recorder.RecordFinished(t.Context(), testEvidenceReceiptEvent()); err != nil {
+		t.Fatalf("RecordFinished() error: %v", err)
+	}
+
+	path, err := evidenceReceiptsPath(dir, flowID)
+	if err != nil {
+		t.Fatalf("evidenceReceiptsPath() error: %v", err)
+	}
+
+	want := readEvidenceReceiptLines(t, path)[0].ReceiptHash
+
+	data, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("read error: %v", err)
+	}
+	line := strings.TrimRight(string(data), "\n")
+	if strings.IndexByte(line, '\n') >= 0 {
+		t.Fatalf("setup expected a single newline-free receipt line, got %q", line)
+	}
+
+	t.Run("last line without trailing newline", func(t *testing.T) {
+		p := filepath.Join(t.TempDir(), "receipts.jsonl")
+		if err := os.WriteFile(p, []byte(line), 0644); err != nil {
+			t.Fatalf("write error: %v", err)
+		}
+
+		got, err := readLastEvidenceReceiptHash(p)
+		if err != nil {
+			t.Fatalf("readLastEvidenceReceiptHash() error: %v", err)
+		}
+		if got != want {
+			t.Fatalf("hash on newline-free tail = %q, want %q", got, want)
+		}
+	})
+
+	t.Run("torn final append is rejected", func(t *testing.T) {
+		p := filepath.Join(t.TempDir(), "receipts.jsonl")
+		if err := os.WriteFile(p, []byte(line+"\n"+`{"schema":"pentagi.evidence_rec`), 0644); err != nil {
+			t.Fatalf("write error: %v", err)
+		}
+
+		if _, err := readLastEvidenceReceiptHash(p); err == nil {
+			t.Fatal("expected an error for a truncated last receipt, got nil")
+		}
+	})
+
+	t.Run("single line exceeding the tail window", func(t *testing.T) {
+		p := filepath.Join(t.TempDir(), "receipts.jsonl")
+		if err := os.WriteFile(p, []byte(strings.Repeat("a", 64*1024+1)), 0644); err != nil {
+			t.Fatalf("write error: %v", err)
+		}
+
+		_, err := readLastEvidenceReceiptHash(p)
+		if err == nil || !strings.Contains(err.Error(), "exceeds") {
+			t.Fatalf("oversized last line: got err=%v, want an 'exceeds ... bytes' error", err)
+		}
+	})
+}
+
 func collidingStripeFlowIDs(t *testing.T, dir string) (int64, int64) {
 	t.Helper()
 
