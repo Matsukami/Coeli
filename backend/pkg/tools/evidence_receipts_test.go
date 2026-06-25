@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 )
@@ -246,4 +247,48 @@ func readEvidenceReceiptLines(t *testing.T, path string) []evidenceReceipt {
 	}
 
 	return receipts
+}
+
+func TestFileEvidenceReceiptRecorderSerializesConcurrentWritesToSamePath(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	const flowID = int64(4242)
+	const writers = 2
+	const perWriter = 40
+
+	var wg sync.WaitGroup
+	for w := 0; w < writers; w++ {
+		recorder := newTestEvidenceReceiptRecorder(dir, flowID)
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for i := 0; i < perWriter; i++ {
+				if err := recorder.RecordFinished(t.Context(), testEvidenceReceiptEvent()); err != nil {
+					t.Errorf("RecordFinished() error: %v", err)
+					return
+				}
+			}
+		}()
+	}
+	wg.Wait()
+
+	path, err := evidenceReceiptsPath(dir, flowID)
+	if err != nil {
+		t.Fatalf("evidenceReceiptsPath() error: %v", err)
+	}
+	receipts := readEvidenceReceiptLines(t, path)
+
+	if len(receipts) != writers*perWriter {
+		t.Fatalf("got %d receipts, want %d", len(receipts), writers*perWriter)
+	}
+	if receipts[0].PreviousReceiptHash != "" {
+		t.Fatalf("first receipt previous hash = %q, want empty", receipts[0].PreviousReceiptHash)
+	}
+	for i := 1; i < len(receipts); i++ {
+		if receipts[i].PreviousReceiptHash != receipts[i-1].ReceiptHash {
+			t.Fatalf("receipt %d chain broken: previous hash = %q, want %q (a concurrent write was not serialized)",
+				i, receipts[i].PreviousReceiptHash, receipts[i-1].ReceiptHash)
+		}
+	}
 }

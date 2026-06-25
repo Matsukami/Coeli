@@ -8,6 +8,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"hash/fnv"
 	"io"
 	"os"
 	"path/filepath"
@@ -95,7 +96,11 @@ type fileEvidenceReceiptRecorder struct {
 	newID   func() string
 }
 
-var evidenceReceiptLocks sync.Map
+// Fixed stripes rather than a per-path sync.Map that kept one *sync.Mutex per flow
+// for the whole server uptime.
+const evidenceReceiptLockShards = 256
+
+var evidenceReceiptLocks [evidenceReceiptLockShards]sync.Mutex
 
 func newEvidenceReceiptRecorder(dataDir string, flowID int64, enabled bool) evidenceReceiptRecorder {
 	if !enabled {
@@ -212,8 +217,9 @@ func evidenceReceiptsPath(dataDir string, flowID int64) (string, error) {
 }
 
 func evidenceReceiptPathLock(path string) *sync.Mutex {
-	lock, _ := evidenceReceiptLocks.LoadOrStore(path, &sync.Mutex{})
-	return lock.(*sync.Mutex)
+	h := fnv.New32a()
+	_, _ = h.Write([]byte(path))
+	return &evidenceReceiptLocks[h.Sum32()%evidenceReceiptLockShards]
 }
 
 func readLastEvidenceReceiptHash(path string) (string, error) {
