@@ -11,12 +11,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// A disabled provider pointed at an unreadable external config must not abort
-// startup. Only enabled providers gate construction on their config loading.
 func TestBuildDefaultConfigs_DisabledProviderBadPathIsNotFatal(t *testing.T) {
 	cfg := &config.Config{
-		// External Bedrock config path that doesn't exist; no Bedrock auth set,
-		// so the provider is disabled.
 		BedrockConfig: filepath.Join(t.TempDir(), "missing.yml"),
 	}
 
@@ -29,8 +25,6 @@ func TestBuildDefaultConfigs_DisabledProviderBadPathIsNotFatal(t *testing.T) {
 	assert.True(t, hasOpenAI, "providers with a readable (embedded) default config still load")
 }
 
-// An enabled provider pointed at an unreadable external config must still fail
-// loudly — the operator explicitly configured a file that can't be read.
 func TestBuildDefaultConfigs_EnabledProviderBadPathIsFatal(t *testing.T) {
 	cfg := &config.Config{
 		BedrockConfig:      filepath.Join(t.TempDir(), "missing.yml"),
