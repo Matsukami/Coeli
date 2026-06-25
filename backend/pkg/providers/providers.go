@@ -26,7 +26,7 @@ import (
 	"pentagi/pkg/templates"
 	"pentagi/pkg/tools"
 
-	lru "github.com/hashicorp/golang-lru/v2/expirable"
+	lru "github.com/hashicorp/golang-lru/v2"
 	"github.com/sirupsen/logrus"
 )
 
@@ -34,10 +34,16 @@ const deltaCallCounter = 10000
 
 const defaultTestParallelWorkersNumber = 16
 
-const (
-	summarizerCacheMaxSize = 1000
-	summarizerCacheTTL     = 4 * time.Hour
-)
+const summarizerCacheMaxSize = 100
+
+// newSummarizerCache creates a fixed-size LRU cache for summarizer results.
+// Using lru.Cache (non-expirable) instead of expirable.LRU avoids spawning a
+// per-instance background goroutine that would otherwise accumulate for every
+// short-lived flow/assistant provider.
+func newSummarizerCache() *lru.Cache[[32]byte, string] {
+	c, _ := lru.New[[32]byte, string](summarizerCacheMaxSize)
+	return c
+}
 
 const pentestDockerImage = "vxcontrol/kali-linux"
 
@@ -326,7 +332,7 @@ func (pc *providerController) NewFlowProvider(
 		prompter:        prompter,
 		executor:        executor,
 		summarizer:      pc.summarizerAgent,
-		summarizerCache: lru.NewLRU[[32]byte, string](summarizerCacheMaxSize, nil, summarizerCacheTTL),
+		summarizerCache: newSummarizerCache(),
 		Provider:        prv,
 		maxGACallsLimit: pc.cfg.MaxGeneralAgentToolCalls,
 		maxLACallsLimit: pc.cfg.MaxLimitedAgentToolCalls,
@@ -378,7 +384,7 @@ func (pc *providerController) LoadFlowProvider(
 		prompter:        prompter,
 		executor:        executor,
 		summarizer:      pc.summarizerAgent,
-		summarizerCache: lru.NewLRU[[32]byte, string](summarizerCacheMaxSize, nil, summarizerCacheTTL),
+		summarizerCache: newSummarizerCache(),
 		Provider:        prv,
 		maxGACallsLimit: pc.cfg.MaxGeneralAgentToolCalls,
 		maxLACallsLimit: pc.cfg.MaxLimitedAgentToolCalls,
@@ -474,7 +480,7 @@ func (pc *providerController) NewAssistantProvider(
 			executor:        executor,
 			streamCb:        streamCb,
 			summarizer:      pc.summarizerAgent,
-			summarizerCache: lru.NewLRU[[32]byte, string](summarizerCacheMaxSize, nil, summarizerCacheTTL),
+			summarizerCache: newSummarizerCache(),
 			Provider:        prv,
 			maxGACallsLimit: pc.cfg.MaxGeneralAgentToolCalls,
 			maxLACallsLimit: pc.cfg.MaxLimitedAgentToolCalls,
@@ -529,7 +535,7 @@ func (pc *providerController) LoadAssistantProvider(
 			executor:        executor,
 			streamCb:        streamCb,
 			summarizer:      pc.summarizerAgent,
-			summarizerCache: lru.NewLRU[[32]byte, string](summarizerCacheMaxSize, nil, summarizerCacheTTL),
+			summarizerCache: newSummarizerCache(),
 			Provider:        prv,
 			maxGACallsLimit: pc.cfg.MaxGeneralAgentToolCalls,
 			maxLACallsLimit: pc.cfg.MaxLimitedAgentToolCalls,
