@@ -505,3 +505,65 @@ describe('DetailNavigationSheet — virtualization (>100 items)', () => {
         });
     });
 });
+
+// Controlled mode (the documented "page-level search box" use case): the parent
+// owns searchQuery, so the sheet's local input mirror must re-seed from the
+// controller when it changes outside the sheet.
+const ControlledSheet = ({ open, query }: { open: boolean; query: string }) => {
+    const nav = useDetailNavigation<Item>({
+        currentId: 'c',
+        getHref,
+        getLabel,
+        getSearchableText,
+        items: ITEMS,
+        onOpenChange: () => {},
+        onSearchQueryChange: () => {},
+        open,
+        searchDebounceMs: 0,
+        searchQuery: query,
+    });
+
+    return (
+        <DetailNavigationSheet<Item>
+            controller={nav}
+            sheetTitle="Items"
+        />
+    );
+};
+
+const renderControlled = (props: { open: boolean; query: string }) =>
+    render(<ControlledSheet {...props} />, {
+        wrapper: ({ children }: { children: ReactNode }) => (
+            <MemoryRouter initialEntries={['/items/c']}>
+                <TooltipProvider>
+                    <Routes>
+                        <Route
+                            element={<>{children}</>}
+                            path="/items/:id"
+                        />
+                    </Routes>
+                </TooltipProvider>
+            </MemoryRouter>
+        ),
+    });
+
+describe('DetailNavigationSheet — controlled search resync', () => {
+    it('reflects an external searchQuery change made while the sheet was closed', () => {
+        const { rerender } = renderControlled({ open: false, query: '' });
+
+        rerender(
+            <ControlledSheet
+                open={false}
+                query="Bravo"
+            />,
+        );
+        rerender(
+            <ControlledSheet
+                open
+                query="Bravo"
+            />,
+        );
+
+        expect(screen.getByRole<HTMLInputElement>('textbox').value).toBe('Bravo');
+    });
+});
