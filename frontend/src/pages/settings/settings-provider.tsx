@@ -443,7 +443,15 @@ function FormModelComboboxItem<T extends FieldValues = FieldValues>({
                         <Input
                             className="rounded-r-none border-r-0 focus-visible:z-10"
                             disabled={disabled}
-                            onChange={(event) => field.onChange(event.target.value)}
+                            onChange={(event) => {
+                                const { value } = event.target;
+                                field.onChange(value);
+                                const matched = options.find((option) => option.name === value);
+
+                                if (matched) {
+                                    onOptionSelect?.(matched);
+                                }
+                            }}
                             placeholder={placeholder}
                             value={displayValue}
                         />
