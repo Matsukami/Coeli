@@ -44,6 +44,9 @@ const registerCJKFonts = (): void => {
         return;
     }
 
+    // NotoSansSC covers Han, kana and Bopomofo but NOT Hangul, so Korean text
+    // still renders as missing-glyph boxes. Register NotoSansKR and route Hangul
+    // segments to it to support Korean.
     Font.register({
         family: 'NotoSansSC',
         fonts: [
@@ -72,7 +75,7 @@ interface TextSegment {
  * Splits a string into alternating non-CJK and CJK segments so each segment
  * can be rendered with the appropriate font family.
  */
-const splitByCJK = (text: string): TextSegment[] => {
+export const splitByCJK = (text: string): TextSegment[] => {
     const segments: TextSegment[] = [];
     let lastIndex = 0;
 
@@ -417,7 +420,7 @@ const parseMarkdownTokens = (markdown: string): ParsedContent[] => {
  * Noto Sans for Latin/Cyrillic, Noto Sans SC for CJK. CJK fonts have no true italic
  * variant, so italic is dropped for those segments.
  */
-const renderTextWithCJK = (
+export const renderTextWithCJK = (
     text: string,
     baseFamily: string,
     boldFamily: string,
@@ -432,7 +435,7 @@ const renderTextWithCJK = (
     }
 
     return segments.map((seg, idx) => {
-        const family = seg.isCJK ? (bold ? 'NotoSansSC' : 'NotoSansSC') : bold ? boldFamily : baseFamily;
+        const family = seg.isCJK ? 'NotoSansSC' : bold ? boldFamily : baseFamily;
         const style: Record<string, string> = { fontFamily: family };
 
         if (bold && !seg.isCJK) {
