@@ -1,4 +1,13 @@
-# Qwen3.7 Series - Latest flagship Max (May 2026)
+# Qwen3.7 Series - Latest generation (May 2026)
+- name: qwen3.7-plus
+  description: Qwen3.7 Plus - Cost-efficient tier of the Qwen3.7 generation for the agent-centric era. Better cost-to-intelligence ratio than qwen3.7-max; supports hybrid thinking, long-horizon autonomous execution, and complex security reasoning workflows
+  thinking: true
+  release_date: 2026-05-21
+  price:
+    input: 1.0
+    output: 3.5
+    cache_read: 0.1
+
 - name: qwen3.7-max
   description: Qwen3.7 Max - Next-generation flagship designed for the agent-centric era with excellence in programming, productivity tasks, and long-term autonomous execution. Pure-text interface optimal for sophisticated penetration testing automation and complex agentic security workflows
   thinking: true
