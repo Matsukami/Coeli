@@ -95,8 +95,6 @@ type fileEvidenceReceiptRecorder struct {
 	newID   func() string
 }
 
-// Fixed stripes rather than a per-path sync.Map that kept one *sync.Mutex per flow
-// for the whole server uptime.
 const evidenceReceiptLockShards = 256
 
 var evidenceReceiptLocks [evidenceReceiptLockShards]sync.Mutex
