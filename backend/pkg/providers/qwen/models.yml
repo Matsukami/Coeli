@@ -6,7 +6,7 @@
   price:
     input: 0.4
     output: 1.6
-    cache_read: 0.2
+    cache_read: 0.08
 
 - name: qwen3.7-max
   description: Qwen3.7 Max - Next-generation flagship designed for the agent-centric era with excellence in programming, productivity tasks, and long-term autonomous execution. Pure-text interface optimal for sophisticated penetration testing automation and complex agentic security workflows
@@ -15,7 +15,7 @@
   price:
     input: 2.5
     output: 7.5
-    cache_read: 1.25
+    cache_read: 0.5
 
 # Qwen3.6 Series - Native vision-language models with enhanced agentic coding (April 2026)
 - name: qwen3.6-max-preview
@@ -25,7 +25,7 @@
   price:
     input: 1.3
     output: 7.8
-    cache_read: 0.13
+    cache_read: 0.26
 
 - name: qwen3.6-plus
   description: Qwen3.6 Plus - Native vision-language model with state-of-the-art performance and significant improvements over 3.5 series in agentic coding, front-end programming, OCR, and object localization. Ideal for multimodal pentesting scenarios requiring screen analysis and code reasoning (lowest <=256k tier pricing)
@@ -34,7 +34,7 @@
   price:
     input: 0.5
     output: 3.0
-    cache_read: 0.05
+    cache_read: 0.10
 
 - name: qwen3.6-flash
   description: Qwen3.6 Flash - Native vision-language Flash model with significant performance boost over 3.5-Flash, excels in agentic coding, math/code reasoning, spatial intelligence, and object detection. Optimal for high-throughput security scanning with multimodal awareness
@@ -43,7 +43,7 @@
   price:
     input: 0.25
     output: 1.5
-    cache_read: 0.025
+    cache_read: 0.05
 
 - name: qwen3.6-35b-a3b
   description: Qwen3.6 35B Open-Source - MoE variant (35B params, ~3B active) of the Qwen3.6 native vision-language series. Cost-effective on-premises option for continuous security monitoring with multimodal awareness
@@ -69,7 +69,7 @@
   price:
     input: 0.4
     output: 2.4
-    cache_read: 0.04
+    cache_read: 0.08
 
 - name: qwen3.5-flash
   description: Qwen3.5 Flash - Native vision-language Flash with outstanding performance and pure-text capabilities. Ultra-fast lightweight model optimized for high-throughput security scanning and rapid vulnerability classification
@@ -78,7 +78,7 @@
   price:
     input: 0.1
     output: 0.4
-    cache_read: 0.01
+    cache_read: 0.02
 
 - name: qwen3.5-397b-a17b
   description: Qwen3.5 397B Open-Source - Largest open-source model in 3.5 series with hybrid architecture (397B params, ~17B active) and exceptional reasoning capabilities. Suitable for deep on-premises security research and sophisticated threat modeling
