@@ -3,9 +3,9 @@
   description: Kimi K2.7 Code - Code-specialist variant of K2.7 with native architecture. Stronger code generation and long-term reasoning than K2.6; supports thinking/non-thinking modes, 256k context, automatic context caching, ToolCalls, JSON Mode
   thinking: true
   price:
-    input: 1.20
-    output: 5.00
-    cache_read: 0.20
+    input: 0.95
+    output: 4.00
+    cache_read: 0.19
 
 # Kimi K2.6 - Latest flagship multimodal model with native architecture
 - name: kimi-k2.6
