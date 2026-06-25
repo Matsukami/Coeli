@@ -292,3 +292,136 @@ func TestFileEvidenceReceiptRecorderSerializesConcurrentWritesToSamePath(t *test
 		}
 	}
 }
+
+func TestEvidenceReceiptPathLockBoundedRegardlessOfFlowCount(t *testing.T) {
+	t.Parallel()
+
+	const flows = 100_000
+	if flows <= evidenceReceiptLockShards {
+		t.Fatalf("test must exercise more than %d flows to prove the bound", evidenceReceiptLockShards)
+	}
+
+	mutexes := make(map[*sync.Mutex]struct{})
+	for id := int64(0); id < flows; id++ {
+		path, err := evidenceReceiptsPath("/data", id)
+		if err != nil {
+			t.Fatalf("evidenceReceiptsPath() error: %v", err)
+		}
+		mutexes[evidenceReceiptPathLock(path)] = struct{}{}
+	}
+
+	if len(mutexes) > evidenceReceiptLockShards {
+		t.Fatalf("%d distinct flows produced %d distinct mutexes, want <= %d (a per-path map would leak one mutex per flow)",
+			flows, len(mutexes), evidenceReceiptLockShards)
+	}
+}
+
+func TestFileEvidenceReceiptRecorderSerializesHighConcurrencyToSamePath(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	const flowID = int64(9001)
+	const writers = 16
+	const perWriter = 24
+
+	var wg sync.WaitGroup
+	for w := 0; w < writers; w++ {
+		recorder := newTestEvidenceReceiptRecorder(dir, flowID)
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for i := 0; i < perWriter; i++ {
+				if err := recorder.RecordFinished(t.Context(), testEvidenceReceiptEvent()); err != nil {
+					t.Errorf("RecordFinished() error: %v", err)
+					return
+				}
+			}
+		}()
+	}
+	wg.Wait()
+
+	path, err := evidenceReceiptsPath(dir, flowID)
+	if err != nil {
+		t.Fatalf("evidenceReceiptsPath() error: %v", err)
+	}
+	receipts := readEvidenceReceiptLines(t, path)
+	if len(receipts) != writers*perWriter {
+		t.Fatalf("got %d receipts, want %d", len(receipts), writers*perWriter)
+	}
+	for i := 1; i < len(receipts); i++ {
+		if receipts[i].PreviousReceiptHash != receipts[i-1].ReceiptHash {
+			t.Fatalf("receipt %d chain broken: previous hash = %q, want %q", i, receipts[i].PreviousReceiptHash, receipts[i-1].ReceiptHash)
+		}
+	}
+}
+
+func TestFileEvidenceReceiptRecorderKeepsChainsIntactWhenPathsShareAStripe(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	flowA, flowB := collidingStripeFlowIDs(t, dir)
+
+	pathA, err := evidenceReceiptsPath(dir, flowA)
+	if err != nil {
+		t.Fatalf("evidenceReceiptsPath() error: %v", err)
+	}
+	pathB, err := evidenceReceiptsPath(dir, flowB)
+	if err != nil {
+		t.Fatalf("evidenceReceiptsPath() error: %v", err)
+	}
+	if evidenceReceiptPathLock(pathA) != evidenceReceiptPathLock(pathB) {
+		t.Fatalf("flows %d and %d do not share a stripe", flowA, flowB)
+	}
+
+	const writers = 8
+	const perWriter = 32
+	var wg sync.WaitGroup
+	for _, flowID := range []int64{flowA, flowB} {
+		for w := 0; w < writers; w++ {
+			recorder := newTestEvidenceReceiptRecorder(dir, flowID)
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				for i := 0; i < perWriter; i++ {
+					if err := recorder.RecordFinished(t.Context(), testEvidenceReceiptEvent()); err != nil {
+						t.Errorf("RecordFinished() error: %v", err)
+						return
+					}
+				}
+			}()
+		}
+	}
+	wg.Wait()
+
+	for _, path := range []string{pathA, pathB} {
+		receipts := readEvidenceReceiptLines(t, path)
+		if len(receipts) != writers*perWriter {
+			t.Fatalf("%s: got %d receipts, want %d", path, len(receipts), writers*perWriter)
+		}
+		for i := 1; i < len(receipts); i++ {
+			if receipts[i].PreviousReceiptHash != receipts[i-1].ReceiptHash {
+				t.Fatalf("%s: receipt %d chain broken", path, i)
+			}
+		}
+	}
+}
+
+func collidingStripeFlowIDs(t *testing.T, dir string) (int64, int64) {
+	t.Helper()
+
+	seen := make(map[*sync.Mutex]int64)
+	for id := int64(0); id <= evidenceReceiptLockShards; id++ {
+		path, err := evidenceReceiptsPath(dir, id)
+		if err != nil {
+			t.Fatalf("evidenceReceiptsPath() error: %v", err)
+		}
+		lock := evidenceReceiptPathLock(path)
+		if other, ok := seen[lock]; ok {
+			return other, id
+		}
+		seen[lock] = id
+	}
+
+	t.Fatalf("no two of the first %d flows share a stripe", evidenceReceiptLockShards+1)
+	return 0, 0
+}
