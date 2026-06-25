@@ -425,6 +425,20 @@ func TestChangeEmailCurrentUser(t *testing.T) {
 			expectedCode:  http.StatusBadRequest,
 			errorContains: "failed to validate user email",
 		},
+		{
+			name:          "rejects a bare UUID (vmail escape hatch closed for user-set email)",
+			requestBody:   `{"current_password": "SecurePass123!", "mail": "550e8400-e29b-41d4-a716-446655440000"}`,
+			uid:           1,
+			expectedCode:  http.StatusBadRequest,
+			errorContains: "failed to validate user email",
+		},
+		{
+			name:          "rejects the admin sentinel for user-set email",
+			requestBody:   `{"current_password": "SecurePass123!", "mail": "admin"}`,
+			uid:           1,
+			expectedCode:  http.StatusBadRequest,
+			errorContains: "failed to validate user email",
+		},
 	}
 
 	for _, tc := range testCases {

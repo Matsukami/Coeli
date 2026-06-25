@@ -81,6 +81,38 @@ func TestEmailValidator(t *testing.T) {
 	}
 }
 
+func TestStrictEmailValidator(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name    string
+		email   string
+		wantErr bool
+	}{
+		{"valid email", "test@example.com", false},
+		{"mixed case", "John.Doe@Example.com", false},
+		{"long tld", "user@example.cloud", false},
+		{"admin sentinel rejected", "admin", true},
+		{"bare UUID rejected", "550e8400-e29b-41d4-a716-446655440000", true},
+		{"too short", "a@b", true},
+		{"empty", "", true},
+		{"no at sign", "testexample.com", true},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			err := GetValidator().Var(tt.email, "realemail")
+			if tt.wantErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
 func TestOAuthMinScopeValidator(t *testing.T) {
 	t.Parallel()
 

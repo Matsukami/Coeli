@@ -306,7 +306,7 @@ type UserWithPreferences struct {
 // EmailChange is model to contain user email to change it
 type EmailChange struct {
 	CurrentPassword string `form:"current_password" json:"current_password" validate:"min=5,max=100,required" gorm:"-"`
-	Mail            string `form:"mail" json:"mail" validate:"max=50,vmail,required" gorm:"type:TEXT"`
+	Mail            string `form:"mail" json:"mail" validate:"max=50,realemail,required" gorm:"type:TEXT"`
 }
 
 // TableName returns the table name string to guaranty use correct table
