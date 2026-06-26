@@ -18,7 +18,7 @@ import {
     Wrench,
     XCircle,
 } from 'lucide-react';
-import { lazy, type Ref, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { type ComponentProps, lazy, type Ref, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import ReactDiffViewer from 'react-diff-viewer-continued';
 import {
     type Control,
@@ -27,6 +27,7 @@ import {
     useController,
     useForm,
     useFormState,
+    useWatch,
 } from 'react-hook-form';
 import { useParams } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -232,11 +233,40 @@ const caretOffsetTop = (textarea: HTMLTextAreaElement, position: number): number
     return offset;
 };
 
+interface DiffContentProps {
+    control: Control<HumanFormData> | Control<SystemFormData>;
+    oldValue: string;
+    styles: ComponentProps<typeof ReactDiffViewer>['styles'];
+}
+
+interface VariablesPanelContainerProps {
+    control: Control<HumanFormData> | Control<SystemFormData>;
+    onVariableClick: (variable: string) => void;
+    variables: string[];
+    viewMode: 'code' | 'plain';
+}
+
 interface VariablesProps {
     currentTemplate: string;
     onVariableClick: (variable: string) => void;
     variables: string[];
     viewMode: 'code' | 'plain';
+}
+
+// Scoped subscription: only this subtree re-renders per keystroke, so the parent
+// SettingsPrompt no longer watches the template field (mirrors knowledge-form-controls.tsx).
+function DiffContent({ control, oldValue, styles }: DiffContentProps) {
+    const newValue = useWatch({ control, name: 'template' });
+
+    return (
+        <ReactDiffViewer
+            newValue={newValue}
+            oldValue={oldValue}
+            splitView
+            styles={styles}
+            useDarkTheme
+        />
+    );
 }
 
 function SettingsPrompt() {
@@ -378,11 +408,11 @@ function SettingsPrompt() {
                     promptType = toolData.type;
                 }
 
-                currentTemplate = systemTemplate;
+                currentTemplate = systemForm.getValues('template');
             } else {
                 const agentData = promptInfo.data as AgentPrompts;
                 promptType = agentData.human!.type;
-                currentTemplate = humanTemplate;
+                currentTemplate = humanForm.getValues('template');
             }
 
             const result = await validatePrompt({
@@ -420,8 +450,7 @@ function SettingsPrompt() {
     const { isDirty: isHumanDirty, isValid: isHumanValid } = useFormState({ control: humanForm.control });
     const isDirty = isSystemDirty || isHumanDirty;
 
-    const systemTemplate = systemForm.watch('template');
-    const humanTemplate = humanForm.watch('template');
+    const activeControl = activeTab === 'system' ? systemForm.control : humanForm.control;
 
     // eslint-disable-next-line react-hooks/preserve-manual-memoization -- branching reads from data.settingsPrompts that the compiler can't statically prove stable
     const promptInfo = useMemo(() => {
@@ -486,7 +515,6 @@ function SettingsPrompt() {
 
         let variables: string[] = [];
         let formId = '';
-        let currentTemplate = '';
 
         if (activeTab === 'system') {
             variables =
@@ -494,15 +522,13 @@ function SettingsPrompt() {
                     ? (promptInfo.data as AgentPrompt | AgentPrompts)?.system?.variables || []
                     : (promptInfo.data as DefaultPrompt)?.variables || [];
             formId = 'system-prompt-form';
-            currentTemplate = systemTemplate;
         } else if (activeTab === 'human' && promptInfo.type === 'agent' && promptInfo.hasHuman) {
             variables = (promptInfo.data as AgentPrompts)?.human?.variables || [];
             formId = 'human-prompt-form';
-            currentTemplate = humanTemplate;
         }
 
-        return { currentTemplate, formId, variables };
-    }, [promptInfo, activeTab, systemTemplate, humanTemplate]);
+        return { formId, variables };
+    }, [promptInfo, activeTab]);
 
     const handleVariableClickCallback = useCallback(
         (variable: string) => {
@@ -514,15 +540,15 @@ function SettingsPrompt() {
                 activeTab === 'system'
                     ? {
                           onChange: (value: string) => systemForm.setValue('template', value, { shouldDirty: true }),
-                          value: systemTemplate,
+                          value: systemForm.getValues('template'),
                       }
                     : {
                           onChange: (value: string) => humanForm.setValue('template', value, { shouldDirty: true }),
-                          value: humanTemplate,
+                          value: humanForm.getValues('template'),
                       };
             handleVariableClick(variable, field, variablesData.formId);
         },
-        [activeTab, systemTemplate, humanTemplate, variablesData, systemForm, humanForm, handleVariableClick],
+        [activeTab, variablesData, systemForm, humanForm, handleVariableClick],
     );
 
     useEffect(() => {
@@ -813,7 +839,6 @@ function SettingsPrompt() {
         );
     }
 
-    const currentTemplate = activeTab === 'system' ? systemTemplate : humanTemplate;
     const defaultTemplate = activeTab === 'system' ? promptInfo.defaultSystemTemplate : promptInfo.defaultHumanTemplate;
 
     // ReactDiffViewer styles aligned with shadcn — uses Tailwind CSS vars rather than hard-coded colors.
@@ -945,8 +970,8 @@ function SettingsPrompt() {
     );
 
     const variablesPanel = variablesData ? (
-        <Variables
-            currentTemplate={variablesData.currentTemplate}
+        <VariablesPanelContainer
+            control={activeControl}
             onVariableClick={handleVariableClickCallback}
             variables={variablesData.variables}
             viewMode={viewMode}
@@ -1158,12 +1183,10 @@ function SettingsPrompt() {
                         <DialogDescription>Changes between current value and default template.</DialogDescription>
                     </DialogHeader>
                     <div className="max-h-[70vh] overflow-auto">
-                        <ReactDiffViewer
-                            newValue={currentTemplate}
+                        <DiffContent
+                            control={activeControl}
                             oldValue={defaultTemplate}
-                            splitView
                             styles={diffStyles}
-                            useDarkTheme
                         />
                     </div>
                 </DialogContent>
@@ -1226,6 +1249,21 @@ function Variables({ currentTemplate, onVariableClick, variables, viewMode }: Va
                 })}
             </div>
         </div>
+    );
+}
+
+// Scoped subscription: confines the per-keystroke re-render (and the live ×count) to this
+// subtree instead of the whole page (mirrors knowledge-form-controls.tsx).
+function VariablesPanelContainer({ control, onVariableClick, variables, viewMode }: VariablesPanelContainerProps) {
+    const currentTemplate = useWatch({ control, name: 'template' });
+
+    return (
+        <Variables
+            currentTemplate={currentTemplate}
+            onVariableClick={onVariableClick}
+            variables={variables}
+            viewMode={viewMode}
+        />
     );
 }
 
