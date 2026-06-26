@@ -76,6 +76,8 @@
 - name: gpt-5-pro
   description: Premium version of GPT-5 with major improvements in reasoning depth and code quality. Optimized for complex security tasks requiring step-by-step reasoning, reduced hallucinations, and exceptional accuracy in high-stakes penetration testing. Superior instruction following and advanced prompt understanding for critical security operations.
   thinking: true
+  reasoning:
+    efforts: [high]
   release_date: 2025-08-07
   price:
     input: 15.0
@@ -150,6 +152,8 @@
 - name: gpt-5.2-codex
   description: Most advanced code-specialized model optimized for agentic security coding. Features context compaction for long-horizon work, superior performance on large code refactors and migrations, enhanced Windows environment support, and significantly stronger cybersecurity capabilities. Ideal for vulnerability discovery, exploit chain development, and complex code analysis in large repositories.
   thinking: true
+  reasoning:
+    efforts: [low, medium, high, xhigh]
   release_date: 2025-12-11
   price:
     input: 1.75
