@@ -3,7 +3,11 @@ package providers
 import (
 	"testing"
 
+	"pentagi/pkg/config"
+	"pentagi/pkg/providers/anthropic"
+	"pentagi/pkg/providers/bedrock"
 	"pentagi/pkg/providers/deepseek"
+	"pentagi/pkg/providers/gemini"
 	"pentagi/pkg/providers/glm"
 	"pentagi/pkg/providers/kimi"
 	"pentagi/pkg/providers/minimax"
@@ -23,6 +27,11 @@ func TestAgentConfigPricesMatchCatalog(t *testing.T) {
 		config func() (*pconfig.ProviderConfig, error)
 		models func() (pconfig.ModelsConfig, error)
 	}{
+		{"anthropic", anthropic.DefaultProviderConfig, anthropic.DefaultModels},
+		{"bedrock",
+			func() (*pconfig.ProviderConfig, error) { return bedrock.DefaultProviderConfig(&config.Config{}) },
+			func() (pconfig.ModelsConfig, error) { return bedrock.DefaultModels(&config.Config{}) }},
+		{"gemini", gemini.DefaultProviderConfig, gemini.DefaultModels},
 		{"deepseek", deepseek.DefaultProviderConfig, deepseek.DefaultModels},
 		{"glm", glm.DefaultProviderConfig, glm.DefaultModels},
 		{"kimi", kimi.DefaultProviderConfig, kimi.DefaultModels},
