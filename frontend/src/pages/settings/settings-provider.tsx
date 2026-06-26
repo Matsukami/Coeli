@@ -57,6 +57,7 @@ import {
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { FormSubmitButton } from '@/components/ui/form-submit-button';
 import { Input } from '@/components/ui/input';
+import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '@/components/ui/input-group';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -438,10 +439,8 @@ function FormModelComboboxItem<T extends FieldValues = FieldValues>({
                     onOpenChange={setIsOpen}
                     open={isOpen}
                 >
-                    <div className="flex w-full">
-                        {/* Input field - main control */}
-                        <Input
-                            className="rounded-r-none border-r-0 focus-visible:z-10"
+                    <InputGroup>
+                        <InputGroupInput
                             disabled={disabled}
                             onChange={(event) => {
                                 const { value } = event.target;
@@ -455,87 +454,85 @@ function FormModelComboboxItem<T extends FieldValues = FieldValues>({
                             placeholder={placeholder}
                             value={displayValue}
                         />
-                        {/* Dropdown trigger button */}
-                        <PopoverTrigger asChild>
-                            <Button
-                                className="rounded-l-none border-l-0 px-3 hover:z-10"
-                                disabled={disabled}
-                                type="button"
-                                variant="outline"
-                            >
-                                <ChevronsUpDown className="size-4 opacity-50" />
-                            </Button>
-                        </PopoverTrigger>
-                        <PopoverContent
-                            align="end"
-                            className={cn(contentClass, 'w-80 p-0 sm:w-[480px] md:w-[640px]')}
-                        >
-                            <Command>
-                                <CommandInput
-                                    className="h-9"
-                                    onValueChange={setSearch}
-                                    placeholder={`Search ${label.toLowerCase()}...`}
-                                    value={search}
-                                />
-                                <CommandList>
-                                    <CommandEmpty>
-                                        <div className="py-2 text-center">
-                                            <p className="text-muted-foreground text-sm">
-                                                No {label.toLowerCase()} found.
-                                            </p>
-                                            {search && allowCustom && (
-                                                <Button
-                                                    className="mt-2"
-                                                    onClick={() => {
-                                                        field.onChange(search);
-                                                        onOptionSelect?.({ name: search });
-                                                        setIsOpen(false);
-                                                        setSearch('');
-                                                    }}
-                                                    size="sm"
-                                                    variant="ghost"
-                                                >
-                                                    Use "{search}" as custom {label.toLowerCase()}
-                                                </Button>
-                                            )}
-                                        </div>
-                                    </CommandEmpty>
-                                    <CommandGroup>
-                                        {filteredOptions.map((option) => (
-                                            <CommandItem
-                                                key={option.name}
-                                                onSelect={() => {
-                                                    field.onChange(option.name);
-                                                    onOptionSelect?.(option);
+                        <InputGroupAddon align="inline-end">
+                            <PopoverTrigger asChild>
+                                <InputGroupButton
+                                    aria-label={`Open ${label.toLowerCase()} list`}
+                                    disabled={disabled}
+                                    size="icon-sm"
+                                >
+                                    <ChevronsUpDown className="opacity-50" />
+                                </InputGroupButton>
+                            </PopoverTrigger>
+                        </InputGroupAddon>
+                    </InputGroup>
+                    <PopoverContent
+                        align="end"
+                        className={cn(contentClass, 'w-80 p-0 sm:w-[480px] md:w-[640px]')}
+                    >
+                        <Command>
+                            <CommandInput
+                                className="h-9"
+                                onValueChange={setSearch}
+                                placeholder={`Search ${label.toLowerCase()}...`}
+                                value={search}
+                            />
+                            <CommandList>
+                                <CommandEmpty>
+                                    <div className="py-2 text-center">
+                                        <p className="text-muted-foreground text-sm">No {label.toLowerCase()} found.</p>
+                                        {search && allowCustom && (
+                                            <Button
+                                                className="mt-2"
+                                                onClick={() => {
+                                                    field.onChange(search);
+                                                    onOptionSelect?.({ name: search });
                                                     setIsOpen(false);
                                                     setSearch('');
                                                 }}
-                                                value={option.name}
+                                                size="sm"
+                                                variant="ghost"
                                             >
-                                                <div className="flex w-full min-w-0 items-center justify-between gap-2">
-                                                    <div className="flex min-w-0 items-center gap-2">
-                                                        <span className="truncate">{option.name}</span>
-                                                        {option.thinking && (
-                                                            <Lightbulb className="text-muted-foreground size-3" />
-                                                        )}
-                                                    </div>
-                                                    <span className="text-muted-foreground shrink-0 text-xs whitespace-nowrap">
-                                                        {formatPrice(option.price)}
-                                                    </span>
-                                                </div>
-                                                <Check
-                                                    className={cn(
-                                                        'ml-auto',
-                                                        displayValue === option.name ? 'opacity-100' : 'opacity-0',
+                                                Use "{search}" as custom {label.toLowerCase()}
+                                            </Button>
+                                        )}
+                                    </div>
+                                </CommandEmpty>
+                                <CommandGroup>
+                                    {filteredOptions.map((option) => (
+                                        <CommandItem
+                                            key={option.name}
+                                            onSelect={() => {
+                                                field.onChange(option.name);
+                                                onOptionSelect?.(option);
+                                                setIsOpen(false);
+                                                setSearch('');
+                                            }}
+                                            value={option.name}
+                                        >
+                                            <div className="flex w-full min-w-0 items-center justify-between gap-2">
+                                                <div className="flex min-w-0 items-center gap-2">
+                                                    <span className="truncate">{option.name}</span>
+                                                    {option.thinking && (
+                                                        <Lightbulb className="text-muted-foreground size-3" />
                                                     )}
-                                                />
-                                            </CommandItem>
-                                        ))}
-                                    </CommandGroup>
-                                </CommandList>
-                            </Command>
-                        </PopoverContent>
-                    </div>
+                                                </div>
+                                                <span className="text-muted-foreground shrink-0 text-xs whitespace-nowrap">
+                                                    {formatPrice(option.price)}
+                                                </span>
+                                            </div>
+                                            <Check
+                                                className={cn(
+                                                    'ml-auto',
+                                                    displayValue === option.name ? 'opacity-100' : 'opacity-0',
+                                                )}
+                                            />
+                                        </CommandItem>
+                                    ))}
+                                </CommandGroup>
+                            </CommandList>
+                        </Command>
+                    </PopoverContent>
                 </Popover>
             </FormControl>
             {description && <FormDescription>{description}</FormDescription>}
