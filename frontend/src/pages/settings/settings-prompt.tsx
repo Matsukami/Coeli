@@ -13,11 +13,12 @@ import {
     Loader2,
     RotateCcw,
     Save,
+    Type,
     User,
     Wrench,
     XCircle,
 } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { lazy, type Ref, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import ReactDiffViewer from 'react-diff-viewer-continued';
 import {
     type Control,
@@ -40,6 +41,8 @@ import type {
 type AgentPrompt = AgentPrompts;
 type AgentPrompts = { human?: DefaultPrompt; system: DefaultPrompt };
 
+import type { ReactCodeMirrorRef } from '@/components/shared/code-editor';
+
 import {
     AppHeader,
     AppHeaderAction,
@@ -58,6 +61,7 @@ import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
+    DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Form, FormControl, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -76,6 +80,11 @@ import {
 import { useBreakpoint } from '@/hooks/use-breakpoint';
 import { formatPromptId } from '@/lib/route-titles/format-prompt-id';
 import { cn } from '@/lib/utils';
+
+// Dynamic-only import: a static CodeEditor import would merge its ~600KB CodeMirror chunk into this route bundle.
+const CodeEditor = lazy(() =>
+    import('@/components/shared/code-editor').then((module) => ({ default: module.CodeEditor })),
+);
 
 const systemFormSchema = z.object({
     template: z.string().min(1, 'System template is required'),
@@ -99,6 +108,11 @@ interface ControllerProps<T extends FieldValues> {
     name: FieldPathByValue<T, string>;
 }
 
+interface FormCodeItemProps<T extends FieldValues> extends ControllerProps<T> {
+    editorRef?: Ref<ReactCodeMirrorRef>;
+    placeholder?: string;
+}
+
 interface FormTextareaItemProps<T extends FieldValues> extends BaseFieldProps<T>, BaseTextareaProps {
     description?: string;
 }
@@ -106,6 +120,45 @@ interface FormTextareaItemProps<T extends FieldValues> extends BaseFieldProps<T>
 type HumanFormData = z.infer<typeof humanFormSchema>;
 
 type SystemFormData = z.infer<typeof systemFormSchema>;
+
+function FormCodeItem<T extends FieldValues>({
+    control,
+    disabled,
+    editorRef,
+    name,
+    placeholder,
+}: FormCodeItemProps<T>) {
+    const { field, fieldState } = useController({
+        control,
+        disabled,
+        name,
+    });
+
+    return (
+        <FormItem className="flex min-h-0 flex-1 flex-col">
+            <FormControl>
+                <Suspense
+                    fallback={
+                        <div className="flex min-h-0 flex-1 items-center justify-center rounded-md border">
+                            <Loader2 className="text-muted-foreground size-5 animate-spin" />
+                        </div>
+                    }
+                >
+                    <CodeEditor
+                        className="min-h-0 flex-1"
+                        disabled={disabled}
+                        onBlur={field.onBlur}
+                        onChange={field.onChange}
+                        placeholder={placeholder}
+                        ref={editorRef}
+                        value={field.value}
+                    />
+                </Suspense>
+            </FormControl>
+            {fieldState.error && <FormMessage>{fieldState.error.message}</FormMessage>}
+        </FormItem>
+    );
+}
 
 function FormTextareaItem<T extends FieldValues>({
     className,
@@ -183,6 +236,7 @@ interface VariablesProps {
     currentTemplate: string;
     onVariableClick: (variable: string) => void;
     variables: string[];
+    viewMode: 'code' | 'plain';
 }
 
 function SettingsPrompt() {
@@ -201,50 +255,73 @@ function SettingsPrompt() {
     const [validationResult, setValidationResult] = useState<null | ValidatePromptMutation['validatePrompt']>(null);
     const [validationDialogOpen, setValidationDialogOpen] = useState(false);
     const [isDiffDialogOpen, setIsDiffDialogOpen] = useState(false);
+    const [viewMode, setViewMode] = useState<'code' | 'plain'>('plain');
+    const editorRef = useRef<ReactCodeMirrorRef>(null);
 
     const isLoading = isCreateLoading || isUpdateLoading || isDeleteLoading || isValidateLoading;
 
-    const handleVariableClick = (
-        variable: string,
-        field: { onChange: (value: string) => void; value: string },
-        formId: string,
-    ) => {
-        const textarea = document.querySelector(`#${formId} textarea`) as HTMLTextAreaElement;
+    const handleVariableClick = useCallback(
+        (variable: string, field: { onChange: (value: string) => void; value: string }, formId: string) => {
+            if (viewMode === 'code') {
+                const view = editorRef.current?.view;
 
-        if (textarea) {
-            const currentValue = field.value || '';
-            const variablePattern = `{{.${variable}}}`;
-            const matches = [...currentValue.matchAll(new RegExp(variableActionRegex(variable).source, 'g'))];
+                if (view) {
+                    const insert = `{{.${variable}}}`;
+                    const pos = view.state.selection.main.head;
+                    view.dispatch({
+                        changes: { from: pos, insert },
+                        scrollIntoView: true,
+                        selection: { anchor: pos + insert.length },
+                    });
+                    view.focus();
+                }
 
-            if (matches.length > 0) {
-                // Cycle through occurrences: advance from the one the caret is already on
-                // (wrapping past the last), else jump to the first occurrence at/after the caret.
-                const { selectionEnd, selectionStart } = textarea;
-                const currentIdx = matches.findIndex(
-                    (match) => match.index === selectionStart && match.index + match[0].length === selectionEnd,
-                );
-                const target =
-                    currentIdx >= 0
-                        ? matches[(currentIdx + 1) % matches.length]
-                        : (matches.find((match) => match.index >= selectionStart) ?? matches[0]);
-                const matchStart = target.index ?? 0;
-                textarea.focus();
-                textarea.setSelectionRange(matchStart, matchStart + target[0].length);
-                textarea.scrollTop = Math.max(0, caretOffsetTop(textarea, matchStart) - textarea.clientHeight / 2);
-            } else {
-                const start = textarea.selectionStart;
-                const end = textarea.selectionEnd;
-                const newValue =
-                    currentValue.slice(0, Math.max(0, start)) + variablePattern + currentValue.slice(Math.max(0, end));
-                field.onChange(newValue);
-
-                setTimeout(() => {
-                    textarea.focus({ preventScroll: true });
-                    textarea.setSelectionRange(start + variablePattern.length, start + variablePattern.length);
-                }, 0);
+                return;
             }
-        }
-    };
+
+            const textarea = document.querySelector(`#${formId} textarea`) as HTMLTextAreaElement;
+
+            if (textarea) {
+                const currentValue = field.value || '';
+                const variablePattern = `{{.${variable}}}`;
+                const matches = [...currentValue.matchAll(new RegExp(variableActionRegex(variable).source, 'g'))];
+
+                if (matches.length > 0) {
+                    // Cycle through occurrences: advance from the one the caret is already on
+                    // (wrapping past the last), else jump to the first occurrence at/after the caret.
+                    const { selectionEnd, selectionStart } = textarea;
+                    const currentIdx = matches.findIndex(
+                        (match) => match.index === selectionStart && match.index + match[0].length === selectionEnd,
+                    );
+                    const target =
+                        currentIdx >= 0
+                            ? matches[(currentIdx + 1) % matches.length]
+                            : (matches.find((match) => match.index >= selectionStart) ?? matches[0]);
+
+                    if (target) {
+                        const matchStart = target.index;
+                        textarea.focus();
+                        textarea.setSelectionRange(matchStart, matchStart + target[0].length);
+                        textarea.scrollTop = Math.max(0, caretOffsetTop(textarea, matchStart) - textarea.clientHeight / 2);
+                    }
+                } else {
+                    const start = textarea.selectionStart;
+                    const end = textarea.selectionEnd;
+                    const newValue =
+                        currentValue.slice(0, Math.max(0, start)) +
+                        variablePattern +
+                        currentValue.slice(Math.max(0, end));
+                    field.onChange(newValue);
+
+                    setTimeout(() => {
+                        textarea.focus({ preventScroll: true });
+                        textarea.setSelectionRange(start + variablePattern.length, start + variablePattern.length);
+                    }, 0);
+                }
+            }
+        },
+        [viewMode],
+    );
 
     const handleReset = () => {
         setResetDialogOpen(true);
@@ -445,7 +522,7 @@ function SettingsPrompt() {
                       };
             handleVariableClick(variable, field, variablesData.formId);
         },
-        [activeTab, systemTemplate, humanTemplate, variablesData, systemForm, humanForm],
+        [activeTab, systemTemplate, humanTemplate, variablesData, systemForm, humanForm, handleVariableClick],
     );
 
     useEffect(() => {
@@ -643,40 +720,49 @@ function SettingsPrompt() {
                     >
                         {isNew ? 'Create' : 'Save'}
                     </FormSubmitButton>
-                    {hasOverride && (
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button
-                                    aria-label="Prompt actions"
-                                    className="size-8 p-0"
-                                    type="button"
-                                    variant="ghost"
-                                >
-                                    <Ellipsis />
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent
-                                align="end"
-                                className="min-w-24"
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button
+                                aria-label="Prompt actions"
+                                className="size-8 p-0"
+                                type="button"
+                                variant="ghost"
                             >
-                                <DropdownMenuItem onClick={() => setIsDiffDialogOpen(true)}>
-                                    <FileDiff className="size-4" />
-                                    Diff
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                    disabled={isLoading}
-                                    onClick={handleReset}
-                                >
-                                    {isDeleteLoading ? (
-                                        <Loader2 className="size-4 animate-spin" />
-                                    ) : (
-                                        <RotateCcw className="size-4" />
-                                    )}
-                                    {isDeleteLoading ? 'Resetting...' : 'Reset'}
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    )}
+                                <Ellipsis />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent
+                            align="end"
+                            className="min-w-24"
+                        >
+                            <DropdownMenuItem
+                                onClick={() => setViewMode((mode) => (mode === 'code' ? 'plain' : 'code'))}
+                            >
+                                {viewMode === 'code' ? <Type className="size-4" /> : <Code className="size-4" />}
+                                {viewMode === 'code' ? 'Plain text' : 'Code editor'}
+                            </DropdownMenuItem>
+                            {hasOverride && (
+                                <>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem onClick={() => setIsDiffDialogOpen(true)}>
+                                        <FileDiff className="size-4" />
+                                        Diff
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                        disabled={isLoading}
+                                        onClick={handleReset}
+                                    >
+                                        {isDeleteLoading ? (
+                                            <Loader2 className="size-4 animate-spin" />
+                                        ) : (
+                                            <RotateCcw className="size-4" />
+                                        )}
+                                        {isDeleteLoading ? 'Resetting...' : 'Reset'}
+                                    </DropdownMenuItem>
+                                </>
+                            )}
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 </AppHeaderActions>
             )}
         </AppHeader>
@@ -863,8 +949,12 @@ function SettingsPrompt() {
             currentTemplate={variablesData.currentTemplate}
             onVariableClick={handleVariableClickCallback}
             variables={variablesData.variables}
+            viewMode={viewMode}
         />
     ) : null;
+
+    const systemPlaceholder =
+        promptInfo.type === 'tool' ? 'Enter the tool template...' : 'Enter the system prompt template...';
 
     const promptEditor = (
         <>
@@ -878,16 +968,22 @@ function SettingsPrompt() {
                         id="system-prompt-form"
                         onSubmit={systemForm.handleSubmit(handleSystemSubmit)}
                     >
-                        <FormTextareaItem
-                            control={systemForm.control}
-                            disabled={isLoading}
-                            name="template"
-                            placeholder={
-                                promptInfo.type === 'tool'
-                                    ? 'Enter the tool template...'
-                                    : 'Enter the system prompt template...'
-                            }
-                        />
+                        {viewMode === 'code' ? (
+                            <FormCodeItem
+                                control={systemForm.control}
+                                disabled={isLoading}
+                                editorRef={editorRef}
+                                name="template"
+                                placeholder={systemPlaceholder}
+                            />
+                        ) : (
+                            <FormTextareaItem
+                                control={systemForm.control}
+                                disabled={isLoading}
+                                name="template"
+                                placeholder={systemPlaceholder}
+                            />
+                        )}
                     </form>
                 </Form>
             </TabsContent>
@@ -903,12 +999,22 @@ function SettingsPrompt() {
                             id="human-prompt-form"
                             onSubmit={humanForm.handleSubmit(handleHumanSubmit)}
                         >
-                            <FormTextareaItem
-                                control={humanForm.control}
-                                disabled={isLoading}
-                                name="template"
-                                placeholder="Enter the human prompt template..."
-                            />
+                            {viewMode === 'code' ? (
+                                <FormCodeItem
+                                    control={humanForm.control}
+                                    disabled={isLoading}
+                                    editorRef={editorRef}
+                                    name="template"
+                                    placeholder="Enter the human prompt template..."
+                                />
+                            ) : (
+                                <FormTextareaItem
+                                    control={humanForm.control}
+                                    disabled={isLoading}
+                                    name="template"
+                                    placeholder="Enter the human prompt template..."
+                                />
+                            )}
                         </form>
                     </Form>
                 </TabsContent>
@@ -1066,7 +1172,7 @@ function SettingsPrompt() {
     );
 }
 
-function Variables({ currentTemplate, onVariableClick, variables }: VariablesProps) {
+function Variables({ currentTemplate, onVariableClick, variables, viewMode }: VariablesProps) {
     if (variables.length === 0) {
         return null;
     }
@@ -1075,16 +1181,23 @@ function Variables({ currentTemplate, onVariableClick, variables }: VariablesPro
         <div className="bg-card overflow-hidden rounded-lg border">
             <div className="border-b px-4 py-3">
                 <h4 className="text-sm font-medium">Available variables</h4>
-                <p className="text-muted-foreground mt-1 text-xs">Click a variable to insert it into the template.</p>
+                <p className="text-muted-foreground mt-1 text-xs">
+                    {viewMode === 'code'
+                        ? 'Click a variable to insert it into the editor.'
+                        : 'Click to insert at the cursor, or cycle through existing uses.'}
+                </p>
             </div>
             <div className="bg-background flex flex-wrap gap-1.5 px-4 py-3">
                 {variables.map((variable) => {
                     const count = (currentTemplate.match(new RegExp(variableActionRegex(variable).source, 'g')) ?? [])
                         .length;
                     const isUsed = count > 0;
-                    const action = isUsed
-                        ? `Go to next {{.${variable}}} in the template${count > 1 ? ` (${count} uses)` : ''}`
-                        : `Insert {{.${variable}}} at the cursor`;
+                    const action =
+                        viewMode === 'code'
+                            ? `Insert {{.${variable}}} into the editor`
+                            : isUsed
+                              ? `Go to next {{.${variable}}} in the template${count > 1 ? ` (${count} uses)` : ''}`
+                              : `Insert {{.${variable}}} at the cursor`;
 
                     return (
                         <Badge
