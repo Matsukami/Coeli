@@ -214,12 +214,22 @@ function SettingsPrompt() {
         if (textarea) {
             const currentValue = field.value || '';
             const variablePattern = `{{.${variable}}}`;
-            const existing = currentValue.match(variableActionRegex(variable));
+            const matches = [...currentValue.matchAll(new RegExp(variableActionRegex(variable).source, 'g'))];
 
-            if (existing && existing.index !== undefined) {
-                const matchStart = existing.index;
+            if (matches.length > 0) {
+                // Cycle through occurrences: advance from the one the caret is already on
+                // (wrapping past the last), else jump to the first occurrence at/after the caret.
+                const { selectionEnd, selectionStart } = textarea;
+                const currentIdx = matches.findIndex(
+                    (match) => match.index === selectionStart && match.index + match[0].length === selectionEnd,
+                );
+                const target =
+                    currentIdx >= 0
+                        ? matches[(currentIdx + 1) % matches.length]
+                        : (matches.find((match) => match.index >= selectionStart) ?? matches[0]);
+                const matchStart = target.index ?? 0;
                 textarea.focus();
-                textarea.setSelectionRange(matchStart, matchStart + existing[0].length);
+                textarea.setSelectionRange(matchStart, matchStart + target[0].length);
                 textarea.scrollTop = Math.max(0, caretOffsetTop(textarea, matchStart) - textarea.clientHeight / 2);
             } else {
                 const start = textarea.selectionStart;
@@ -1069,9 +1079,11 @@ function Variables({ currentTemplate, onVariableClick, variables }: VariablesPro
             </div>
             <div className="bg-background flex flex-wrap gap-1.5 px-4 py-3">
                 {variables.map((variable) => {
-                    const isUsed = variableActionRegex(variable).test(currentTemplate);
+                    const count = (currentTemplate.match(new RegExp(variableActionRegex(variable).source, 'g')) ?? [])
+                        .length;
+                    const isUsed = count > 0;
                     const action = isUsed
-                        ? `Go to {{.${variable}}} in the template`
+                        ? `Go to next {{.${variable}}} in the template${count > 1 ? ` (${count} uses)` : ''}`
                         : `Insert {{.${variable}}} at the cursor`;
 
                     return (
@@ -1093,6 +1105,9 @@ function Variables({ currentTemplate, onVariableClick, variables }: VariablesPro
                         >
                             {isUsed ? <Check className="size-3" /> : null}
                             {`{{.${variable}}}`}
+                            {count > 1 ? (
+                                <span className="ml-0.5 text-[10px] tabular-nums opacity-70">×{count}</span>
+                            ) : null}
                         </Badge>
                     );
                 })}
