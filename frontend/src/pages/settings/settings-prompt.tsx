@@ -193,7 +193,29 @@ function FormTextareaItem<T extends FieldValues>({
 }
 
 // .<variable> used in any {{ }} form (bare, if/range/with, nested) — intentionally broader than bare {{.X}}.
-const variableActionRegex = (variable: string): RegExp => new RegExp(`\\{\\{[^}]*?\\.${variable}\\b[^}]*?\\}\\}`);
+// `[^{}]` (not `[^}]`) keeps a stray unclosed `{{` from driving quadratic backtracking across the whole template.
+const variableActionRegex = (variable: string): RegExp => new RegExp(`\\{\\{[^{}]*?\\.${variable}\\b[^{}]*?\\}\\}`);
+
+// One pass over the `{{ … }}` blocks — the naive per-variable `.match` over the whole template is
+// O(variables × length) on every keystroke.
+function countVariableUses(template: string, variables: string[]): Record<string, number> {
+    const counts: Record<string, number> = {};
+    const probes = variables.map((variable) => {
+        counts[variable] = 0;
+
+        return [variable, new RegExp(`\\.${variable}\\b`)] as const;
+    });
+
+    for (const block of template.match(/\{\{[^{}]*\}\}/g) ?? []) {
+        for (const [variable, probe] of probes) {
+            if (probe.test(block)) {
+                counts[variable] = (counts[variable] ?? 0) + 1;
+            }
+        }
+    }
+
+    return counts;
+}
 
 // Pixel offset of `position` from the textarea content top, measured via a hidden mirror so
 // soft-wrapped lines count — a logical-line count undershoots the scroll badly for wrapped templates.
@@ -1193,6 +1215,8 @@ function SettingsPrompt() {
 }
 
 function Variables({ currentTemplate, onVariableClick, variables, viewMode }: VariablesProps) {
+    const counts = useMemo(() => countVariableUses(currentTemplate, variables), [currentTemplate, variables]);
+
     if (variables.length === 0) {
         return null;
     }
@@ -1209,8 +1233,7 @@ function Variables({ currentTemplate, onVariableClick, variables, viewMode }: Va
             </div>
             <div className="bg-background flex flex-wrap gap-1.5 px-4 py-3">
                 {variables.map((variable) => {
-                    const count = (currentTemplate.match(new RegExp(variableActionRegex(variable).source, 'g')) ?? [])
-                        .length;
+                    const count = counts[variable] ?? 0;
                     // Plain-view only: a code-view click just inserts, so don't imply go-to-occurrence.
                     const isUsed = viewMode === 'plain' && count > 0;
                     const action =
