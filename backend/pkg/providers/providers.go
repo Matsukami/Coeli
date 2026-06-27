@@ -613,7 +613,10 @@ func (pc *providerController) GetProviders(
 	for _, prv := range providers {
 		p, err := pc.NewProvider(prv)
 		if err != nil {
-			return nil, fmt.Errorf("failed to build provider: %w", err)
+			// A saved provider of a now-disabled type must not fail the whole list —
+			// skip it (like startup tolerates disabled defaults) so the rest stay usable.
+			logrus.WithError(err).Warnf("skipping user provider '%s' of unavailable type '%s'", prv.Name, prv.Type)
+			continue
 		}
 		providersMap[provider.ProviderName(prv.Name)] = p
 	}
