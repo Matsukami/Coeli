@@ -1262,7 +1262,7 @@ function SettingsProvider() {
 
             // A hand-typed ?type= URL bypasses the create menu's enabled-only filter; an
             // unknown or disabled type would otherwise create a dead provider or dump a raw
-            // zod error on submit. Bounce it to the list. (Clone-by-id, below, is exempt.)
+            // zod error on submit. Bounce it to the list. (Clone-by-id is gated separately below.)
             if (!queryId && queryType && !providers.enabled[queryType as keyof typeof providers.enabled]) {
                 toast.error(`Provider type "${queryType}" is not available`);
                 navigate(routes.settings.providers, { replace: true });
@@ -1275,6 +1275,15 @@ function SettingsProvider() {
 
                 if (sourceProvider) {
                     const { agents, name, type: sourceType } = sourceProvider;
+
+                    // Cloning a provider whose type is now disabled would only make
+                    // another dead one — gate it the same as the ?type= path.
+                    if (sourceType && !providers.enabled[sourceType as keyof typeof providers.enabled]) {
+                        toast.error(`Provider type "${sourceType}" is not available`);
+                        navigate(routes.settings.providers, { replace: true });
+
+                        return;
+                    }
 
                     reset({
                         agents: agents ? (normalizeGraphQLData(agents) as FormAgents) : {},
