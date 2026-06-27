@@ -16,7 +16,7 @@ import {
     Trash2,
     XCircle,
 } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { type ComponentProps, useEffect, useMemo, useState } from 'react';
 import {
     type Control,
     type FieldPath,
@@ -1065,6 +1065,29 @@ const extractAgentTypes = (agents: unknown): null | string[] => {
     return types.length > 0 ? types : null;
 };
 
+interface DeleteProviderDialogProps
+    extends Pick<ComponentProps<typeof ConfirmationDialog>, 'handleConfirm' | 'handleOpenChange' | 'isOpen'> {
+    control: Control<FormInput>;
+}
+
+// Subscribes to the `name` field on its own so a keystroke in the provider-name
+// input re-renders only this dialog, not the whole SettingsProvider form tree.
+function DeleteProviderDialog({ control, handleConfirm, handleOpenChange, isOpen }: DeleteProviderDialogProps) {
+    const providerName = useWatch({ control, name: 'name' });
+
+    return (
+        <ConfirmationDialog
+            cancelText="Cancel"
+            confirmText="Delete"
+            handleConfirm={handleConfirm}
+            handleOpenChange={handleOpenChange}
+            isOpen={isOpen}
+            itemName={providerName}
+            itemType="provider"
+        />
+    );
+}
+
 function SettingsProvider() {
     const { providerId } = useParams<{ providerId: string }>();
     const navigate = useNavigate();
@@ -1106,8 +1129,6 @@ function SettingsProvider() {
     }, [submitError]);
 
     const selectedType = useWatch({ control, name: 'type' });
-
-    const providerName = useWatch({ control, name: 'name' });
 
     const formQueryParams = useMemo(
         () => ({
@@ -1880,14 +1901,11 @@ function SettingsProvider() {
                 results={testResults}
             />
 
-            <ConfirmationDialog
-                cancelText="Cancel"
-                confirmText="Delete"
+            <DeleteProviderDialog
+                control={control}
                 handleConfirm={handleConfirmDelete}
                 handleOpenChange={setIsDeleteDialogOpen}
                 isOpen={isDeleteDialogOpen}
-                itemName={providerName}
-                itemType="provider"
             />
 
             <UnsavedChangesDialog
