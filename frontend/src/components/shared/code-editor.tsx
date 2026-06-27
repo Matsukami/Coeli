@@ -17,10 +17,13 @@ export interface CodeEditorProps {
     value: string;
 }
 
-// CodeMirror edits the raw document string verbatim — no parse/serialize round-trip —
-// so it is byte-faithful for content (Go templates) a markdown editor would normalize.
 const extensions = [markdown(), EditorView.lineWrapping];
 
+/**
+ * Byte-faithful text editor: CodeMirror edits the raw document string verbatim, with no
+ * parse/serialize round-trip. Don't swap in a markdown/rich editor — it would corrupt
+ * Go-template tables, `<tags>`, and significant whitespace on round-trip.
+ */
 export function CodeEditor({ className, disabled, onBlur, onChange, placeholder, ref, value }: CodeEditorProps) {
     const { theme } = useTheme();
     const isDark = useMemo(

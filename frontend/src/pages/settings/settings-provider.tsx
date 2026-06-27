@@ -1070,8 +1070,7 @@ interface DeleteProviderDialogProps
     control: Control<FormInput>;
 }
 
-// Subscribes to the `name` field on its own so a keystroke in the provider-name
-// input re-renders only this dialog, not the whole SettingsProvider form tree.
+// Don't hoist this useWatch to the parent — a name keystroke would re-render the whole form.
 function DeleteProviderDialog({ control, handleConfirm, handleOpenChange, isOpen }: DeleteProviderDialogProps) {
     const providerName = useWatch({ control, name: 'name' });
 

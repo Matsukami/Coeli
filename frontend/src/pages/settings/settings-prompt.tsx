@@ -253,8 +253,7 @@ interface VariablesProps {
     viewMode: 'code' | 'plain';
 }
 
-// Scoped subscription: only this subtree re-renders per keystroke, so the parent
-// SettingsPrompt no longer watches the template field (mirrors knowledge-form-controls.tsx).
+// Don't hoist this useWatch to the parent — it would re-subscribe the whole page per keystroke.
 function DiffContent({ control, oldValue, styles }: DiffContentProps) {
     const newValue = useWatch({ control, name: 'template' });
 
@@ -297,11 +296,11 @@ function SettingsPrompt() {
 
                 if (view) {
                     const insert = `{{.${variable}}}`;
-                    const pos = view.state.selection.main.head;
+                    const position = view.state.selection.main.head;
                     view.dispatch({
-                        changes: { from: pos, insert },
+                        changes: { from: position, insert },
                         scrollIntoView: true,
-                        selection: { anchor: pos + insert.length },
+                        selection: { anchor: position + insert.length },
                     });
                     view.focus();
                 }
@@ -317,15 +316,13 @@ function SettingsPrompt() {
                 const matches = [...currentValue.matchAll(new RegExp(variableActionRegex(variable).source, 'g'))];
 
                 if (matches.length > 0) {
-                    // Cycle through occurrences: advance from the one the caret is already on
-                    // (wrapping past the last), else jump to the first occurrence at/after the caret.
                     const { selectionEnd, selectionStart } = textarea;
-                    const currentIdx = matches.findIndex(
+                    const currentIndex = matches.findIndex(
                         (match) => match.index === selectionStart && match.index + match[0].length === selectionEnd,
                     );
                     const target =
-                        currentIdx >= 0
-                            ? matches[(currentIdx + 1) % matches.length]
+                        currentIndex >= 0
+                            ? matches[(currentIndex + 1) % matches.length]
                             : (matches.find((match) => match.index >= selectionStart) ?? matches[0]);
 
                     if (target) {
@@ -1214,7 +1211,8 @@ function Variables({ currentTemplate, onVariableClick, variables, viewMode }: Va
                 {variables.map((variable) => {
                     const count = (currentTemplate.match(new RegExp(variableActionRegex(variable).source, 'g')) ?? [])
                         .length;
-                    const isUsed = count > 0;
+                    // Plain-view only: a code-view click just inserts, so don't imply go-to-occurrence.
+                    const isUsed = viewMode === 'plain' && count > 0;
                     const action =
                         viewMode === 'code'
                             ? `Insert {{.${variable}}} into the editor`
@@ -1252,8 +1250,7 @@ function Variables({ currentTemplate, onVariableClick, variables, viewMode }: Va
     );
 }
 
-// Scoped subscription: confines the per-keystroke re-render (and the live ×count) to this
-// subtree instead of the whole page (mirrors knowledge-form-controls.tsx).
+// Don't hoist this useWatch to the parent — it would re-subscribe the whole page per keystroke.
 function VariablesPanelContainer({ control, onVariableClick, variables, viewMode }: VariablesPanelContainerProps) {
     const currentTemplate = useWatch({ control, name: 'template' });
 

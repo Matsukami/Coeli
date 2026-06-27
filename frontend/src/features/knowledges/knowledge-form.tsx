@@ -424,10 +424,7 @@ export function KnowledgeForm({ initialValues, isNew, knowledge, onSubmit }: Kno
     );
 }
 
-// Scoped subscription: the `content` watch lives here, not in KnowledgeForm, so
-// only the header re-renders as the user types — the form body, layout, and
-// markdown editor stay still. Just enough reactivity to toggle the anonymize
-// button's disabled state.
+// Don't hoist this useWatch to the parent — it would re-render the whole form per keystroke.
 function KnowledgeFormHeader({ control, isAnonymizing, isSaving = false, ...rest }: KnowledgeFormHeaderProps) {
     const content = useWatch({ control, name: 'content' });
     const isAnonymizeDisabled = isAnonymizing || isSaving || !content?.trim();
