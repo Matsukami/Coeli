@@ -55,6 +55,10 @@ export function SettingsProvidersHeader() {
     // Cached: the list above already fetched this query, so the read is local.
     const { data } = useQuery(SettingsProvidersDocument);
     const enabled = data?.settingsProviders?.enabled;
+    // Only offer types whose API key is configured — a disabled-type provider is unusable
+    // for flows (the create form guards the same against a hand-typed ?type=). Empty while
+    // the query is in flight or when no key is configured anywhere.
+    const availableTypes = providerTypes.filter(({ type }) => enabled?.[type as keyof typeof enabled]);
 
     const handleProviderCreate = (providerType: string) => {
         navigate(routes.settings.newProvider({ type: providerType }));
@@ -89,12 +93,10 @@ export function SettingsProvidersHeader() {
                         width: 'var(--radix-dropdown-menu-trigger-width)',
                     }}
                 >
-                    {/* Only offer types whose API key is configured — creating a provider of a
-                        disabled type yields one that's unusable for flows (the create form guards
-                        the same against a hand-typed ?type=). */}
-                    {providerTypes
-                        .filter(({ type }) => enabled?.[type as keyof typeof enabled])
-                        .map(({ label, type }) => {
+                    {availableTypes.length === 0 ? (
+                        <DropdownMenuItem disabled>No available provider types</DropdownMenuItem>
+                    ) : (
+                        availableTypes.map(({ label, type }) => {
                             const Icon = providerIcons[type]?.icon;
 
                             return (
@@ -106,7 +108,8 @@ export function SettingsProvidersHeader() {
                                     {label}
                                 </DropdownMenuItem>
                             );
-                        })}
+                        })
+                    )}
                 </DropdownMenuContent>
             </DropdownMenu>
         </div>

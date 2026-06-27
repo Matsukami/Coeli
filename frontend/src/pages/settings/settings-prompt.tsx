@@ -18,7 +18,17 @@ import {
     Wrench,
     XCircle,
 } from 'lucide-react';
-import { type ComponentProps, lazy, type Ref, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+    type ComponentProps,
+    lazy,
+    type Ref,
+    Suspense,
+    useCallback,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+} from 'react';
 import ReactDiffViewer from 'react-diff-viewer-continued';
 import {
     type Control,
@@ -199,12 +209,8 @@ const variableActionRegex = (variable: string): RegExp => new RegExp(`\\{\\{[^{}
 // One pass over the `{{ … }}` blocks — the naive per-variable `.match` over the whole template is
 // O(variables × length) on every keystroke.
 function countVariableUses(template: string, variables: string[]): Record<string, number> {
+    const probes = variables.map((variable) => [variable, new RegExp(`\\.${variable}\\b`)] as const);
     const counts: Record<string, number> = {};
-    const probes = variables.map((variable) => {
-        counts[variable] = 0;
-
-        return [variable, new RegExp(`\\.${variable}\\b`)] as const;
-    });
 
     for (const block of template.match(/\{\{[^{}]*\}\}/g) ?? []) {
         for (const [variable, probe] of probes) {
@@ -351,7 +357,10 @@ function SettingsPrompt() {
                         const matchStart = target.index;
                         textarea.focus();
                         textarea.setSelectionRange(matchStart, matchStart + target[0].length);
-                        textarea.scrollTop = Math.max(0, caretOffsetTop(textarea, matchStart) - textarea.clientHeight / 2);
+                        textarea.scrollTop = Math.max(
+                            0,
+                            caretOffsetTop(textarea, matchStart) - textarea.clientHeight / 2,
+                        );
                     }
                 } else {
                     const start = textarea.selectionStart;

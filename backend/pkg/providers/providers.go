@@ -613,9 +613,11 @@ func (pc *providerController) GetProviders(
 	for _, prv := range providers {
 		p, err := pc.NewProvider(prv)
 		if err != nil {
-			// A saved provider of a now-disabled type must not fail the whole list —
-			// skip it (like startup tolerates disabled defaults) so the rest stay usable.
-			logrus.WithError(err).Warnf("skipping user provider '%s' of unavailable type '%s'", prv.Name, prv.Type)
+			// Any unbuildable saved provider (its type is disabled, or its stored
+			// config is stale/invalid) is skipped, not propagated — one bad row must
+			// not take down the whole list. Debug, not Warn: it re-fires on every
+			// providers fetch; WithError carries the specific reason.
+			logrus.WithError(err).Debugf("skipping unusable user provider '%s' (type '%s')", prv.Name, prv.Type)
 			continue
 		}
 		providersMap[provider.ProviderName(prv.Name)] = p
