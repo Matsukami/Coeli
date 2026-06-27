@@ -1065,8 +1065,10 @@ const extractAgentTypes = (agents: unknown): null | string[] => {
     return types.length > 0 ? types : null;
 };
 
-interface DeleteProviderDialogProps
-    extends Pick<ComponentProps<typeof ConfirmationDialog>, 'handleConfirm' | 'handleOpenChange' | 'isOpen'> {
+interface DeleteProviderDialogProps extends Pick<
+    ComponentProps<typeof ConfirmationDialog>,
+    'handleConfirm' | 'handleOpenChange' | 'isOpen'
+> {
     control: Control<FormInput>;
 }
 
@@ -1257,6 +1259,16 @@ function SettingsProvider() {
         if (isNew || !providerId) {
             const queryType = formQueryParams.type ?? undefined;
             const queryId = formQueryParams.id;
+
+            // A hand-typed ?type= URL bypasses the create menu's enabled-only filter; an
+            // unknown or disabled type would otherwise create a dead provider or dump a raw
+            // zod error on submit. Bounce it to the list. (Clone-by-id, below, is exempt.)
+            if (!queryId && queryType && !providers.enabled[queryType as keyof typeof providers.enabled]) {
+                toast.error(`Provider type "${queryType}" is not available`);
+                navigate(routes.settings.providers, { replace: true });
+
+                return;
+            }
 
             if (queryId && data?.settingsProviders?.userDefined) {
                 const sourceProvider = data.settingsProviders.userDefined.find((p: Provider) => p.id == queryId);

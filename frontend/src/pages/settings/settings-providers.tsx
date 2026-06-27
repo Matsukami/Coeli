@@ -452,6 +452,9 @@ function SettingsProviders() {
 
 function SettingsProvidersHeader() {
     const navigate = useNavigate();
+    // Cached: the list above already fetched this query, so the read is local.
+    const { data } = useQuery(SettingsProvidersDocument);
+    const enabled = data?.settingsProviders?.enabled;
 
     const handleProviderCreate = (providerType: string) => {
         navigate(routes.settings.newProvider({ type: providerType }));
@@ -486,19 +489,24 @@ function SettingsProvidersHeader() {
                         width: 'var(--radix-dropdown-menu-trigger-width)',
                     }}
                 >
-                    {providerTypes.map(({ label, type }) => {
-                        const Icon = providerIcons[type]?.icon;
+                    {/* Only offer types whose API key is configured — creating a provider of a
+                        disabled type yields one that's unusable for flows (the create form guards
+                        the same against a hand-typed ?type=). */}
+                    {providerTypes
+                        .filter(({ type }) => enabled?.[type as keyof typeof enabled])
+                        .map(({ label, type }) => {
+                            const Icon = providerIcons[type]?.icon;
 
-                        return (
-                            <DropdownMenuItem
-                                key={type}
-                                onClick={() => handleProviderCreate(type)}
-                            >
-                                {Icon && <Icon className="size-4" />}
-                                {label}
-                            </DropdownMenuItem>
-                        );
-                    })}
+                            return (
+                                <DropdownMenuItem
+                                    key={type}
+                                    onClick={() => handleProviderCreate(type)}
+                                >
+                                    {Icon && <Icon className="size-4" />}
+                                    {label}
+                                </DropdownMenuItem>
+                            );
+                        })}
                 </DropdownMenuContent>
             </DropdownMenu>
         </div>
