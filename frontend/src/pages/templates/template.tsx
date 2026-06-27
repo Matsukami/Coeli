@@ -4,6 +4,7 @@ import { skipToken, useQuery } from '@apollo/client/react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
     ChevronDown,
+    Code,
     Ellipsis,
     FileSymlink,
     FileText,
@@ -13,8 +14,9 @@ import {
     Pencil,
     Save,
     Trash,
+    Type,
 } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -52,6 +54,11 @@ import { useBreakpoint } from '@/hooks/use-breakpoint';
 import { routes } from '@/lib/routes';
 import { cn } from '@/lib/utils';
 import { type Template, useTemplates } from '@/providers/templates-provider';
+
+// Dynamic-only import: a static CodeEditor import would merge its ~600KB CodeMirror chunk into this route bundle.
+const CodeEditor = lazy(() =>
+    import('@/components/shared/code-editor').then((module) => ({ default: module.CodeEditor })),
+);
 
 const formSchema = z.object({
     text: z.string().trim().min(1, { message: 'Text is required' }),
@@ -262,6 +269,7 @@ function Template() {
     const [isRenaming, setIsRenaming] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+    const [viewMode, setViewMode] = useState<'code' | 'plain'>('plain');
 
     const {
         handleDropdownCloseAutoFocus,
@@ -455,65 +463,72 @@ function Template() {
                     >
                         {isAsideOpen ? <PanelRightClose /> : <PanelRightOpen />}
                     </Button>
-                    {canShowActions && (
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button
-                                    aria-label="Template actions"
-                                    className="size-8 p-0"
-                                    variant="ghost"
-                                >
-                                    <Ellipsis />
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent
-                                align="end"
-                                className="min-w-24"
-                                onCloseAutoFocus={handleDropdownCloseAutoFocus}
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button
+                                aria-label="Template actions"
+                                className="size-8 p-0"
+                                variant="ghost"
                             >
-                                {isMobile && templateNav.total > 0 && (
-                                    <>
-                                        <DropdownMenuItem
-                                            className="cursor-default hover:bg-transparent focus:bg-transparent"
-                                            onSelect={(event) => event.preventDefault()}
-                                        >
-                                            <FileText className="size-4" />
-                                            Templates
-                                            <div className="-my-1.5 -mr-2 ml-auto flex items-center">
-                                                <DetailNavigationButtons<Template>
-                                                    controller={templateNav}
-                                                    sheetTitle="Templates"
-                                                    size="sm"
-                                                />
-                                            </div>
-                                        </DropdownMenuItem>
-                                        <DropdownMenuSeparator />
-                                    </>
-                                )}
-                                <DropdownMenuItem onClick={handleTemplateRenameStart}>
-                                    <Pencil className="size-3" />
-                                    Rename
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem
-                                    disabled={isDeleting}
-                                    onClick={() => setIsDeleteDialogOpen(true)}
-                                >
-                                    {isDeleting ? (
+                                <Ellipsis />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent
+                            align="end"
+                            className="min-w-24"
+                            onCloseAutoFocus={handleDropdownCloseAutoFocus}
+                        >
+                            <DropdownMenuItem onClick={() => setViewMode((mode) => (mode === 'code' ? 'plain' : 'code'))}>
+                                {viewMode === 'code' ? <Type className="size-4" /> : <Code className="size-4" />}
+                                {viewMode === 'code' ? 'Plain text' : 'Code editor'}
+                            </DropdownMenuItem>
+                            {canShowActions && (
+                                <>
+                                    <DropdownMenuSeparator />
+                                    {isMobile && templateNav.total > 0 && (
                                         <>
-                                            <Loader2 className="size-4 animate-spin" />
-                                            Deleting...
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Trash className="size-4" />
-                                            Delete
+                                            <DropdownMenuItem
+                                                className="cursor-default hover:bg-transparent focus:bg-transparent"
+                                                onSelect={(event) => event.preventDefault()}
+                                            >
+                                                <FileText className="size-4" />
+                                                Templates
+                                                <div className="-my-1.5 -mr-2 ml-auto flex items-center">
+                                                    <DetailNavigationButtons<Template>
+                                                        controller={templateNav}
+                                                        sheetTitle="Templates"
+                                                        size="sm"
+                                                    />
+                                                </div>
+                                            </DropdownMenuItem>
+                                            <DropdownMenuSeparator />
                                         </>
                                     )}
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    )}
+                                    <DropdownMenuItem onClick={handleTemplateRenameStart}>
+                                        <Pencil className="size-3" />
+                                        Rename
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem
+                                        disabled={isDeleting}
+                                        onClick={() => setIsDeleteDialogOpen(true)}
+                                    >
+                                        {isDeleting ? (
+                                            <>
+                                                <Loader2 className="size-4 animate-spin" />
+                                                Deleting...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Trash className="size-4" />
+                                                Delete
+                                            </>
+                                        )}
+                                    </DropdownMenuItem>
+                                </>
+                            )}
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 </AppHeaderActions>
             </AppHeader>
             {isMobile && canShowActions && (
@@ -725,16 +740,35 @@ function Template() {
                                         render={({ field }) => (
                                             <FormItem>
                                                 <FormControl>
-                                                    <InputGroup className="block">
-                                                        <InputGroupTextareaAutosize
-                                                            {...field}
-                                                            className="min-h-0"
-                                                            disabled={isSaving}
-                                                            maxRows={9}
-                                                            minRows={1}
-                                                            onKeyDown={handleKeyDown}
-                                                            placeholder="Content"
-                                                        />
+                                                    <InputGroup className="block h-auto">
+                                                        {viewMode === 'code' ? (
+                                                            <Suspense
+                                                                fallback={
+                                                                    <div className="flex h-[50vh] max-h-[600px] min-h-[240px] items-center justify-center">
+                                                                        <Spinner variant="circle" />
+                                                                    </div>
+                                                                }
+                                                            >
+                                                                <CodeEditor
+                                                                    className="h-[50vh] max-h-[600px] min-h-[240px] rounded-none border-0 shadow-none"
+                                                                    disabled={isSaving}
+                                                                    onBlur={field.onBlur}
+                                                                    onChange={field.onChange}
+                                                                    placeholder="Content"
+                                                                    value={field.value}
+                                                                />
+                                                            </Suspense>
+                                                        ) : (
+                                                            <InputGroupTextareaAutosize
+                                                                {...field}
+                                                                className="min-h-0"
+                                                                disabled={isSaving}
+                                                                maxRows={9}
+                                                                minRows={1}
+                                                                onKeyDown={handleKeyDown}
+                                                                placeholder="Content"
+                                                            />
+                                                        )}
                                                         <InputGroupAddon align="block-end">
                                                             <InputGroupButton
                                                                 aria-label={isNew ? 'Create template' : 'Save template'}
