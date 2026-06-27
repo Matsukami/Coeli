@@ -8,9 +8,8 @@ import {
     Ellipsis,
     FileSymlink,
     FileText,
+    GripVertical,
     Loader2,
-    PanelRightClose,
-    PanelRightOpen,
     Pencil,
     Save,
     Trash,
@@ -43,10 +42,11 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Form, FormControl, FormField, FormItem } from '@/components/ui/form';
+import { FormSubmitButton } from '@/components/ui/form-submit-button';
 import { Input } from '@/components/ui/input';
-import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupTextareaAutosize } from '@/components/ui/input-group';
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { Spinner } from '@/components/ui/spinner';
+import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useTemplateDetailNavigation } from '@/features/templates/use-template-detail-navigation';
 import { FlowTemplateDocument } from '@/graphql/types';
@@ -253,7 +253,7 @@ function Template() {
     const { templateId } = useParams<{ templateId?: string }>();
     const { createTemplate, deleteTemplate, updateTemplate } = useTemplates();
 
-    const { isMobile } = useBreakpoint();
+    const { isDesktop, isMobile } = useBreakpoint();
     const isNew = templateId === 'new';
 
     // Pass `null` while creating a new template — there is no "current item"
@@ -261,7 +261,6 @@ function Template() {
     // below by `canShowActions`).
     const templateNav = useTemplateDetailNavigation(isNew ? null : templateId);
 
-    const [isAsideOpen, setIsAsideOpen] = useState(false);
     const [expandedPresetIndex, setExpandedPresetIndex] = useState<null | number>(null);
     const [isReplaceConfirmOpen, setIsReplaceConfirmOpen] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
@@ -372,17 +371,6 @@ function Template() {
         }
     };
 
-    const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
-        const { ctrlKey, key, metaKey, shiftKey } = event;
-
-        if (isSaving || key !== 'Enter' || shiftKey || ctrlKey || metaKey) {
-            return;
-        }
-
-        event.preventDefault();
-        handleFormSubmit(handleSubmit)();
-    };
-
     const handleApplyPreset = useCallback(
         (preset: { text: string; title: string }) => {
             const current = getValues();
@@ -456,13 +444,18 @@ function Template() {
                             sheetTitle="Templates"
                         />
                     )}
-                    <Button
-                        onClick={() => setIsAsideOpen((open) => !open)}
-                        size="icon"
-                        variant="ghost"
-                    >
-                        {isAsideOpen ? <PanelRightClose /> : <PanelRightOpen />}
-                    </Button>
+                    {(isNew || !!templateData?.flowTemplate) && (
+                        <FormSubmitButton
+                            disabled={isSaving || !formState.isValid || (!isNew && !hasUnsavedChanges)}
+                            form="template-form"
+                            icon={<Save className="size-4" />}
+                            loading={isSaving}
+                            size="sm"
+                            variant="secondary"
+                        >
+                            {isNew ? 'Create' : 'Save'}
+                        </FormSubmitButton>
+                    )}
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button
@@ -542,143 +535,161 @@ function Template() {
         </>
     );
 
-    const asideContent = useMemo(
+    const presetsPanel = useMemo(
         () => (
-            <div className="flex w-full min-w-0 flex-col gap-2 p-2">
-                {PRESET_TEMPLATES.map((preset, index) => (
-                    <Collapsible
-                        className="w-full min-w-0"
-                        key={index}
-                        onOpenChange={(open) => setExpandedPresetIndex(open ? index : null)}
-                        open={expandedPresetIndex === index}
-                    >
-                        <Card className="w-full min-w-0">
-                            <div className="flex w-full min-w-0">
-                                <Button
-                                    className={cn(
-                                        'h-auto min-w-0 flex-1 justify-start rounded-none rounded-tl-[0.6875rem] px-3 py-2 text-left text-start',
-                                        expandedPresetIndex !== index ? 'rounded-bl-[0.6875rem]' : 'whitespace-normal',
-                                    )}
-                                    onClick={() => handleApplyPreset(preset)}
-                                    variant="ghost"
-                                >
-                                    <span className={cn('min-w-0', expandedPresetIndex !== index && 'truncate')}>
-                                        {preset.title}
-                                    </span>
-                                </Button>
-                                <CollapsibleTrigger asChild>
+            <div className="bg-card overflow-hidden rounded-lg border">
+                <div className="border-b px-4 py-3">
+                    <h4 className="flex items-center gap-2 text-sm font-medium">
+                        Preset templates
+                        <Badge
+                            className="ml-auto font-normal tabular-nums"
+                            variant="secondary"
+                        >
+                            {PRESET_TEMPLATES.length}
+                        </Badge>
+                    </h4>
+                    <p className="text-muted-foreground mt-1 text-xs">
+                        Click a preset to fill the form, or expand it to preview the content.
+                    </p>
+                </div>
+                <div className="flex w-full min-w-0 flex-col gap-2 p-2">
+                    {PRESET_TEMPLATES.map((preset, index) => (
+                        <Collapsible
+                            className="w-full min-w-0"
+                            key={index}
+                            onOpenChange={(open) => setExpandedPresetIndex(open ? index : null)}
+                            open={expandedPresetIndex === index}
+                        >
+                            <Card className="w-full min-w-0">
+                                <div className="flex w-full min-w-0">
                                     <Button
                                         className={cn(
-                                            'h-auto shrink-0 rounded-none rounded-tr-[0.6875rem] border-l px-2 py-2',
-                                            expandedPresetIndex !== index && 'rounded-br-[0.6875rem]',
+                                            'h-auto min-w-0 flex-1 justify-start rounded-none rounded-tl-[0.6875rem] px-3 py-2 text-left text-start',
+                                            expandedPresetIndex !== index
+                                                ? 'rounded-bl-[0.6875rem]'
+                                                : 'whitespace-normal',
                                         )}
+                                        onClick={() => handleApplyPreset(preset)}
                                         variant="ghost"
                                     >
-                                        <ChevronDown
-                                            className={cn(
-                                                'transition-transform',
-                                                expandedPresetIndex === index && 'rotate-180',
-                                            )}
-                                        />
+                                        <span className={cn('min-w-0', expandedPresetIndex !== index && 'truncate')}>
+                                            {preset.title}
+                                        </span>
                                     </Button>
-                                </CollapsibleTrigger>
-                            </div>
-                            <CollapsibleContent>
-                                <CardContent className="border-t px-3 py-2">
-                                    <p className="text-muted-foreground text-sm break-words whitespace-pre-wrap">
-                                        {preset.text}
-                                    </p>
-                                </CardContent>
-                            </CollapsibleContent>
-                        </Card>
-                    </Collapsible>
-                ))}
+                                    <CollapsibleTrigger asChild>
+                                        <Button
+                                            className={cn(
+                                                'h-auto shrink-0 rounded-none rounded-tr-[0.6875rem] border-l px-2 py-2',
+                                                expandedPresetIndex !== index && 'rounded-br-[0.6875rem]',
+                                            )}
+                                            variant="ghost"
+                                        >
+                                            <ChevronDown
+                                                className={cn(
+                                                    'transition-transform',
+                                                    expandedPresetIndex === index && 'rotate-180',
+                                                )}
+                                            />
+                                        </Button>
+                                    </CollapsibleTrigger>
+                                </div>
+                                <CollapsibleContent>
+                                    <CardContent className="border-t px-3 py-2">
+                                        <p className="text-muted-foreground text-sm break-words whitespace-pre-wrap">
+                                            {preset.text}
+                                        </p>
+                                    </CardContent>
+                                </CollapsibleContent>
+                            </Card>
+                        </Collapsible>
+                    ))}
+                </div>
             </div>
         ),
         [expandedPresetIndex, handleApplyPreset],
     );
 
-    const aside = useMemo(
-        () =>
-            isMobile ? (
-                <Sheet
-                    onOpenChange={setIsAsideOpen}
-                    open={isAsideOpen}
-                >
-                    <SheetContent
-                        // The Sheet body is just a list of presets with no
-                        // descriptive sub-text — opt out of the Radix
-                        // Description warning explicitly.
-                        aria-describedby={undefined}
-                        className="flex w-full max-w-sm flex-col gap-0 p-0 sm:max-w-sm"
-                        side="right"
-                    >
-                        <SheetHeader className="border-b p-4">
-                            <SheetTitle className="flex items-center gap-2 pr-8 text-base">
-                                <FileText className="size-4" />
-                                <span>Preset templates</span>
-                                <Badge
-                                    className="ml-auto font-normal tabular-nums"
-                                    variant="secondary"
-                                >
-                                    {PRESET_TEMPLATES.length}
-                                </Badge>
-                            </SheetTitle>
-                        </SheetHeader>
-                        {/* Plain overflow-y-auto instead of Radix ScrollArea —
-                            ScrollArea's Viewport wraps children in a
-                            `display: table` div whose width grows to fit
-                            intrinsic content, defeating `w-full min-w-0` on
-                            inner flex rows and pushing the chevron buttons
-                            off-screen. */}
-                        <div className="min-w-0 flex-1 overflow-y-auto">{asideContent}</div>
-                    </SheetContent>
-                </Sheet>
-            ) : (
-                <aside
-                    className={cn(
-                        'bg-background shrink-0 overflow-hidden transition-[width] duration-200',
-                        isAsideOpen ? 'w-80 border-l sm:w-96' : 'w-0',
-                    )}
-                >
-                    {isAsideOpen ? (
-                        <div className="flex h-full w-80 min-w-0 flex-col sm:w-96">
-                            <div className="border-b p-4">
-                                <h3 className="flex items-center gap-2 text-base font-semibold">
-                                    <FileText className="size-4" />
-                                    <span>Preset templates</span>
-                                    <Badge
-                                        className="ml-auto font-normal tabular-nums"
-                                        variant="secondary"
-                                    >
-                                        {PRESET_TEMPLATES.length}
-                                    </Badge>
-                                </h3>
-                            </div>
-                            <div className="min-w-0 flex-1 overflow-y-auto">{asideContent}</div>
-                        </div>
-                    ) : null}
-                </aside>
-            ),
-        [isMobile, isAsideOpen, asideContent],
+    const introBlock = (
+        <div className="flex flex-col gap-2 text-center">
+            <h2 className="text-2xl font-semibold">{isNew ? 'Create a new template' : 'Edit template'}</h2>
+            <p className="text-muted-foreground">Add a title and content, or start from a preset.</p>
+        </div>
+    );
+
+    const titleField = (
+        <FormField
+            control={control}
+            name="title"
+            render={({ field }) => (
+                <FormItem>
+                    <FormControl>
+                        <Input
+                            autoFocus={isNew}
+                            disabled={isSaving}
+                            placeholder="Title"
+                            {...field}
+                        />
+                    </FormControl>
+                </FormItem>
+            )}
+        />
+    );
+
+    const textEditor = (
+        <FormField
+            control={control}
+            name="text"
+            render={({ field }) => (
+                <FormItem className="flex min-h-0 flex-1 flex-col">
+                    <FormControl>
+                        {viewMode === 'code' ? (
+                            <Suspense
+                                fallback={
+                                    <div className="flex min-h-0 flex-1 items-center justify-center rounded-md border">
+                                        <Spinner variant="circle" />
+                                    </div>
+                                }
+                            >
+                                <CodeEditor
+                                    className="min-h-0 flex-1"
+                                    disabled={isSaving}
+                                    onBlur={field.onBlur}
+                                    onChange={field.onChange}
+                                    placeholder="Content"
+                                    value={field.value}
+                                />
+                            </Suspense>
+                        ) : (
+                            <Textarea
+                                {...field}
+                                autoSize={false}
+                                className="min-h-[640px] flex-1 resize-none font-mono text-sm"
+                                disabled={isSaving}
+                                placeholder="Content"
+                            />
+                        )}
+                    </FormControl>
+                </FormItem>
+            )}
+        />
     );
 
     if (!isNew && isLoadingTemplate) {
         return (
-            <>
+            <div className={isDesktop ? 'flex h-[100dvh] min-h-0 flex-col' : 'flex min-h-[100dvh] flex-col'}>
                 {pageHeader}
-                <div className="flex min-h-[calc(100dvh-3rem)] items-center justify-center">
+                <div className="flex flex-1 items-center justify-center">
                     <Spinner variant="circle" />
                 </div>
-            </>
+            </div>
         );
     }
 
     if (!isNew && !isLoadingTemplate && !templateData?.flowTemplate) {
         return (
-            <>
+            <div className={isDesktop ? 'flex h-[100dvh] min-h-0 flex-col' : 'flex min-h-[100dvh] flex-col'}>
                 {pageHeader}
-                <div className="flex min-h-[calc(100dvh-3rem)] items-center justify-center p-4">
+                <div className="flex flex-1 items-center justify-center p-4">
                     <Card className="w-full max-w-2xl">
                         <CardContent className="flex flex-col items-center gap-4 pt-6 text-center">
                             <h2 className="text-xl font-semibold">Template not found</h2>
@@ -687,121 +698,60 @@ function Template() {
                         </CardContent>
                     </Card>
                 </div>
-            </>
+            </div>
         );
     }
 
     return (
-        <>
+        <div className={isDesktop ? 'flex h-[100dvh] min-h-0 flex-col' : 'flex min-h-[100dvh] flex-col'}>
             {pageHeader}
-            <div className="flex min-h-[calc(100dvh-3rem)]">
-                <div className="flex min-w-0 flex-1 items-center justify-center p-4">
-                    <Card className="w-full max-w-2xl">
-                        <CardContent className="flex flex-col gap-4 pt-6">
-                            <div className="text-center">
-                                <h1 className="text-2xl font-semibold">
-                                    {isNew ? 'Create a new template' : 'Edit template'}
-                                </h1>
-                                <p className="text-muted-foreground mt-2">
-                                    Add title and content for your template or use a
-                                    <Button
-                                        className="h-auto px-1.5 py-0 text-base"
-                                        onClick={() => setIsAsideOpen((open) => !open)}
-                                        variant="link"
-                                    >
-                                        Preset template
-                                    </Button>
-                                </p>
-                            </div>
-                            <Form {...form}>
-                                <form
-                                    className="flex flex-col gap-4"
-                                    onSubmit={handleFormSubmit(handleSubmit)}
+            <Form {...form}>
+                <form
+                    className="flex min-h-0 flex-1 flex-col"
+                    id="template-form"
+                    onSubmit={handleFormSubmit(handleSubmit)}
+                >
+                    {isDesktop ? (
+                        <div className="flex min-h-0 w-full max-w-full flex-1 overflow-hidden">
+                            <ResizablePanelGroup
+                                className="w-full"
+                                orientation="horizontal"
+                            >
+                                <ResizablePanel
+                                    defaultSize={45}
+                                    minSize={30}
                                 >
-                                    <FormField
-                                        control={control}
-                                        name="title"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormControl>
-                                                    <Input
-                                                        autoFocus={isNew}
-                                                        disabled={isSaving}
-                                                        placeholder="Title"
-                                                        {...field}
-                                                    />
-                                                </FormControl>
-                                            </FormItem>
-                                        )}
-                                    />
-                                    <FormField
-                                        control={control}
-                                        name="text"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormControl>
-                                                    <InputGroup className="block h-auto">
-                                                        {viewMode === 'code' ? (
-                                                            <Suspense
-                                                                fallback={
-                                                                    <div className="flex h-[50vh] max-h-[600px] min-h-[240px] items-center justify-center">
-                                                                        <Spinner variant="circle" />
-                                                                    </div>
-                                                                }
-                                                            >
-                                                                <CodeEditor
-                                                                    className="h-[50vh] max-h-[600px] min-h-[240px] rounded-none border-0 shadow-none"
-                                                                    disabled={isSaving}
-                                                                    onBlur={field.onBlur}
-                                                                    onChange={field.onChange}
-                                                                    placeholder="Content"
-                                                                    value={field.value}
-                                                                />
-                                                            </Suspense>
-                                                        ) : (
-                                                            <InputGroupTextareaAutosize
-                                                                {...field}
-                                                                className="min-h-0"
-                                                                disabled={isSaving}
-                                                                maxRows={9}
-                                                                minRows={1}
-                                                                onKeyDown={handleKeyDown}
-                                                                placeholder="Content"
-                                                            />
-                                                        )}
-                                                        <InputGroupAddon align="block-end">
-                                                            <InputGroupButton
-                                                                aria-label={isNew ? 'Create template' : 'Save template'}
-                                                                className="ml-auto"
-                                                                disabled={
-                                                                    isSaving ||
-                                                                    !formState.isValid ||
-                                                                    (!isNew && !hasUnsavedChanges)
-                                                                }
-                                                                size="icon-xs"
-                                                                title={isNew ? 'Create template' : 'Save template'}
-                                                                type="submit"
-                                                                variant="default"
-                                                            >
-                                                                {isSaving ? (
-                                                                    <Spinner variant="circle" />
-                                                                ) : (
-                                                                    <Save aria-hidden="true" />
-                                                                )}
-                                                            </InputGroupButton>
-                                                        </InputGroupAddon>
-                                                    </InputGroup>
-                                                </FormControl>
-                                            </FormItem>
-                                        )}
-                                    />
-                                </form>
-                            </Form>
-                        </CardContent>
-                    </Card>
-                </div>
-                {aside}
-            </div>
+                                    <div className="h-full min-h-0 overflow-y-auto">
+                                        <Card className="mx-auto min-h-full w-full max-w-2xl rounded-none border-0">
+                                            <CardContent className="flex flex-col gap-6 py-6">
+                                                {introBlock}
+                                                {titleField}
+                                                {presetsPanel}
+                                            </CardContent>
+                                        </Card>
+                                    </div>
+                                </ResizablePanel>
+                                <ResizableHandle withHandle>
+                                    <GripVertical className="size-4" />
+                                </ResizableHandle>
+                                <ResizablePanel
+                                    defaultSize={55}
+                                    minSize={30}
+                                >
+                                    <div className="flex h-full min-h-0 flex-col overflow-y-auto p-4">{textEditor}</div>
+                                </ResizablePanel>
+                            </ResizablePanelGroup>
+                        </div>
+                    ) : (
+                        <div className="flex min-h-0 flex-1 flex-col gap-4 p-4">
+                            {introBlock}
+                            {titleField}
+                            {textEditor}
+                            {presetsPanel}
+                        </div>
+                    )}
+                </form>
+            </Form>
             <ConfirmationDialog
                 confirmIcon={<FileSymlink />}
                 confirmText="Replace"
@@ -827,7 +777,7 @@ function Template() {
                 itemName={templateName ?? undefined}
                 itemType="template"
             />
-        </>
+        </div>
     );
 }
 
