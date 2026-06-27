@@ -3,6 +3,8 @@ import userEvent from '@testing-library/user-event';
 import { type Control, Controller } from 'react-hook-form';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import type { KnowledgeDocumentFragmentFragment } from '@/graphql/types';
+
 import { KnowledgeAnswerType, KnowledgeDocType } from '@/graphql/types';
 
 import type { FormValues, SubmitResult } from './knowledge-form';
@@ -152,8 +154,58 @@ describe('KnowledgeForm — update', () => {
         expect(values.question).toBe('updated question');
         expect(dirty).toMatchObject({ question: true });
 
-        await new Promise((resolve) => setTimeout(resolve, 0));
+        // Save re-disables once the post-save reset clears isDirty — a deterministic
+        // anchor for the negative navigate assertion below.
+        await waitFor(() => expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled());
         expect(navigate).not.toHaveBeenCalled();
+    });
+
+    it('resets untouched fields to the server document returned by onSubmit', async () => {
+        const user = userEvent.setup();
+        // Server normalizes `content` (a field the user never edits here). The form's
+        // resetOptions keep DIRTY fields at their typed value, so asserting the reset
+        // applied the server document means asserting on an untouched field.
+        const serverDocument = {
+            answerType: KnowledgeAnswerType.Other,
+            codeLang: null,
+            content: 'server normalized content',
+            description: null,
+            docType: KnowledgeDocType.Answer,
+            flowId: null,
+            guideType: null,
+            id: 'doc-1',
+            manual: false,
+            partSize: 0,
+            question: 'updated question',
+            subtaskId: null,
+            taskId: null,
+            totalSize: 0,
+            userId: 'u-1',
+        } satisfies KnowledgeDocumentFragmentFragment;
+
+        const onSubmit = vi
+            .fn<(values: FormValues, dirty: unknown) => Promise<SubmitResult>>()
+            .mockResolvedValue({ document: serverDocument });
+
+        render(
+            <KnowledgeForm
+                initialValues={editValues}
+                isNew={false}
+                onSubmit={onSubmit}
+            />,
+        );
+
+        const question = screen.getByLabelText('question');
+        await user.clear(question);
+        await user.type(question, 'updated question');
+        await user.click(screen.getByRole('button', { name: 'Save' }));
+
+        await waitFor(() => expect(onSubmit).toHaveBeenCalledOnce());
+
+        // editValues.content is 'existing content'; reaching the server value proves the
+        // form took `documentToFormValues(result.document)`, not the local `values` fallback.
+        await waitFor(() => expect(screen.getByLabelText('content')).toHaveValue('server normalized content'));
+        expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled();
     });
 
     it('keeps Save disabled until the form is dirty', async () => {

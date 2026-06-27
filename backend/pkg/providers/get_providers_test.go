@@ -47,3 +47,24 @@ func TestGetProviders_SkipsUserProviderOfDisabledType(t *testing.T) {
 	assert.Contains(t, got, provider.ProviderName("openai-default"), "enabled providers stay reachable")
 	assert.NotContains(t, got, provider.ProviderName("stale-minimax"), "the unavailable provider is skipped")
 }
+
+func TestGetProviders_StaleUserRowSpansValidSibling(t *testing.T) {
+	pc := &providerController{
+		cfg: &config.Config{},
+		db: stubProvidersQuerier{rows: []database.Provider{
+			// ollama.New builds with no API key and makes no network call (pull/load
+			// off under the empty config), so this row clears the real NewProvider.
+			{Name: "ollama-user", Type: "ollama"},
+			{Name: "stale-minimax", Type: "minimax"}, // type absent from ListTypes()
+		}},
+		Providers: provider.Providers{
+			"ollama-default": stubTypedProvider{ptype: provider.ProviderOllama},
+		},
+	}
+
+	got, err := pc.GetProviders(context.Background(), 1)
+
+	require.NoError(t, err, "a stale sibling row must not fail the whole query")
+	assert.Contains(t, got, provider.ProviderName("ollama-user"), "a valid user provider survives a stale sibling")
+	assert.NotContains(t, got, provider.ProviderName("stale-minimax"), "the unbuildable sibling is skipped")
+}
