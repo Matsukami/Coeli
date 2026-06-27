@@ -229,11 +229,9 @@ export function KnowledgeForm({ initialValues, isNew, knowledge, onSubmit }: Kno
     const { control, formState, handleSubmit, reset } = form;
     const { isDirty, isValid } = formState;
 
-    // Saves and resets the form; returns the page's submit result (with an
-    // optional `redirectTo`) so the *caller* owns navigation. Keeping navigation
-    // out of here lets `onSaveFromDialog` feed the guard without depending on
-    // `guard.skipNextBlock` — which would otherwise form a real cycle
-    // (guard ← onSaveFromDialog ← performSave ← guard.skipNextBlock).
+    // Navigation is the caller's job — it reads `redirectTo` off the returned result.
+    // Pulling it in here would make onSaveFromDialog depend on guard.skipNextBlock and
+    // form a real cycle (guard ← onSaveFromDialog ← performSave ← guard.skipNextBlock).
     const performSave = useCallback(
         async (values: FormValues): Promise<null | SubmitResult> => {
             try {
