@@ -1,8 +1,8 @@
 import { useMutation } from '@apollo/client/react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Save } from 'lucide-react';
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { type FieldPath, type SubmitHandler, useForm } from 'react-hook-form';
+import { type ComponentProps, useCallback, useState } from 'react';
+import { type Control, type FieldPath, type SubmitHandler, useForm, useWatch } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { z } from 'zod';
@@ -181,6 +181,11 @@ export interface SubmitResult {
     redirectTo?: string;
 }
 
+interface KnowledgeFormHeaderProps extends Omit<ComponentProps<typeof KnowledgeHeader>, 'isAnonymizeDisabled'> {
+    control: Control<FormValues>;
+    isSaving?: boolean;
+}
+
 interface KnowledgeFormProps {
     initialValues: FormValues;
     isNew: boolean;
@@ -224,8 +229,13 @@ export function KnowledgeForm({ initialValues, isNew, knowledge, onSubmit }: Kno
     const { control, formState, handleSubmit, reset } = form;
     const { isDirty, isValid } = formState;
 
+    // Saves and resets the form; returns the page's submit result (with an
+    // optional `redirectTo`) so the *caller* owns navigation. Keeping navigation
+    // out of here lets `onSaveFromDialog` feed the guard without depending on
+    // `guard.skipNextBlock` — which would otherwise form a real cycle
+    // (guard ← onSaveFromDialog ← performSave ← guard.skipNextBlock).
     const performSave = useCallback(
-        async (values: FormValues): Promise<boolean> => {
+        async (values: FormValues): Promise<null | SubmitResult> => {
             try {
                 // Snapshot dirty flags from the latest formState. We read it
                 // here (instead of capturing into deps) so partial-update
@@ -240,54 +250,19 @@ export function KnowledgeForm({ initialValues, isNew, knowledge, onSubmit }: Kno
                 // saved fragment for some reason.
                 const resetValues = result.document ? documentToFormValues(result.document) : values;
 
-                // Reset BEFORE navigate so `isDirty` is false by the time the
-                // blocker re-evaluates. We also `skipNextBlock` defensively
-                // because reset's state propagation is async.
+                // Reset BEFORE the caller navigates so `isDirty` is false by the
+                // time the blocker re-evaluates (the caller also calls
+                // `skipNextBlock` to cover reset's async state propagation).
                 reset(resetValues, { keepDefaultValues: false });
 
-                if (result.redirectTo) {
-                    skipNextBlockRef.current();
-                    navigate(result.redirectTo);
-                }
-
-                return true;
+                return result;
             } catch (error) {
                 Log.error('Failed to save knowledge document', error);
 
-                return false;
+                return null;
             }
         },
-        [form, navigate, onSubmit, reset],
-    );
-
-    // The ref below breaks an otherwise circular hook dependency:
-    //
-    //   performSave           → skipNextBlockRef.current()        (ref filled by effect below)
-    //   onSaveFromDialog      → performSave
-    //   useUnsavedChangesGuard({ onSave: onSaveFromDialog }) → exposes skipNextBlock
-    //   useEffect             → wires the exposed skipNextBlock back into the ref
-    //
-    // Replacing the ref with a plain dep would force `performSave` to depend
-    // on `guard.skipNextBlock`, which is produced by a hook (`guard`) whose
-    // own input (`onSave`) closes over `performSave` — a real cycle that
-    // can't be expressed in deps without `useRef`.
-    const skipNextBlockRef = useRef<() => void>(() => {});
-
-    const onSubmitWithGuard: SubmitHandler<FormValues> = useCallback(
-        async (values) => {
-            if (isSaving) {
-                return;
-            }
-
-            setIsSaving(true);
-
-            try {
-                await performSave(values);
-            } finally {
-                setIsSaving(false);
-            }
-        },
-        [isSaving, performSave],
+        [form, onSubmit, reset],
     );
 
     const onSaveFromDialog = useCallback(async (): Promise<boolean> => {
@@ -308,7 +283,12 @@ export function KnowledgeForm({ initialValues, isNew, knowledge, onSubmit }: Kno
         setIsSaving(true);
 
         try {
-            return await performSave(parsed.data);
+            // The guard proceeds the originally-blocked navigation on success;
+            // a CREATE's `redirectTo` is intentionally not honored here ("Save
+            // and leave" leaves to where the user was going, not the new doc).
+            const result = await performSave(parsed.data);
+
+            return result !== null;
         } finally {
             setIsSaving(false);
         }
@@ -319,10 +299,32 @@ export function KnowledgeForm({ initialValues, isNew, knowledge, onSubmit }: Kno
         isFormValid: isValid,
         onSave: onSaveFromDialog,
     });
+    const { skipNextBlock } = guard;
 
-    useEffect(() => {
-        skipNextBlockRef.current = guard.skipNextBlock;
-    }, [guard.skipNextBlock]);
+    // Defined after `guard` so it can own the post-save redirect (CREATE only)
+    // via the stable `skipNextBlock` — the form-button path navigates to the new
+    // document; the dialog path above deliberately does not.
+    const onSubmitWithGuard: SubmitHandler<FormValues> = useCallback(
+        async (values) => {
+            if (isSaving) {
+                return;
+            }
+
+            setIsSaving(true);
+
+            try {
+                const result = await performSave(values);
+
+                if (result?.redirectTo) {
+                    skipNextBlock();
+                    navigate(result.redirectTo);
+                }
+            } finally {
+                setIsSaving(false);
+            }
+        },
+        [isSaving, navigate, performSave, skipNextBlock],
+    );
 
     const canSubmit = !isSaving && isValid && (isNew || isDirty);
 
@@ -334,12 +336,6 @@ export function KnowledgeForm({ initialValues, isNew, knowledge, onSubmit }: Kno
             type="submit"
         />
     );
-
-    // Subscribe to `content` so the anonymize button toggles its disabled
-    // state as the user types. `form.watch('content')` triggers a re-render
-    // on every keystroke, which is what we want for snappy UX.
-    const contentValue = form.watch('content');
-    const isAnonymizeDisabled = isAnonymizing || isSaving || !contentValue?.trim();
 
     const handleAnonymize = useCallback(async () => {
         const currentContent = form.getValues('content');
@@ -387,14 +383,15 @@ export function KnowledgeForm({ initialValues, isNew, knowledge, onSubmit }: Kno
                     className={isDesktop ? 'flex h-[100dvh] min-h-0 w-full flex-col' : 'flex min-h-[100dvh] flex-col'}
                     onSubmit={handleSubmit(onSubmitWithGuard)}
                 >
-                    <KnowledgeHeader
+                    <KnowledgeFormHeader
                         canAnonymize={canAnonymize}
-                        isAnonymizeDisabled={isAnonymizeDisabled}
+                        control={control}
                         isAnonymizing={isAnonymizing}
                         isNew={isNew}
+                        isSaving={isSaving}
                         knowledge={knowledge}
                         onAnonymize={handleAnonymize}
-                        onBeforeNavigateAway={() => skipNextBlockRef.current()}
+                        onBeforeNavigateAway={skipNextBlock}
                         saveButton={saveButton}
                     />
                     {isDesktop ? (
@@ -424,5 +421,22 @@ export function KnowledgeForm({ initialValues, isNew, knowledge, onSubmit }: Kno
                 isSavingFromDialog={guard.isSavingFromDialog}
             />
         </>
+    );
+}
+
+// Scoped subscription: the `content` watch lives here, not in KnowledgeForm, so
+// only the header re-renders as the user types — the form body, layout, and
+// markdown editor stay still. Just enough reactivity to toggle the anonymize
+// button's disabled state.
+function KnowledgeFormHeader({ control, isAnonymizing, isSaving = false, ...rest }: KnowledgeFormHeaderProps) {
+    const content = useWatch({ control, name: 'content' });
+    const isAnonymizeDisabled = isAnonymizing || isSaving || !content?.trim();
+
+    return (
+        <KnowledgeHeader
+            {...rest}
+            isAnonymizeDisabled={isAnonymizeDisabled}
+            isAnonymizing={isAnonymizing}
+        />
     );
 }
