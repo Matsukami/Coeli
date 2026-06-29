@@ -73,9 +73,9 @@ export const MarkdownTable = Table.extend({
     },
 });
 
-// The `as never` bridges a transitive version skew: @tiptap/markdown's `marked` option is typed against
-// its own marked@17 while our direct dep is marked@18; the instance is runtime-compatible (corpus-verified).
+// `new Marked()` is a Marked instance, but the `marked` option is typed as the default singleton (which
+// carries extra statics like getDefaults); the cast bridges that structural gap.
 export const createMarkdownLayer = () => [
-    Markdown.configure({ marked: createFaithfulMarked() as never }),
+    Markdown.configure({ marked: createFaithfulMarked() as unknown as typeof import('marked').marked }),
     FaithfulMarkdownText,
 ];
