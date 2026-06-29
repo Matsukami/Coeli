@@ -34,8 +34,6 @@ import { createMarkdownExtensions } from './markdown-editor-extensions';
 
 export interface MarkdownEditorHandle {
     cycleToVariable: (variable: string) => boolean;
-    focus: () => void;
-    getEditor: () => Editor | null;
     insertAtCursor: (text: string) => void;
 }
 
@@ -195,8 +193,6 @@ function MarkdownEditor({
 
                 return true;
             },
-            focus: () => editor?.commands.focus(),
-            getEditor: () => editor,
             insertAtCursor: (text: string) => {
                 if (!editor) {
                     return;
@@ -204,8 +200,9 @@ function MarkdownEditor({
 
                 const { state, view } = editor;
 
-                view.dispatch(state.tr.insertText(text).scrollIntoView());
+                // Focus before scroll — PM won't scrollIntoView an unfocused view (same as cycleToVariable).
                 view.focus();
+                view.dispatch(state.tr.insertText(text).scrollIntoView());
             },
         }),
         [editor],
