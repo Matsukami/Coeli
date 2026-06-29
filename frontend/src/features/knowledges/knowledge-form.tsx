@@ -198,6 +198,7 @@ export function KnowledgeForm({ initialValues, isNew, knowledge, onSubmit }: Kno
     const { isDesktop } = useBreakpoint();
     const [isSaving, setIsSaving] = useState(false);
     const [isAnonymizing, setIsAnonymizing] = useState(false);
+    const [viewMode, setViewMode] = useState<'plain' | 'visual'>('visual');
     const [anonymizeMutation] = useMutation(AnonymizeTextDocument);
     const { authInfo } = useUser();
     const canAnonymize = authInfo?.privileges?.includes('anonymize.call') ?? false;
@@ -390,7 +391,9 @@ export function KnowledgeForm({ initialValues, isNew, knowledge, onSubmit }: Kno
                         knowledge={knowledge}
                         onAnonymize={handleAnonymize}
                         onBeforeNavigateAway={skipNextBlock}
+                        onToggleViewMode={() => setViewMode((m) => (m === 'visual' ? 'plain' : 'visual'))}
                         saveButton={saveButton}
+                        viewMode={viewMode}
                     />
                     {isDesktop ? (
                         <KnowledgeFormLayoutDesktop
@@ -398,6 +401,7 @@ export function KnowledgeForm({ initialValues, isNew, knowledge, onSubmit }: Kno
                             isNew={isNew}
                             isSaving={isSaving}
                             knowledge={knowledge}
+                            viewMode={viewMode}
                         />
                     ) : (
                         <KnowledgeFormLayoutMobile
@@ -405,6 +409,7 @@ export function KnowledgeForm({ initialValues, isNew, knowledge, onSubmit }: Kno
                             isNew={isNew}
                             isSaving={isSaving}
                             knowledge={knowledge}
+                            viewMode={viewMode}
                         />
                     )}
                 </form>

@@ -17,6 +17,7 @@ interface KnowledgeFormLayoutProps {
     isNew: boolean;
     isSaving: boolean;
     knowledge?: KnowledgeDocumentFragmentFragment | null;
+    viewMode?: 'plain' | 'visual';
 }
 
 interface KnowledgeIntroBlockProps {
@@ -24,7 +25,7 @@ interface KnowledgeIntroBlockProps {
     knowledge?: KnowledgeDocumentFragmentFragment | null;
 }
 
-export function KnowledgeFormLayoutDesktop({ control, isNew, isSaving, knowledge }: KnowledgeFormLayoutProps) {
+export function KnowledgeFormLayoutDesktop({ control, isNew, isSaving, knowledge, viewMode }: KnowledgeFormLayoutProps) {
     return (
         <div className="flex min-h-0 w-full max-w-full flex-1 overflow-hidden">
             <ResizablePanelGroup
@@ -63,6 +64,7 @@ export function KnowledgeFormLayoutDesktop({ control, isNew, isSaving, knowledge
                             control={control}
                             fillParent
                             isSaving={isSaving}
+                            viewMode={viewMode}
                         />
                     </div>
                 </ResizablePanel>
@@ -71,7 +73,7 @@ export function KnowledgeFormLayoutDesktop({ control, isNew, isSaving, knowledge
     );
 }
 
-export function KnowledgeFormLayoutMobile({ control, isNew, isSaving, knowledge }: KnowledgeFormLayoutProps) {
+export function KnowledgeFormLayoutMobile({ control, isNew, isSaving, knowledge, viewMode }: KnowledgeFormLayoutProps) {
     return (
         <div className="flex min-h-0 flex-1 flex-col gap-4 p-4">
             <KnowledgeIntroBlock
@@ -87,6 +89,7 @@ export function KnowledgeFormLayoutMobile({ control, isNew, isSaving, knowledge 
                 control={control}
                 isSaving={isSaving}
                 showLabel
+                viewMode={viewMode}
             />
         </div>
     );

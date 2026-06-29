@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 
-import { Ellipsis, HatGlasses, LibraryBig, Loader2, Pencil, Trash } from 'lucide-react';
+import { Code, Ellipsis, Eye, HatGlasses, LibraryBig, Loader2, Pencil, Trash } from 'lucide-react';
 import { useCallback, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -52,7 +52,9 @@ interface KnowledgeHeaderProps {
      */
     onAnonymize?: () => void;
     onBeforeNavigateAway?: () => void;
+    onToggleViewMode?: () => void;
     saveButton?: ReactNode;
+    viewMode?: 'plain' | 'visual';
 }
 
 const renderKnowledgeItem = (item: Knowledge, isCurrent: boolean): ReactNode => (
@@ -75,7 +77,9 @@ export function KnowledgeHeader({
     knowledge,
     onAnonymize,
     onBeforeNavigateAway,
+    onToggleViewMode,
     saveButton,
+    viewMode = 'visual',
 }: KnowledgeHeaderProps) {
     const navigate = useNavigate();
     const { isMobile } = useBreakpoint();
@@ -273,6 +277,16 @@ export function KnowledgeHeader({
                                             <Pencil className="size-3" />
                                             Rename
                                         </DropdownMenuItem>
+                                        {onToggleViewMode ? (
+                                            <DropdownMenuItem onClick={onToggleViewMode}>
+                                                {viewMode === 'plain' ? (
+                                                    <Eye className="size-4" />
+                                                ) : (
+                                                    <Code className="size-4" />
+                                                )}
+                                                {viewMode === 'plain' ? 'Visual editor' : 'Plain text'}
+                                            </DropdownMenuItem>
+                                        ) : null}
                                         <DropdownMenuSeparator />
                                         <DropdownMenuItem
                                             disabled={isDeleting}

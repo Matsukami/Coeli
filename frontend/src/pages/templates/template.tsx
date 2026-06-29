@@ -55,9 +55,8 @@ import { routes } from '@/lib/routes';
 import { cn } from '@/lib/utils';
 import { type Template, useTemplates } from '@/providers/templates-provider';
 
-// Dynamic-only import: a static CodeEditor import would merge its ~600KB CodeMirror chunk into this route bundle.
-const CodeEditor = lazy(() =>
-    import('@/components/shared/code-editor').then((module) => ({ default: module.CodeEditor })),
+const MarkdownEditor = lazy(() =>
+    import('@/components/shared/markdown-editor').then((module) => ({ default: module.MarkdownEditor })),
 );
 
 const formSchema = z.object({
@@ -268,7 +267,7 @@ function Template() {
     const [isRenaming, setIsRenaming] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-    const [viewMode, setViewMode] = useState<'code' | 'plain'>('plain');
+    const [viewMode, setViewMode] = useState<'code' | 'plain'>('code');
 
     const {
         handleDropdownCloseAutoFocus,
@@ -650,7 +649,7 @@ function Template() {
                                     </div>
                                 }
                             >
-                                <CodeEditor
+                                <MarkdownEditor
                                     className="min-h-0 flex-1"
                                     disabled={isSaving}
                                     onBlur={field.onBlur}

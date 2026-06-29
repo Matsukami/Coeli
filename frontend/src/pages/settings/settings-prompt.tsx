@@ -18,17 +18,7 @@ import {
     Wrench,
     XCircle,
 } from 'lucide-react';
-import {
-    type ComponentProps,
-    lazy,
-    type Ref,
-    Suspense,
-    useCallback,
-    useEffect,
-    useMemo,
-    useRef,
-    useState,
-} from 'react';
+import { type ComponentProps, lazy, type Ref, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import ReactDiffViewer from 'react-diff-viewer-continued';
 import {
     type Control,
@@ -52,7 +42,7 @@ import type {
 type AgentPrompt = AgentPrompts;
 type AgentPrompts = { human?: DefaultPrompt; system: DefaultPrompt };
 
-import type { ReactCodeMirrorRef } from '@/components/shared/code-editor';
+import type { MarkdownEditorHandle } from '@/components/shared/markdown-editor';
 
 import {
     AppHeader,
@@ -92,9 +82,9 @@ import { useBreakpoint } from '@/hooks/use-breakpoint';
 import { formatPromptId } from '@/lib/route-titles/format-prompt-id';
 import { cn } from '@/lib/utils';
 
-// Dynamic-only import: a static CodeEditor import would merge its ~600KB CodeMirror chunk into this route bundle.
-const CodeEditor = lazy(() =>
-    import('@/components/shared/code-editor').then((module) => ({ default: module.CodeEditor })),
+// Dynamic-only import: a static import would merge the tiptap editor chunk into this route bundle.
+const MarkdownEditor = lazy(() =>
+    import('@/components/shared/markdown-editor').then((module) => ({ default: module.MarkdownEditor })),
 );
 
 const systemFormSchema = z.object({
@@ -120,7 +110,7 @@ interface ControllerProps<T extends FieldValues> {
 }
 
 interface FormCodeItemProps<T extends FieldValues> extends ControllerProps<T> {
-    editorRef?: Ref<ReactCodeMirrorRef>;
+    editorRef?: Ref<MarkdownEditorHandle>;
     placeholder?: string;
 }
 
@@ -155,7 +145,7 @@ function FormCodeItem<T extends FieldValues>({
                         </div>
                     }
                 >
-                    <CodeEditor
+                    <MarkdownEditor
                         className="min-h-0 flex-1"
                         disabled={disabled}
                         onBlur={field.onBlur}
@@ -312,26 +302,15 @@ function SettingsPrompt() {
     const [validationResult, setValidationResult] = useState<null | ValidatePromptMutation['validatePrompt']>(null);
     const [validationDialogOpen, setValidationDialogOpen] = useState(false);
     const [isDiffDialogOpen, setIsDiffDialogOpen] = useState(false);
-    const [viewMode, setViewMode] = useState<'code' | 'plain'>('plain');
-    const editorRef = useRef<ReactCodeMirrorRef>(null);
+    const [viewMode, setViewMode] = useState<'code' | 'plain'>('code');
+    const editorRef = useRef<MarkdownEditorHandle>(null);
 
     const isLoading = isCreateLoading || isUpdateLoading || isDeleteLoading || isValidateLoading;
 
     const handleVariableClick = useCallback(
         (variable: string, field: { onChange: (value: string) => void; value: string }, formId: string) => {
             if (viewMode === 'code') {
-                const view = editorRef.current?.view;
-
-                if (view) {
-                    const insert = `{{.${variable}}}`;
-                    const position = view.state.selection.main.head;
-                    view.dispatch({
-                        changes: { from: position, insert },
-                        scrollIntoView: true,
-                        selection: { anchor: position + insert.length },
-                    });
-                    view.focus();
-                }
+                editorRef.current?.insertAtCursor(`{{.${variable}}}`);
 
                 return;
             }

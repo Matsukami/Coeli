@@ -1,10 +1,8 @@
 import type { Editor } from '@tiptap/react';
 
-import { Placeholder } from '@tiptap/extensions';
 import { history } from '@tiptap/pm/history';
 import { EditorState } from '@tiptap/pm/state';
 import { EditorContent, useEditor } from '@tiptap/react';
-import StarterKit from '@tiptap/starter-kit';
 import {
     Bold,
     Code,
@@ -12,26 +10,31 @@ import {
     Heading1,
     Heading2,
     Heading3,
+    ImagePlus,
     Italic,
     Link as LinkIcon,
     List,
     ListOrdered,
+    ListTodo,
     Minus,
     Quote,
     Redo,
     Strikethrough,
+    Table,
     Undo,
 } from 'lucide-react';
 import { type Ref, useCallback, useEffect, useImperativeHandle, useRef } from 'react';
-import { Markdown } from 'tiptap-markdown';
 
 import { Separator } from '@/components/ui/separator';
 import { Toggle } from '@/components/ui/toggle';
 import { cn } from '@/lib/utils';
 
+import { createMarkdownExtensions } from './markdown-editor-extensions';
+
 export interface MarkdownEditorHandle {
     focus: () => void;
     getEditor: () => Editor | null;
+    insertAtCursor: (text: string) => void;
 }
 
 export interface MarkdownEditorProps {
@@ -115,9 +118,9 @@ function MarkdownEditor({
     const onChangeRef = useRef(onChange);
     const onBlurRef = useRef(onBlur);
     // Tracks the last markdown the editor reported externally. We compare
-    // against this to suppress echo updates: tiptap-markdown can re-serialize
-    // content slightly differently than the input string (whitespace/list
-    // markers/hard breaks/etc.), and we don't want to flag those
+    // against this to suppress echo updates: the markdown round-trip can
+    // re-serialize content slightly differently than the input string
+    // (whitespace/list markers/blank lines/etc.), and we don't want to flag those
     // normalizations as user edits — that would falsely flip RHF's
     // `isDirty` flag.
     //
@@ -146,33 +149,13 @@ function MarkdownEditor({
 
     const editor = useEditor({
         content: value,
+        contentType: 'markdown',
         editable: !disabled,
-        extensions: [
-            StarterKit.configure({
-                codeBlock: { HTMLAttributes: { class: 'hljs' } },
-            }),
-            Placeholder.configure({
-                emptyEditorClass: 'is-editor-empty',
-                placeholder,
-            }),
-            Markdown.configure({
-                breaks: true,
-                html: false,
-                linkify: true,
-                tightLists: true,
-                transformCopiedText: true,
-                // Plain text pasted from the OS clipboard is left as-is.
-                // With `transformPastedText: true`, a leading "- " (or
-                // "1. ", "> ", etc.) would be parsed as markdown and
-                // turn the paste into a list/blockquote — almost never
-                // what the user wants for knowledge documents.
-                transformPastedText: false,
-            }),
-        ],
+        extensions: createMarkdownExtensions(placeholder),
         immediatelyRender: false,
         onBlur: () => onBlurRef.current?.(),
         onCreate: ({ editor: instance }) => {
-            lastEmittedRef.current = instance.storage.markdown.getMarkdown();
+            lastEmittedRef.current = instance.getMarkdown();
             isInitializedRef.current = true;
         },
         onUpdate: ({ editor: instance }) => {
@@ -180,7 +163,7 @@ function MarkdownEditor({
                 return;
             }
 
-            const next = instance.storage.markdown.getMarkdown();
+            const next = instance.getMarkdown();
 
             if (next === lastEmittedRef.current) {
                 return;
@@ -196,6 +179,16 @@ function MarkdownEditor({
         () => ({
             focus: () => editor?.commands.focus(),
             getEditor: () => editor,
+            insertAtCursor: (text: string) => {
+                if (!editor) {
+                    return;
+                }
+
+                const { state, view } = editor;
+
+                view.dispatch(state.tr.insertText(text).scrollIntoView());
+                view.focus();
+            },
         }),
         [editor],
     );
@@ -207,11 +200,17 @@ function MarkdownEditor({
             return;
         }
 
-        const current = editor.storage.markdown.getMarkdown();
+        const current = editor.getMarkdown();
         const shouldExternalSync = current !== value;
 
         if (shouldExternalSync) {
-            editor.commands.setContent(value, { emitUpdate: false });
+            // @tiptap/markdown only wires `contentType: 'markdown'` into the initial
+            // content + insertContent — NOT setContent — so parse the markdown explicitly.
+            const parsed = editor.markdown?.parse(value);
+
+            if (parsed) {
+                editor.commands.setContent(parsed, { emitUpdate: false });
+            }
         }
 
         // The editor's own serialized markdown is the canonical form —
@@ -219,7 +218,7 @@ function MarkdownEditor({
         // representation, not the (possibly non-normalized) input
         // `value`. Storing the raw `value` here would cause the first
         // user keystroke to also re-emit the round-trip normalization.
-        lastEmittedRef.current = editor.storage.markdown.getMarkdown();
+        lastEmittedRef.current = editor.getMarkdown();
 
         // Clear the undo stack:
         //   - on initial mount, to discard the construction-time
@@ -422,6 +421,15 @@ function MarkdownEditorToolbar({ disabled, editor }: MarkdownEditorToolbarProps)
             >
                 <ListOrdered />
             </Toggle>
+            <Toggle
+                aria-label="Task list"
+                onPressedChange={() => editor.chain().focus().toggleTaskList().run()}
+                pressed={editor.isActive('taskList')}
+                size="sm"
+                title="Task list"
+            >
+                <ListTodo />
+            </Toggle>
 
             <Separator
                 className="mx-1 h-5"
@@ -456,6 +464,21 @@ function MarkdownEditorToolbar({ disabled, editor }: MarkdownEditorToolbarProps)
                 <LinkIcon />
             </Toggle>
             <Toggle
+                aria-label="Insert image"
+                onPressedChange={() => {
+                    const url = window.prompt('Image URL');
+
+                    if (url) {
+                        editor.chain().focus().setImage({ src: url }).run();
+                    }
+                }}
+                pressed={false}
+                size="sm"
+                title="Insert image"
+            >
+                <ImagePlus />
+            </Toggle>
+            <Toggle
                 aria-label="Horizontal rule"
                 onPressedChange={() => editor.chain().focus().setHorizontalRule().run()}
                 pressed={false}
@@ -463,6 +486,17 @@ function MarkdownEditorToolbar({ disabled, editor }: MarkdownEditorToolbarProps)
                 title="Horizontal rule"
             >
                 <Minus />
+            </Toggle>
+            <Toggle
+                aria-label="Insert table"
+                onPressedChange={() =>
+                    editor.chain().focus().insertTable({ cols: 3, rows: 3, withHeaderRow: true }).run()
+                }
+                pressed={editor.isActive('table')}
+                size="sm"
+                title="Insert table"
+            >
+                <Table />
             </Toggle>
 
             <div className="ml-auto flex items-center gap-0.5">
