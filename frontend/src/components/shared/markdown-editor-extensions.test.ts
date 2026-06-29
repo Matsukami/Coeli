@@ -1,6 +1,7 @@
 import { Editor } from '@tiptap/core';
 import { beforeAll, describe, expect, it } from 'vitest';
 
+import { findVariableOccurrences } from './editor-variable-highlight';
 import { createMarkdownExtensions } from './markdown-editor-extensions';
 
 beforeAll(() => {
@@ -123,5 +124,38 @@ describe('KNOWN UPSTREAM BUG — ordered > bullet > code drops the code block', 
         const out = roundTrip('1. lvl1\n   - lvl2\n\n     ```\n     deepcode\n     ```');
 
         expect(out).not.toContain('deepcode');
+    });
+});
+
+describe('findVariableOccurrences — doc spans for the Available-variables cycle', () => {
+    const docOf = (md: string) => {
+        const editor = new Editor({ content: md, contentType: 'markdown', extensions: createMarkdownExtensions() });
+        const { doc } = editor.state;
+        editor.destroy();
+
+        return doc;
+    };
+
+    it('locates every {{.Var}} and each span maps to the literal token', () => {
+        const doc = docOf('Use {{.Foo}} then {{.Foo}} and {{.Bar}}.');
+        const foo = findVariableOccurrences(doc, 'Foo');
+
+        expect(foo).toHaveLength(2);
+
+        for (const hit of foo) {
+            expect(doc.textBetween(hit.from, hit.to)).toBe('{{.Foo}}');
+        }
+
+        expect(findVariableOccurrences(doc, 'Bar')).toHaveLength(1);
+    });
+
+    it('returns none for an unused variable (caller then inserts instead of cycling)', () => {
+        expect(findVariableOccurrences(docOf('Use {{.Foo}} only.'), 'Missing')).toHaveLength(0);
+    });
+
+    it('matches inside control-flow actions but honors word boundaries', () => {
+        const doc = docOf('{{if .Enabled}}on{{end}} but not {{.EnabledExtra}}');
+
+        expect(findVariableOccurrences(doc, 'Enabled')).toHaveLength(1);
     });
 });

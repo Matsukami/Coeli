@@ -261,14 +261,12 @@ interface VariablesPanelContainerProps {
     control: Control<HumanFormData> | Control<SystemFormData>;
     onVariableClick: (variable: string) => void;
     variables: string[];
-    viewMode: 'code' | 'plain';
 }
 
 interface VariablesProps {
     currentTemplate: string;
     onVariableClick: (variable: string) => void;
     variables: string[];
-    viewMode: 'code' | 'plain';
 }
 
 // Don't hoist this useWatch to the parent — it would re-subscribe the whole page per keystroke.
@@ -310,7 +308,9 @@ function SettingsPrompt() {
     const handleVariableClick = useCallback(
         (variable: string, field: { onChange: (value: string) => void; value: string }, formId: string) => {
             if (viewMode === 'code') {
-                editorRef.current?.insertAtCursor(`{{.${variable}}}`);
+                if (!editorRef.current?.cycleToVariable(variable)) {
+                    editorRef.current?.insertAtCursor(`{{.${variable}}}`);
+                }
 
                 return;
             }
@@ -981,7 +981,6 @@ function SettingsPrompt() {
             control={activeControl}
             onVariableClick={handleVariableClickCallback}
             variables={variablesData.variables}
-            viewMode={viewMode}
         />
     ) : null;
 
@@ -1202,7 +1201,7 @@ function SettingsPrompt() {
     );
 }
 
-function Variables({ currentTemplate, onVariableClick, variables, viewMode }: VariablesProps) {
+function Variables({ currentTemplate, onVariableClick, variables }: VariablesProps) {
     const counts = useMemo(() => countVariableUses(currentTemplate, variables), [currentTemplate, variables]);
 
     if (variables.length === 0) {
@@ -1214,22 +1213,16 @@ function Variables({ currentTemplate, onVariableClick, variables, viewMode }: Va
             <div className="border-b px-4 py-3">
                 <h4 className="text-sm font-medium">Available variables</h4>
                 <p className="text-muted-foreground mt-1 text-xs">
-                    {viewMode === 'code'
-                        ? 'Click a variable to insert it into the editor.'
-                        : 'Click to insert at the cursor, or cycle through existing uses.'}
+                    Click to insert at the cursor, or cycle through existing uses.
                 </p>
             </div>
             <div className="bg-background flex flex-wrap gap-1.5 px-4 py-3">
                 {variables.map((variable) => {
                     const count = counts[variable] ?? 0;
-                    // Plain-view only: a code-view click just inserts, so don't imply go-to-occurrence.
-                    const isUsed = viewMode === 'plain' && count > 0;
-                    const action =
-                        viewMode === 'code'
-                            ? `Insert {{.${variable}}} into the editor`
-                            : isUsed
-                              ? `Go to next {{.${variable}}} in the template${count > 1 ? ` (${count} uses)` : ''}`
-                              : `Insert {{.${variable}}} at the cursor`;
+                    const isUsed = count > 0;
+                    const action = isUsed
+                        ? `Go to next {{.${variable}}} in the template${count > 1 ? ` (${count} uses)` : ''}`
+                        : `Insert {{.${variable}}} at the cursor`;
 
                     return (
                         <Badge
@@ -1262,7 +1255,7 @@ function Variables({ currentTemplate, onVariableClick, variables, viewMode }: Va
 }
 
 // Don't hoist this useWatch to the parent — it would re-subscribe the whole page per keystroke.
-function VariablesPanelContainer({ control, onVariableClick, variables, viewMode }: VariablesPanelContainerProps) {
+function VariablesPanelContainer({ control, onVariableClick, variables }: VariablesPanelContainerProps) {
     const currentTemplate = useWatch({ control, name: 'template' });
 
     return (
@@ -1270,7 +1263,6 @@ function VariablesPanelContainer({ control, onVariableClick, variables, viewMode
             currentTemplate={currentTemplate}
             onVariableClick={onVariableClick}
             variables={variables}
-            viewMode={viewMode}
         />
     );
 }

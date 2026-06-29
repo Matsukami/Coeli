@@ -1,7 +1,7 @@
 import type { Editor } from '@tiptap/react';
 
 import { history } from '@tiptap/pm/history';
-import { EditorState } from '@tiptap/pm/state';
+import { EditorState, TextSelection } from '@tiptap/pm/state';
 import { EditorContent, useEditor } from '@tiptap/react';
 import {
     Bold,
@@ -29,9 +29,11 @@ import { Separator } from '@/components/ui/separator';
 import { Toggle } from '@/components/ui/toggle';
 import { cn } from '@/lib/utils';
 
+import { findVariableOccurrences } from './editor-variable-highlight';
 import { createMarkdownExtensions } from './markdown-editor-extensions';
 
 export interface MarkdownEditorHandle {
+    cycleToVariable: (variable: string) => boolean;
     focus: () => void;
     getEditor: () => Editor | null;
     insertAtCursor: (text: string) => void;
@@ -162,6 +164,37 @@ function MarkdownEditor({
     useImperativeHandle(
         ref,
         () => ({
+            cycleToVariable: (variable: string) => {
+                if (!editor) {
+                    return false;
+                }
+
+                const { state, view } = editor;
+                const hits = findVariableOccurrences(state.doc, variable);
+
+                if (hits.length === 0) {
+                    return false;
+                }
+
+                const { from, to } = state.selection;
+                const currentIndex = hits.findIndex((hit) => hit.from === from && hit.to === to);
+                const target =
+                    currentIndex >= 0
+                        ? hits[(currentIndex + 1) % hits.length]
+                        : (hits.find((hit) => hit.from >= from) ?? hits[0]);
+
+                if (!target) {
+                    return false;
+                }
+
+                // Focus first: ProseMirror won't scrollIntoView an unfocused editor (first post-load click would no-op).
+                view.focus();
+                view.dispatch(
+                    state.tr.setSelection(TextSelection.create(state.doc, target.from, target.to)).scrollIntoView(),
+                );
+
+                return true;
+            },
             focus: () => editor?.commands.focus(),
             getEditor: () => editor,
             insertAtCursor: (text: string) => {
@@ -182,6 +215,13 @@ function MarkdownEditor({
     // the editor already reflects the same markdown to keep cursor stable.
     useEffect(() => {
         if (!editor) {
+            return;
+        }
+
+        // Skip when `value` is just our own echoed onUpdate output — the editor already reflects it, so the
+        // getMarkdown re-serialization below would no-op. Mount (hasResetInitialHistoryRef) and real external
+        // changes (form.reset, where value ≠ lastEmittedRef) still fall through and sync.
+        if (hasResetInitialHistoryRef.current && value === lastEmittedRef.current) {
             return;
         }
 

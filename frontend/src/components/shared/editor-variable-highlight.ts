@@ -34,6 +34,26 @@ const buildDecorations = (doc: PMNode): DecorationSet => {
     return DecorationSet.create(doc, decorations);
 };
 
+// Regex mirrors settings-prompt.tsx countVariableUses so the panel's "used" badge and this cycle agree.
+export const findVariableOccurrences = (doc: PMNode, variable: string): { from: number; to: number }[] => {
+    const pattern = new RegExp(`\\{\\{[^{}]*?\\.${variable}\\b[^{}]*?\\}\\}`, 'g');
+    const occurrences: { from: number; to: number }[] = [];
+
+    doc.descendants((node, pos) => {
+        if (!node.isText || !node.text) {
+            return;
+        }
+
+        for (const match of node.text.matchAll(pattern)) {
+            const from = pos + (match.index ?? 0);
+
+            occurrences.push({ from, to: from + match[0].length });
+        }
+    });
+
+    return occurrences;
+};
+
 export const VariableHighlight = Extension.create({
     addProseMirrorPlugins() {
         return [
