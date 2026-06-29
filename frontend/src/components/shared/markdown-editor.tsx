@@ -49,20 +49,14 @@ export interface MarkdownEditorProps {
     value: string;
 }
 
-// Replaces the editor's ProseMirror history plugin with a fresh instance,
-// effectively clearing the undo/redo stack. We call this on initial mount
-// (to discard the construction-time transactions from extensions like
-// `trailingNode`) and after every external content sync (`setContent`
-// itself is a transaction that lands in history). Crucially, we MUST NOT
-// call this on every value change — user edits also propagate through
-// `value`, and wiping then would break Ctrl+Z.
+// Clears the undo/redo stack by swapping the history plugin for a fresh instance. MUST NOT run on user
+// edits (value changes carry user input too) — that would wipe the user's own Ctrl+Z history.
 const resetUndoHistory = (editor: Editor): void => {
     const { state, view } = editor;
-    const historyIndex = state.plugins.findIndex((plugin) => {
-        const pluginKey = plugin.spec.key as undefined | { key?: string };
-
-        return pluginKey?.key?.startsWith('history$') ?? false;
-    });
+    // A fresh history() shares prosemirror-history's module-level singleton PluginKey, so match the
+    // existing plugin by key identity rather than sniffing the stringified key name.
+    const replacement = history();
+    const historyIndex = state.plugins.findIndex((plugin) => plugin.spec.key === replacement.spec.key);
 
     if (historyIndex < 0) {
         return;
@@ -70,16 +64,11 @@ const resetUndoHistory = (editor: Editor): void => {
 
     const plugins = [...state.plugins];
 
-    plugins[historyIndex] = history();
+    plugins[historyIndex] = replacement;
 
-    // We MUST create a fresh `EditorState` rather than calling
-    // `state.reconfigure({ plugins })`. PM's `history()` factory uses a
-    // module-level singleton `PluginKey`, so every invocation returns a
-    // plugin keyed `history$`. `reconfigure` sees the same key in the old
-    // and new plugin arrays, decides "same plugin", and KEEPS the old
-    // state — meaning the undo stack stays populated even after our swap.
-    // `EditorState.create` has no prior state to carry over and initializes
-    // every plugin from scratch, which is exactly what we want here.
+    // Rebuild via `EditorState.create`, NOT `state.reconfigure({ plugins })`: reconfigure sees the shared
+    // history key in both plugin arrays, treats it as the same plugin, and KEEPS the old undo state — so
+    // the stack would stay populated despite the swap. EditorState.create initializes every plugin fresh.
     const newState = EditorState.create({
         doc: state.doc,
         plugins,
@@ -123,10 +112,6 @@ function MarkdownEditor({
     // (whitespace/list markers/blank lines/etc.), and we don't want to flag those
     // normalizations as user edits — that would falsely flip RHF's
     // `isDirty` flag.
-    //
-    // The baseline is the editor's own serialized markdown, NOT the raw
-    // input `value`. Comparing user edits against the canonical
-    // (post-normalization) form is what makes the comparison correct.
     const lastEmittedRef = useRef<string>(value);
 
     // Tiptap dispatches transactions for the initial content during view
@@ -213,11 +198,8 @@ function MarkdownEditor({
             }
         }
 
-        // The editor's own serialized markdown is the canonical form —
-        // subsequent user edits will be compared against this
-        // representation, not the (possibly non-normalized) input
-        // `value`. Storing the raw `value` here would cause the first
-        // user keystroke to also re-emit the round-trip normalization.
+        // Seed with the editor's serialized markdown, not the raw `value` — else the first user keystroke
+        // would re-emit the round-trip normalization as if it were an edit.
         lastEmittedRef.current = editor.getMarkdown();
 
         // Clear the undo stack:
@@ -256,10 +238,6 @@ function MarkdownEditor({
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [editor]);
 
-    // While tiptap is initializing (`useEditor` returns `null` on the
-    // first render with `immediatelyRender: false`), render a placeholder
-    // with the same outer classes so the bounding box is already correct
-    // and the parent layout doesn't jump when the editor mounts.
     if (!editor) {
         return (
             <div

@@ -69,11 +69,10 @@ export const MarkdownTable = Table.extend({
             renderChildren: (nodes, separator) => helpers.renderChildren(nodes, separator).replace(/\|/g, '\\|'),
         };
 
-        return renderTableToMarkdown(node, pipeEscaping as never);
+        return renderTableToMarkdown(node, pipeEscaping as Parameters<typeof renderTableToMarkdown>[1]);
     },
 });
 
-// The official Markdown extension wired with our faithful `marked`, plus the serialize-side retune.
 // The `as never` bridges a transitive version skew: @tiptap/markdown's `marked` option is typed against
 // its own marked@17 while our direct dep is marked@18; the instance is runtime-compatible (corpus-verified).
 export const createMarkdownLayer = () => [
