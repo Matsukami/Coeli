@@ -24,8 +24,12 @@ const createFaithfulMarked = () => {
 // ``` ` * _ [ ] ~ ``` — both corrupt our content (tags become entities, `[1-1000]`/`*.php`/`snake_case`
 // gain stray backslashes). Text serialization is hard-coded in the manager (no per-extension hook), so we
 // retune that one method: drop the entity-encoding entirely, and backslash-escape only the chars that
-// would otherwise re-parse as inline syntax (`` ` ``, `~`, `\`).
-const faithfulEscape = (text: string): string => text.replace(/([\\`~])/g, '\\$1');
+// would otherwise re-parse as inline syntax: `` ` `` and `\` always, and `~` only when doubled — a lone
+// `~` is literal in GFM, so escaping it would inject a stray `\` into prose like `~10%`.
+const faithfulEscape = (text: string): string =>
+    text.replace(/[\\`]|~+/g, (match) =>
+        match[0] === '~' ? (match.length > 1 ? match.replace(/~/g, '\\~') : match) : `\\${match}`,
+    );
 
 type ManagerWithEncode = {
     codeTypes: Set<string>;

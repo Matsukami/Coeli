@@ -63,6 +63,19 @@ describe('selective escape — no stray backslashes on literal punctuation', () 
     );
 });
 
+describe('lone tilde stays literal — no stray backslash injected (M1)', () => {
+    it.each(['~10% for environment setup', 'approximately ~5 minutes', 'a ~ b ~ c'])(
+        'keeps %s byte-identical',
+        (s) => {
+            expect(roundTrip(s)).toBe(s);
+        },
+    );
+
+    it('still round-trips ~~strikethrough~~ (double tilde unaffected)', () => {
+        expect(roundTrip('use ~~deprecated~~ here')).toContain('~~deprecated~~');
+    });
+});
+
 describe('inline marks round-trip', () => {
     it.each(['**bold**', '*italic*', '`code span`', '~~strike~~', '[a link](https://example.com)', '**bold `code` end**'])(
         'preserves %s',
