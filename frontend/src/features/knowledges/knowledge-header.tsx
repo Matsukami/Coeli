@@ -214,7 +214,7 @@ export function KnowledgeHeader({
                         />
                     )}
                     {saveButton}
-                    {(canShowActions || (isMobile && canAnonymize)) && (
+                    {(canShowActions || (isMobile && canAnonymize) || !!onToggleViewMode) && (
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <Button
@@ -249,7 +249,7 @@ export function KnowledgeHeader({
                                                 </>
                                             )}
                                         </DropdownMenuItem>
-                                        {canShowActions && <DropdownMenuSeparator />}
+                                        {(canShowActions || onToggleViewMode) && <DropdownMenuSeparator />}
                                     </>
                                 )}
                                 {isMobile && knowledgeNav.total > 0 && (
@@ -271,22 +271,23 @@ export function KnowledgeHeader({
                                         <DropdownMenuSeparator />
                                     </>
                                 )}
+                                {onToggleViewMode ? (
+                                    <DropdownMenuItem onClick={onToggleViewMode}>
+                                        {viewMode === 'plain' ? (
+                                            <Eye className="size-4" />
+                                        ) : (
+                                            <Code className="size-4" />
+                                        )}
+                                        {viewMode === 'plain' ? 'Visual editor' : 'Plain text'}
+                                    </DropdownMenuItem>
+                                ) : null}
                                 {canShowActions && (
                                     <>
+                                        {onToggleViewMode ? <DropdownMenuSeparator /> : null}
                                         <DropdownMenuItem onClick={handleRenameStart}>
                                             <Pencil className="size-3" />
                                             Rename
                                         </DropdownMenuItem>
-                                        {onToggleViewMode ? (
-                                            <DropdownMenuItem onClick={onToggleViewMode}>
-                                                {viewMode === 'plain' ? (
-                                                    <Eye className="size-4" />
-                                                ) : (
-                                                    <Code className="size-4" />
-                                                )}
-                                                {viewMode === 'plain' ? 'Visual editor' : 'Plain text'}
-                                            </DropdownMenuItem>
-                                        ) : null}
                                         <DropdownMenuSeparator />
                                         <DropdownMenuItem
                                             disabled={isDeleting}
