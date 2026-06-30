@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
 import { TAG_RE } from './editor-tag-highlight';
-import { VARIABLE_RE } from './editor-variable-highlight';
+import { findVariableUseRanges, VARIABLE_RE, variableProbe } from './editor-variable-highlight';
 
-// Decorations highlight per text node via `node.text.matchAll(RE)`; assert the RE itself matches the
-// right spans and — critically — does NOT false-positive on prose that merely contains < or {{.
+// Assert the highlight regexes match the right spans and — critically — do NOT false-positive on prose
+// that merely contains < or {{.
 const matches = (re: RegExp, text: string) => [...text.matchAll(re)].map((m) => m[0]);
 
 describe('VARIABLE_RE — {{ go-template actions }}', () => {
@@ -53,5 +53,30 @@ describe('TAG_RE — <xml-like tags>', () => {
 
     it('documented false-positive: a single-letter <b> in prose is highlighted (harmless, view-only)', () => {
         expect(matches(TAG_RE, 'if a<b> then')).toEqual(['<b>']);
+    });
+});
+
+describe('findVariableUseRanges — block-first {{ … .Var … }} ranges (ReDoS-safe)', () => {
+    it('returns each use as {index, length}', () => {
+        expect(findVariableUseRanges('a {{.Foo}} b {{ .Foo | upper }} c {{.Bar}}', 'Foo')).toEqual([
+            { index: 2, length: 8 },
+            { index: 13, length: 18 },
+        ]);
+    });
+
+    it('stays linear on an unclosed {{ with many anchors (the old lazy regex froze here)', () => {
+        const pathological = `{{ ${' .Foo'.repeat(20000)}`;
+        const start = performance.now();
+        const ranges = findVariableUseRanges(pathological, 'Foo');
+
+        expect(performance.now() - start).toBeLessThan(200);
+        expect(ranges).toEqual([]);
+    });
+});
+
+describe('variableProbe — escapes the interpolated name', () => {
+    it('treats a dot in the name as literal, not any-char', () => {
+        expect(variableProbe('Foo').test('.Foo')).toBe(true);
+        expect(variableProbe('F.o').test('.Fxo')).toBe(false);
     });
 });

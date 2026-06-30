@@ -2,6 +2,7 @@ import type { Node as PMNode } from '@tiptap/pm/model';
 
 export interface InlineMatch {
     from: number;
+    text: string;
     to: number;
 }
 
@@ -41,7 +42,7 @@ export const collectInlineMatches = (doc: PMNode, regex: RegExp): InlineMatch[] 
             const last = positions[start + match[0].length - 1];
 
             if (from !== undefined && last !== undefined) {
-                matches.push({ from, to: last + 1 });
+                matches.push({ from, text: match[0], to: last + 1 });
             }
         }
 

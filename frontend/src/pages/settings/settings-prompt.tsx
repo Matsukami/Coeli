@@ -52,7 +52,7 @@ import {
     AppHeaderTitle,
 } from '@/components/layouts/app/app-header';
 import ConfirmationDialog from '@/components/shared/confirmation-dialog';
-import { VARIABLE_RE, variableUseRegex } from '@/components/shared/editor-variable-highlight';
+import { findVariableUseRanges, VARIABLE_RE, variableProbe } from '@/components/shared/editor-variable-highlight';
 import { UnsavedChangesDialog, useUnsavedChangesGuard } from '@/components/shared/unsaved-changes';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -126,7 +126,7 @@ type SystemFormData = z.infer<typeof systemFormSchema>;
 // One pass over the `{{ … }}` blocks — the naive per-variable `.match` over the whole template is
 // O(variables × length) on every keystroke.
 function countVariableUses(template: string, variables: string[]): Record<string, number> {
-    const probes = variables.map((variable) => [variable, new RegExp(`\\.${variable}\\b`)] as const);
+    const probes = variables.map((variable) => [variable, variableProbe(variable)] as const);
     const counts: Record<string, number> = {};
 
     for (const block of template.match(VARIABLE_RE) ?? []) {
@@ -317,12 +317,12 @@ function SettingsPrompt() {
             if (textarea) {
                 const currentValue = field.value || '';
                 const variablePattern = `{{.${variable}}}`;
-                const matches = [...currentValue.matchAll(variableUseRegex(variable))];
+                const matches = findVariableUseRanges(currentValue, variable);
 
                 if (matches.length > 0) {
                     const { selectionEnd, selectionStart } = textarea;
                     const currentIndex = matches.findIndex(
-                        (match) => match.index === selectionStart && match.index + match[0].length === selectionEnd,
+                        (match) => match.index === selectionStart && match.index + match.length === selectionEnd,
                     );
                     const target =
                         currentIndex >= 0
@@ -332,7 +332,7 @@ function SettingsPrompt() {
                     if (target) {
                         const matchStart = target.index;
                         textarea.focus();
-                        textarea.setSelectionRange(matchStart, matchStart + target[0].length);
+                        textarea.setSelectionRange(matchStart, matchStart + target.length);
                         textarea.scrollTop = Math.max(
                             0,
                             caretOffsetTop(textarea, matchStart) - textarea.clientHeight / 2,
