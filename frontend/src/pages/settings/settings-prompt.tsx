@@ -18,7 +18,17 @@ import {
     Wrench,
     XCircle,
 } from 'lucide-react';
-import { type ComponentProps, lazy, type Ref, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+    type ComponentProps,
+    lazy,
+    type Ref,
+    Suspense,
+    useCallback,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+} from 'react';
 import ReactDiffViewer from 'react-diff-viewer-continued';
 import {
     type Control,
@@ -139,6 +149,86 @@ function countVariableUses(template: string, variables: string[]): Record<string
 
     return counts;
 }
+
+// ReactDiffViewer styles aligned with shadcn — Tailwind CSS vars rather than hard-coded colors.
+const diffStyles = {
+    content: {
+        fontFamily:
+            'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
+        fontSize: '0.875rem',
+        width: '50%',
+    },
+    diffContainer: {
+        border: '1px solid var(--border)',
+        borderRadius: '0.5rem',
+    },
+    gutter: {
+        borderRight: '1px solid var(--border)',
+    },
+    line: {
+        borderBottom: '1px solid oklch(from var(--border) l c h / 0.50)',
+    },
+    lineNumber: {
+        color: 'var(--muted-foreground)',
+    },
+    splitView: {
+        gap: '0',
+    },
+    variables: {
+        dark: {
+            addedBackground: 'hsl(142 70% 45% / 0.50)',
+            addedColor: 'var(--foreground)',
+            addedGutterBackground: 'hsl(142 70% 45% / 0.40)',
+            addedGutterColor: 'var(--muted-foreground)',
+            codeFoldBackground: 'var(--muted)',
+            codeFoldContentColor: 'var(--muted-foreground)',
+            codeFoldGutterBackground: 'var(--muted)',
+            diffViewerBackground: 'var(--background)',
+            diffViewerColor: 'var(--foreground)',
+            diffViewerTitleBackground: 'var(--card)',
+            diffViewerTitleBorderColor: 'var(--border)',
+            diffViewerTitleColor: 'var(--card-foreground)',
+            emptyLineBackground: 'var(--background)',
+            gutterBackground: 'var(--muted)',
+            gutterBackgroundDark: 'var(--muted)',
+            gutterColor: 'var(--muted-foreground)',
+            highlightBackground: 'oklch(from var(--primary) l c h / 0.20)',
+            highlightGutterBackground: 'oklch(from var(--primary) l c h / 0.30)',
+            removedBackground: 'oklch(from var(--destructive) l c h / 0.50)',
+            removedColor: 'var(--foreground)',
+            removedGutterBackground: 'oklch(from var(--destructive) l c h / 0.40)',
+            removedGutterColor: 'var(--muted-foreground)',
+            wordAddedBackground: 'hsl(142 70% 45% / 0.70)',
+            wordRemovedBackground: 'oklch(from var(--destructive) l c h / 0.70)',
+        },
+        light: {
+            addedBackground: 'hsl(142 70% 45% / 0.50)',
+            addedColor: 'var(--foreground)',
+            addedGutterBackground: 'hsl(142 70% 45% / 0.40)',
+            addedGutterColor: 'var(--muted-foreground)',
+            codeFoldBackground: 'var(--muted)',
+            codeFoldContentColor: 'var(--muted-foreground)',
+            codeFoldGutterBackground: 'var(--muted)',
+            diffViewerBackground: 'var(--background)',
+            diffViewerColor: 'var(--foreground)',
+            diffViewerTitleBackground: 'var(--card)',
+            diffViewerTitleBorderColor: 'var(--border)',
+            diffViewerTitleColor: 'var(--card-foreground)',
+            emptyLineBackground: 'var(--background)',
+            gutterBackground: 'var(--muted)',
+            gutterBackgroundDark: 'var(--muted)',
+            gutterColor: 'var(--muted-foreground)',
+            highlightBackground: 'oklch(from var(--primary) l c h / 0.20)',
+            highlightGutterBackground: 'oklch(from var(--primary) l c h / 0.30)',
+            removedBackground: 'oklch(from var(--destructive) l c h / 0.50)',
+            removedColor: 'var(--foreground)',
+            removedGutterBackground: 'oklch(from var(--destructive) l c h / 0.40)',
+            removedGutterColor: 'var(--muted-foreground)',
+            wordAddedBackground: 'hsl(142 70% 45% / 0.70)',
+            wordRemovedBackground: 'oklch(from var(--destructive) l c h / 0.70)',
+        },
+    },
+} satisfies ComponentProps<typeof ReactDiffViewer>['styles'];
 
 function FormCodeItem<T extends FieldValues>({
     control,
@@ -844,86 +934,6 @@ function SettingsPrompt() {
     }
 
     const defaultTemplate = activeTab === 'system' ? promptInfo.defaultSystemTemplate : promptInfo.defaultHumanTemplate;
-
-    // ReactDiffViewer styles aligned with shadcn — uses Tailwind CSS vars rather than hard-coded colors.
-    const diffStyles = {
-        content: {
-            fontFamily:
-                'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
-            fontSize: '0.875rem',
-            width: '50%',
-        },
-        diffContainer: {
-            border: '1px solid var(--border)',
-            borderRadius: '0.5rem',
-        },
-        gutter: {
-            borderRight: '1px solid var(--border)',
-        },
-        line: {
-            borderBottom: '1px solid oklch(from var(--border) l c h / 0.50)',
-        },
-        lineNumber: {
-            color: 'var(--muted-foreground)',
-        },
-        splitView: {
-            gap: '0',
-        },
-        variables: {
-            dark: {
-                addedBackground: 'hsl(142 70% 45% / 0.50)',
-                addedColor: 'var(--foreground)',
-                addedGutterBackground: 'hsl(142 70% 45% / 0.40)',
-                addedGutterColor: 'var(--muted-foreground)',
-                codeFoldBackground: 'var(--muted)',
-                codeFoldContentColor: 'var(--muted-foreground)',
-                codeFoldGutterBackground: 'var(--muted)',
-                diffViewerBackground: 'var(--background)',
-                diffViewerColor: 'var(--foreground)',
-                diffViewerTitleBackground: 'var(--card)',
-                diffViewerTitleBorderColor: 'var(--border)',
-                diffViewerTitleColor: 'var(--card-foreground)',
-                emptyLineBackground: 'var(--background)',
-                gutterBackground: 'var(--muted)',
-                gutterBackgroundDark: 'var(--muted)',
-                gutterColor: 'var(--muted-foreground)',
-                highlightBackground: 'oklch(from var(--primary) l c h / 0.20)',
-                highlightGutterBackground: 'oklch(from var(--primary) l c h / 0.30)',
-                removedBackground: 'oklch(from var(--destructive) l c h / 0.50)',
-                removedColor: 'var(--foreground)',
-                removedGutterBackground: 'oklch(from var(--destructive) l c h / 0.40)',
-                removedGutterColor: 'var(--muted-foreground)',
-                wordAddedBackground: 'hsl(142 70% 45% / 0.70)',
-                wordRemovedBackground: 'oklch(from var(--destructive) l c h / 0.70)',
-            },
-            light: {
-                addedBackground: 'hsl(142 70% 45% / 0.50)',
-                addedColor: 'var(--foreground)',
-                addedGutterBackground: 'hsl(142 70% 45% / 0.40)',
-                addedGutterColor: 'var(--muted-foreground)',
-                codeFoldBackground: 'var(--muted)',
-                codeFoldContentColor: 'var(--muted-foreground)',
-                codeFoldGutterBackground: 'var(--muted)',
-                diffViewerBackground: 'var(--background)',
-                diffViewerColor: 'var(--foreground)',
-                diffViewerTitleBackground: 'var(--card)',
-                diffViewerTitleBorderColor: 'var(--border)',
-                diffViewerTitleColor: 'var(--card-foreground)',
-                emptyLineBackground: 'var(--background)',
-                gutterBackground: 'var(--muted)',
-                gutterBackgroundDark: 'var(--muted)',
-                gutterColor: 'var(--muted-foreground)',
-                highlightBackground: 'oklch(from var(--primary) l c h / 0.20)',
-                highlightGutterBackground: 'oklch(from var(--primary) l c h / 0.30)',
-                removedBackground: 'oklch(from var(--destructive) l c h / 0.50)',
-                removedColor: 'var(--foreground)',
-                removedGutterBackground: 'oklch(from var(--destructive) l c h / 0.40)',
-                removedGutterColor: 'var(--muted-foreground)',
-                wordAddedBackground: 'hsl(142 70% 45% / 0.70)',
-                wordRemovedBackground: 'oklch(from var(--destructive) l c h / 0.70)',
-            },
-        },
-    };
 
     const promptMeta = (
         <>
