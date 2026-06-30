@@ -173,4 +173,19 @@ describe('findVariableOccurrences — doc spans for the Available-variables cycl
             expect(doc.textBetween(hit.from, hit.to)).toBe('{{.Foo}}');
         }
     });
+
+    it('spans the full token when a hard break sits inside it (non-text-node off-by-N)', () => {
+        const doc = docOf('{{.Foo\\\n}}');
+
+        // sanity — the hard break really is inside the token (text, hardBreak, text)
+        expect(doc.firstChild?.childCount ?? 0).toBeGreaterThan(1);
+
+        const foo = findVariableOccurrences(doc, 'Foo');
+
+        expect(foo).toHaveLength(1);
+
+        for (const hit of foo) {
+            expect(doc.textBetween(hit.from, hit.to)).toBe('{{.Foo}}');
+        }
+    });
 });
