@@ -119,9 +119,6 @@ export const documentToFormValues = (k: KnowledgeDocumentFragmentFragment): Form
     question: k.question,
 });
 
-// react-hook-form's `dirtyFields` is a partial map of the same shape as
-// `FormValues`, with `true` for fields the user actually changed compared to
-// `defaultValues`. We project it onto the (flat) FormValues keys here.
 export type DirtyFlags = Partial<Record<keyof FormValues, boolean>>;
 
 // CREATE: send all required fields and only non-empty optional fields. There
@@ -142,10 +139,8 @@ export const formValuesToCreateInput = (values: FormValues): CreateKnowledgeDocu
 // every other field is gated by `dirty`. This way:
 //   - untouched fields stay `undefined` and the backend keeps the existing value;
 //   - cleared fields go out as `""` so the backend wipes them;
-//   - subtype-related fields cleared by `setValue` on docType change are
-//     marked dirty by the form, so they reach the backend with the right
-//     "clear me" value (the backend additionally wipes mismatching subtypes
-//     itself, but we mirror the user-visible state explicitly).
+//   - subtype-related fields cleared by `setValue` on docType change are marked
+//     dirty by the form, so they reach the backend with the right "clear me" value.
 export const formValuesToUpdateInput = (values: FormValues, dirty: DirtyFlags): UpdateKnowledgeDocumentInput => {
     const input: UpdateKnowledgeDocumentInput = { content: values.content };
 

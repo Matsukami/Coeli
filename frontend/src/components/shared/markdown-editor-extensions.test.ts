@@ -12,8 +12,6 @@ beforeAll(() => {
         ({ item: () => null, length: 0, [Symbol.iterator]: [][Symbol.iterator] }) as unknown as DOMRectList;
 });
 
-// Runs the EXACT production extension set (createMarkdownExtensions) through the official
-// @tiptap/markdown round-trip: markdown string -> marked parse -> ProseMirror doc -> getMarkdown().
 const roundTrip = (content: string): string => {
     const editor = new Editor({ content, contentType: 'markdown', extensions: createMarkdownExtensions() });
     const out = editor.getMarkdown();
