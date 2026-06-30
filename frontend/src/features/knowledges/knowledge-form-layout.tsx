@@ -87,8 +87,8 @@ export function KnowledgeFormLayoutMobile({ control, isNew, isSaving, knowledge,
             />
             <KnowledgeContentField
                 control={control}
+                hasLabel
                 isSaving={isSaving}
-                showLabel
                 viewMode={viewMode}
             />
         </div>

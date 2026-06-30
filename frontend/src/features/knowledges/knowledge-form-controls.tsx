@@ -74,8 +74,8 @@ interface KnowledgeContentFieldProps {
     control: Control<FormValues>;
     /** When `true`, the editor stretches to fill its parent (desktop split view). */
     fillParent?: boolean;
+    hasLabel?: boolean;
     isSaving: boolean;
-    showLabel?: boolean;
     /** 'visual' (default) = rich MarkdownEditor; 'plain' = raw-markdown textarea. */
     viewMode?: 'plain' | 'visual';
 }
@@ -89,8 +89,8 @@ interface KnowledgeMetaFieldsProps {
 export function KnowledgeContentField({
     control,
     fillParent = false,
+    hasLabel = false,
     isSaving,
-    showLabel = false,
     viewMode = 'visual',
 }: KnowledgeContentFieldProps) {
     return (
@@ -99,7 +99,7 @@ export function KnowledgeContentField({
             name="content"
             render={({ field }) => (
                 <FormItem className={fillParent ? 'flex min-h-0 flex-1 flex-col' : undefined}>
-                    {showLabel ? <FormLabel>Content</FormLabel> : null}
+                    {hasLabel ? <FormLabel>Content</FormLabel> : null}
                     <FormControl>
                         {viewMode === 'plain' ? (
                             <Textarea

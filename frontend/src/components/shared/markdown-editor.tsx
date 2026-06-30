@@ -42,10 +42,10 @@ export interface MarkdownEditorProps {
     className?: string;
     contentClassName?: string;
     disabled?: boolean;
+    hasToolbar?: boolean;
     onBlur?: () => void;
     onChange: (value: string) => void;
     placeholder?: string;
-    showToolbar?: boolean;
     value: string;
 }
 
@@ -94,11 +94,11 @@ function MarkdownEditor({
     className,
     contentClassName,
     disabled,
+    hasToolbar = true,
     onBlur,
     onChange,
     placeholder = 'Write something…',
     ref,
-    showToolbar = true,
     value,
 }: MarkdownEditorProps & { ref?: Ref<MarkdownEditorHandle> }) {
     // Suppress echoes of our own output: the markdown round-trip re-serializes slightly (whitespace/list
@@ -281,7 +281,7 @@ function MarkdownEditor({
             )}
             data-slot="markdown-editor"
         >
-            {showToolbar ? (
+            {hasToolbar ? (
                 <MarkdownEditorToolbar
                     disabled={disabled}
                     editor={editor}
