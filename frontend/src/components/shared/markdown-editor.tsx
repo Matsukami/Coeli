@@ -23,7 +23,7 @@ import {
     Table,
     Undo,
 } from 'lucide-react';
-import { type Ref, useCallback, useEffect, useImperativeHandle, useRef } from 'react';
+import { type Ref, useCallback, useEffect, useImperativeHandle, useMemo, useRef } from 'react';
 
 import { Separator } from '@/components/ui/separator';
 import { Toggle } from '@/components/ui/toggle';
@@ -79,11 +79,8 @@ const resetUndoHistory = (editor: Editor): void => {
 
     view.updateState(newState);
 
-    // `view.updateState` bypasses PM's dispatch pipeline, so tiptap's
-    // `transaction` subscription doesn't fire — the toolbar would keep
-    // showing the stale `canUndo: true` value. Dispatch an empty
-    // transaction to wake the React subscription. The transaction is
-    // marked as non-historable so the freshly-empty stack stays empty.
+    // `view.updateState` bypasses PM's dispatch pipeline, so tiptap's `transaction` subscription doesn't fire
+    // and the toolbar keeps showing a stale `canUndo: true`. Dispatch an empty transaction to wake it.
     view.dispatch(newState.tr.setMeta('addToHistory', false));
 };
 
@@ -104,41 +101,26 @@ function MarkdownEditor({
     showToolbar = true,
     value,
 }: MarkdownEditorProps & { ref?: Ref<MarkdownEditorHandle> }) {
-    const onChangeRef = useRef(onChange);
-    const onBlurRef = useRef(onBlur);
-    // Tracks the last markdown the editor reported externally. We compare
-    // against this to suppress echo updates: the markdown round-trip can
-    // re-serialize content slightly differently than the input string
-    // (whitespace/list markers/blank lines/etc.), and we don't want to flag those
-    // normalizations as user edits — that would falsely flip RHF's
-    // `isDirty` flag.
+    // Suppress echoes of our own output: the markdown round-trip re-serializes slightly (whitespace/list
+    // markers/blank lines), and those normalizations must not flip RHF's isDirty as if the user had edited.
     const lastEmittedRef = useRef<string>(value);
 
-    // Tiptap dispatches transactions for the initial content during view
-    // construction. Those `onUpdate` calls are echoes of the initial
-    // parse, not real user edits — forwarding them to RHF would mark
-    // the form dirty on mount. We start forwarding edits only after
-    // `onCreate` has captured the canonical baseline.
+    // Ignore the onUpdate echoes tiptap fires for the initial parse during view construction — forwarding
+    // them would dirty the form on mount; start forwarding only after onCreate sets the baseline.
     const isInitializedRef = useRef(false);
 
-    // Tracks whether we have already cleared the undo stack on initial
-    // mount. After the first sync useEffect run we set this to true; on
-    // subsequent renders we only clear the stack when an external value
-    // arrived (see `shouldExternalSync` below).
     const hasResetInitialHistoryRef = useRef(false);
 
-    useEffect(() => {
-        onChangeRef.current = onChange;
-        onBlurRef.current = onBlur;
-    }, [onChange, onBlur]);
+    const extensions = useMemo(() => createMarkdownExtensions(placeholder), [placeholder]);
 
+    // tiptap invokes onBlur/onUpdate from its live options ref, so these closures always read the latest props.
     const editor = useEditor({
         content: value,
         contentType: 'markdown',
         editable: !disabled,
-        extensions: createMarkdownExtensions(placeholder),
+        extensions,
         immediatelyRender: false,
-        onBlur: () => onBlurRef.current?.(),
+        onBlur: () => onBlur?.(),
         onCreate: ({ editor: instance }) => {
             lastEmittedRef.current = instance.getMarkdown();
             isInitializedRef.current = true;
@@ -155,7 +137,7 @@ function MarkdownEditor({
             }
 
             lastEmittedRef.current = next;
-            onChangeRef.current?.(next);
+            onChange(next);
         },
     });
 
