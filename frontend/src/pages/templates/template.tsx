@@ -365,16 +365,6 @@ function Template() {
         [isNew, templateId, createTemplate, updateTemplate, reset],
     );
 
-    const handleSubmit = async (values: FormValues) => {
-        if (isSaving) {
-            return;
-        }
-
-        if ((await performSave(values)) && isNew) {
-            navigate(routes.templates);
-        }
-    };
-
     const handleSaveFromGuard = useCallback(async (): Promise<boolean> => {
         if (isSaving || !isValid) {
             return false;
@@ -390,6 +380,19 @@ function Template() {
         isFormValid: isValid,
         onSave: handleSaveFromGuard,
     });
+
+    const handleSubmit = async (values: FormValues) => {
+        if (isSaving) {
+            return;
+        }
+
+        if ((await performSave(values)) && isNew) {
+            // A fresh template stays dirty until we leave; skip the guard's blocker so this post-save
+            // navigation doesn't trap the user in the unsaved-changes dialog.
+            guard.skipNextBlock();
+            navigate(routes.templates);
+        }
+    };
 
     const handleApplyPreset = useCallback(
         (preset: { text: string; title: string }) => {
