@@ -9,7 +9,6 @@ import {
     Ellipsis,
     FileDiff,
     FileText,
-    GripVertical,
     Loader2,
     RotateCcw,
     Save,
@@ -62,12 +61,12 @@ import {
     AppHeaderTitle,
 } from '@/components/layouts/app/app-header';
 import ConfirmationDialog from '@/components/shared/confirmation-dialog';
+import { DetailTwoPanelLayout } from '@/components/shared/detail-two-panel-layout';
 import { findVariableUseRanges, VARIABLE_RE, variableProbe } from '@/components/shared/editor-variable-highlight';
 import { UnsavedChangesDialog, useUnsavedChangesGuard } from '@/components/shared/unsaved-changes';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
     DropdownMenu,
@@ -78,7 +77,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Form, FormControl, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { FormSubmitButton } from '@/components/ui/form-submit-button';
-import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { StatusCard } from '@/components/ui/status-card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
@@ -1069,35 +1067,15 @@ function SettingsPrompt() {
                 value={activeTab}
             >
                 {isDesktop ? (
-                    <div className="flex min-h-0 w-full max-w-full flex-1 overflow-hidden">
-                        <ResizablePanelGroup
-                            className="w-full"
-                            orientation="horizontal"
-                        >
-                            <ResizablePanel
-                                defaultSize={45}
-                                minSize={30}
-                            >
-                                <div className="h-full min-h-0 overflow-y-auto">
-                                    <Card className="mx-auto min-h-full w-full max-w-2xl rounded-none border-0">
-                                        <CardContent className="flex flex-col gap-6 py-6">
-                                            {promptMeta}
-                                            {variablesPanel}
-                                        </CardContent>
-                                    </Card>
-                                </div>
-                            </ResizablePanel>
-                            <ResizableHandle withHandle>
-                                <GripVertical className="size-4" />
-                            </ResizableHandle>
-                            <ResizablePanel
-                                defaultSize={55}
-                                minSize={30}
-                            >
-                                <div className="flex h-full min-h-0 flex-col overflow-y-auto p-4">{promptEditor}</div>
-                            </ResizablePanel>
-                        </ResizablePanelGroup>
-                    </div>
+                    <DetailTwoPanelLayout
+                        left={
+                            <>
+                                {promptMeta}
+                                {variablesPanel}
+                            </>
+                        }
+                        right={promptEditor}
+                    />
                 ) : (
                     <div className="flex min-h-0 flex-1 flex-col gap-4 p-4">
                         {promptMeta}

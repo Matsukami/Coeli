@@ -7,7 +7,6 @@ import {
     ChevronsUpDown,
     Clock,
     Ellipsis,
-    GripVertical,
     Lightbulb,
     Loader2,
     Play,
@@ -41,11 +40,11 @@ import {
     AppHeaderTitle,
 } from '@/components/layouts/app/app-header';
 import ConfirmationDialog from '@/components/shared/confirmation-dialog';
+import { DetailTwoPanelLayout } from '@/components/shared/detail-two-panel-layout';
 import { UnsavedChangesDialog, useUnsavedChangesGuard } from '@/components/shared/unsaved-changes';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
@@ -59,7 +58,6 @@ import { FormSubmitButton } from '@/components/ui/form-submit-button';
 import { Input } from '@/components/ui/input';
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '@/components/ui/input-group';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { StatusCard } from '@/components/ui/status-card';
 import {
@@ -1880,32 +1878,11 @@ function SettingsProvider() {
                     onSubmit={handleFormSubmit(handleSubmit)}
                 >
                     {isDesktop ? (
-                        <div className="flex min-h-0 w-full max-w-full flex-1 overflow-hidden">
-                            <ResizablePanelGroup
-                                className="w-full"
-                                orientation="horizontal"
-                            >
-                                <ResizablePanel
-                                    defaultSize={45}
-                                    minSize={30}
-                                >
-                                    <div className="h-full min-h-0 overflow-y-auto">
-                                        <Card className="mx-auto min-h-full w-full max-w-2xl rounded-none border-0">
-                                            <CardContent className="flex flex-col gap-6 py-6">{metaFields}</CardContent>
-                                        </Card>
-                                    </div>
-                                </ResizablePanel>
-                                <ResizableHandle withHandle>
-                                    <GripVertical className="size-4" />
-                                </ResizableHandle>
-                                <ResizablePanel
-                                    defaultSize={55}
-                                    minSize={30}
-                                >
-                                    <div className="h-full min-h-0 overflow-y-auto p-4">{agentConfigs}</div>
-                                </ResizablePanel>
-                            </ResizablePanelGroup>
-                        </div>
+                        <DetailTwoPanelLayout
+                            left={metaFields}
+                            right={agentConfigs}
+                            rightClassName="h-full min-h-0 overflow-y-auto p-4"
+                        />
                     ) : (
                         <div className="flex min-h-0 flex-1 flex-col gap-4 p-4">
                             {metaFields}

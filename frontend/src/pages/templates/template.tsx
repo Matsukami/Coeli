@@ -2,19 +2,7 @@ import type { ReactNode } from 'react';
 
 import { skipToken, useQuery } from '@apollo/client/react';
 import { zodResolver } from '@hookform/resolvers/zod';
-import {
-    ChevronDown,
-    Code,
-    Ellipsis,
-    FileSymlink,
-    FileText,
-    GripVertical,
-    Loader2,
-    Pencil,
-    Save,
-    Trash,
-    Type,
-} from 'lucide-react';
+import { ChevronDown, Code, Ellipsis, FileSymlink, FileText, Loader2, Pencil, Save, Trash, Type } from 'lucide-react';
 import { lazy, Suspense, useCallback, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -28,6 +16,7 @@ import {
     DetailNavigationSheet,
     DetailNavigationToolbar,
 } from '@/components/shared/detail-navigation';
+import { DetailTwoPanelLayout } from '@/components/shared/detail-two-panel-layout';
 import { InlineEditInput, useInlineEdit } from '@/components/shared/inline-edit';
 import { UnsavedChangesDialog, useUnsavedChangesGuard } from '@/components/shared/unsaved-changes';
 import { Badge } from '@/components/ui/badge';
@@ -45,7 +34,6 @@ import {
 import { Form, FormControl, FormField, FormItem } from '@/components/ui/form';
 import { FormSubmitButton } from '@/components/ui/form-submit-button';
 import { Input } from '@/components/ui/input';
-import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -503,7 +491,9 @@ function Template() {
                             className="min-w-24"
                             onCloseAutoFocus={handleDropdownCloseAutoFocus}
                         >
-                            <DropdownMenuItem onClick={() => setViewMode((mode) => (mode === 'code' ? 'plain' : 'code'))}>
+                            <DropdownMenuItem
+                                onClick={() => setViewMode((mode) => (mode === 'code' ? 'plain' : 'code'))}
+                            >
                                 {viewMode === 'code' ? <Type className="size-4" /> : <Code className="size-4" />}
                                 {viewMode === 'code' ? 'Plain text' : 'Code editor'}
                             </DropdownMenuItem>
@@ -744,36 +734,16 @@ function Template() {
                     onSubmit={handleFormSubmit(handleSubmit)}
                 >
                     {isDesktop ? (
-                        <div className="flex min-h-0 w-full max-w-full flex-1 overflow-hidden">
-                            <ResizablePanelGroup
-                                className="w-full"
-                                orientation="horizontal"
-                            >
-                                <ResizablePanel
-                                    defaultSize={45}
-                                    minSize={30}
-                                >
-                                    <div className="h-full min-h-0 overflow-y-auto">
-                                        <Card className="mx-auto min-h-full w-full max-w-2xl rounded-none border-0">
-                                            <CardContent className="flex flex-col gap-6 py-6">
-                                                {introBlock}
-                                                {titleField}
-                                                {presetsPanel}
-                                            </CardContent>
-                                        </Card>
-                                    </div>
-                                </ResizablePanel>
-                                <ResizableHandle withHandle>
-                                    <GripVertical className="size-4" />
-                                </ResizableHandle>
-                                <ResizablePanel
-                                    defaultSize={55}
-                                    minSize={30}
-                                >
-                                    <div className="flex h-full min-h-0 flex-col overflow-y-auto p-4">{textEditor}</div>
-                                </ResizablePanel>
-                            </ResizablePanelGroup>
-                        </div>
+                        <DetailTwoPanelLayout
+                            left={
+                                <>
+                                    {introBlock}
+                                    {titleField}
+                                    {presetsPanel}
+                                </>
+                            }
+                            right={textEditor}
+                        />
                     ) : (
                         <div className="flex min-h-0 flex-1 flex-col gap-4 p-4">
                             {introBlock}

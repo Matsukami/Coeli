@@ -1,12 +1,9 @@
 import type { Control } from 'react-hook-form';
 
-import { GripVertical } from 'lucide-react';
-
 import type { KnowledgeDocumentFragmentFragment } from '@/graphql/types';
 
+import { DetailTwoPanelLayout } from '@/components/shared/detail-two-panel-layout';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
-import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 
 import type { FormValues } from './knowledge-form';
 
@@ -25,51 +22,38 @@ interface KnowledgeIntroBlockProps {
     knowledge?: KnowledgeDocumentFragmentFragment | null;
 }
 
-export function KnowledgeFormLayoutDesktop({ control, isNew, isSaving, knowledge, viewMode }: KnowledgeFormLayoutProps) {
+export function KnowledgeFormLayoutDesktop({
+    control,
+    isNew,
+    isSaving,
+    knowledge,
+    viewMode,
+}: KnowledgeFormLayoutProps) {
     return (
-        <div className="flex min-h-0 w-full max-w-full flex-1 overflow-hidden">
-            <ResizablePanelGroup
-                className="w-full"
-                orientation="horizontal"
-            >
-                <ResizablePanel
-                    defaultSize={45}
-                    minSize={30}
-                >
-                    <div className="h-full min-h-0 overflow-y-auto">
-                        <Card className="mx-auto min-h-full w-full max-w-2xl rounded-none border-0">
-                            <CardContent className="flex flex-col gap-6 py-6">
-                                <KnowledgeIntroBlock
-                                    isNew={isNew}
-                                    knowledge={knowledge}
-                                />
-                                <KnowledgeMetaFields
-                                    control={control}
-                                    isNew={isNew}
-                                    isSaving={isSaving}
-                                />
-                            </CardContent>
-                        </Card>
-                    </div>
-                </ResizablePanel>
-                <ResizableHandle withHandle>
-                    <GripVertical className="size-4" />
-                </ResizableHandle>
-                <ResizablePanel
-                    defaultSize={55}
-                    minSize={30}
-                >
-                    <div className="flex h-full min-h-0 flex-col overflow-hidden p-4">
-                        <KnowledgeContentField
-                            control={control}
-                            fillParent
-                            isSaving={isSaving}
-                            viewMode={viewMode}
-                        />
-                    </div>
-                </ResizablePanel>
-            </ResizablePanelGroup>
-        </div>
+        <DetailTwoPanelLayout
+            left={
+                <>
+                    <KnowledgeIntroBlock
+                        isNew={isNew}
+                        knowledge={knowledge}
+                    />
+                    <KnowledgeMetaFields
+                        control={control}
+                        isNew={isNew}
+                        isSaving={isSaving}
+                    />
+                </>
+            }
+            right={
+                <KnowledgeContentField
+                    control={control}
+                    fillParent
+                    isSaving={isSaving}
+                    viewMode={viewMode}
+                />
+            }
+            rightClassName="flex h-full min-h-0 flex-col overflow-hidden p-4"
+        />
     );
 }
 
