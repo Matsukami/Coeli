@@ -15,7 +15,7 @@ import {
     Trash,
     Type,
 } from 'lucide-react';
-import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
+import { lazy, Suspense, useCallback, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -29,6 +29,7 @@ import {
     DetailNavigationToolbar,
 } from '@/components/shared/detail-navigation';
 import { InlineEditInput, useInlineEdit } from '@/components/shared/inline-edit';
+import { UnsavedChangesDialog, useUnsavedChangesGuard } from '@/components/shared/unsaved-changes';
 import { Badge } from '@/components/ui/badge';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage } from '@/components/ui/breadcrumb';
 import { Button } from '@/components/ui/button';
@@ -282,24 +283,29 @@ function Template() {
         templateId && !isNew ? { variables: { templateId } } : skipToken,
     );
 
+    // `values` re-syncs the form whenever the cache refreshes (an inline rename, a refetch), while
+    // `keepDirtyValues` preserves the user's in-flight edits — without it an external re-emit would
+    // silently wipe an unsaved body. Mirrors knowledge-form.
+    const initialValues = useMemo<FormValues>(
+        () => ({
+            text: templateData?.flowTemplate?.text ?? '',
+            title: templateData?.flowTemplate?.title ?? '',
+        }),
+        [templateData?.flowTemplate],
+    );
+
     const form = useForm<FormValues>({
-        defaultValues: { text: '', title: '' },
-        mode: 'onChange',
+        defaultValues: initialValues,
+        mode: 'onTouched',
+        resetOptions: { keepDirtyValues: true },
         resolver: zodResolver(formSchema),
+        values: initialValues,
     });
 
     const { control, formState, getValues, handleSubmit: handleFormSubmit, reset, setValue } = form;
+    const { isDirty, isValid } = formState;
 
-    useEffect(() => {
-        if (isNew || !templateData?.flowTemplate) {
-            return;
-        }
-
-        const { text, title } = templateData.flowTemplate;
-        reset({ text, title }, { keepDefaultValues: false });
-    }, [templateData, isNew, reset]);
-
-    const hasUnsavedChanges = formState.isDirty;
+    const hasUnsavedChanges = isDirty;
     const templateName = templateData?.flowTemplate?.title ?? null;
 
     const handleTemplateRenameSave = useCallback(async () => {
@@ -319,8 +325,8 @@ function Template() {
         setIsRenaming(true);
 
         try {
-            // Preserve the original `text` from the server so that an inline
-            // rename never overwrites unsaved edits in the form below.
+            // Send the server's current `text`, not the form's, so renaming the title never persists the
+            // user's unsaved body edits — those stay dirty in the form (kept by `keepDirtyValues`) until they save.
             await updateTemplate(templateId, { text: template.text, title: newTitle });
             toast.success('Template renamed successfully');
             handleTemplateRenameCancel();
@@ -348,27 +354,54 @@ function Template() {
         }
     }, [templateId, deleteTemplate, navigate]);
 
+    const performSave = useCallback(
+        async (values: FormValues): Promise<boolean> => {
+            setIsSaving(true);
+
+            try {
+                if (isNew) {
+                    await createTemplate(values.title, values.text);
+                } else if (templateId) {
+                    await updateTemplate(templateId, { text: values.text, title: values.title });
+                    reset(values, { keepDefaultValues: false });
+                }
+
+                return true;
+            } catch {
+                // Error already handled in provider with toast
+                return false;
+            } finally {
+                setIsSaving(false);
+            }
+        },
+        [isNew, templateId, createTemplate, updateTemplate, reset],
+    );
+
     const handleSubmit = async (values: FormValues) => {
         if (isSaving) {
             return;
         }
 
-        setIsSaving(true);
-
-        try {
-            if (isNew) {
-                await createTemplate(values.title, values.text);
-                navigate(routes.templates);
-            } else if (templateId) {
-                await updateTemplate(templateId, { text: values.text, title: values.title });
-                reset(values, { keepDefaultValues: false });
-            }
-        } catch {
-            // Error already handled in provider with toast
-        } finally {
-            setIsSaving(false);
+        if ((await performSave(values)) && isNew) {
+            navigate(routes.templates);
         }
     };
+
+    const handleSaveFromGuard = useCallback(async (): Promise<boolean> => {
+        if (isSaving || !isValid) {
+            return false;
+        }
+
+        const parsed = formSchema.safeParse(getValues());
+
+        return parsed.success ? performSave(parsed.data) : false;
+    }, [getValues, isSaving, isValid, performSave]);
+
+    const guard = useUnsavedChangesGuard({
+        isDirty,
+        isFormValid: isValid,
+        onSave: handleSaveFromGuard,
+    });
 
     const handleApplyPreset = useCallback(
         (preset: { text: string; title: string }) => {
@@ -445,7 +478,7 @@ function Template() {
                     )}
                     {(isNew || !!templateData?.flowTemplate) && (
                         <FormSubmitButton
-                            disabled={isSaving || !formState.isValid || (!isNew && !hasUnsavedChanges)}
+                            disabled={isSaving || !isValid || (!isNew && !hasUnsavedChanges)}
                             form="template-form"
                             icon={<Save className="size-4" />}
                             loading={isSaving}
@@ -775,6 +808,15 @@ function Template() {
                 isOpen={isDeleteDialogOpen}
                 itemName={templateName ?? undefined}
                 itemType="template"
+            />
+            <UnsavedChangesDialog
+                canSave={isValid}
+                handleCancel={guard.handleCancel}
+                handleDiscard={guard.handleDiscard}
+                handleOpenChange={guard.handleOpenChange}
+                handleSaveAndLeave={guard.handleSaveAndLeave}
+                isOpen={guard.isOpen}
+                isSavingFromDialog={guard.isSavingFromDialog}
             />
         </div>
     );
