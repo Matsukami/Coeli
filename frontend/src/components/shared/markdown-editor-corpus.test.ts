@@ -15,9 +15,6 @@ beforeAll(() => {
         ({ item: () => null, length: 0, [Symbol.iterator]: [][Symbol.iterator] }) as unknown as DOMRectList;
 });
 
-// Node-fs corpus test: reads the real backend prompt templates (XML-tag-heavy Go templates) and asserts
-// the @tiptap/markdown round-trip preserves their CONTENT on EVERY one. Excluded from the app `tsc` build
-// (uses node APIs); validated at runtime by vitest.
 const roundTrip = (content: string): string => {
     const editor = new Editor({ content, contentType: 'markdown', extensions: createMarkdownExtensions() });
     const out = editor.getMarkdown();
@@ -39,16 +36,12 @@ describe('corpus — every real prompt .tmpl survives the round-trip with no con
             const save1 = roundTrip(src);
             const save2 = roundTrip(save1);
 
-            // tags stay literal — no HTML-entity escaping introduced.
             expect(save1).not.toContain('&lt;');
             expect(save1).not.toContain('&gt;');
-            // every {{ }} action survives (set + order).
             expect(variables(save1)).toEqual(variables(src));
-            // no source word is dropped (cosmetic whitespace reformatting aside).
             const after = new Set(words(save2));
             const lost = [...new Set(words(src))].filter((w) => !after.has(w));
             expect(lost).toEqual([]);
-            // converges — the canonical form is stable on resave.
             expect(roundTrip(save2)).toBe(save2);
         });
     }

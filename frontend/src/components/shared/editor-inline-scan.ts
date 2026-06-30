@@ -18,7 +18,7 @@ export const collectInlineMatches = (doc: PMNode, regex: RegExp): InlineMatch[] 
 
     doc.descendants((node, pos) => {
         if (!node.isTextblock) {
-            return; // a container — recurse into it to reach its textblocks
+            return;
         }
 
         let text = '';
@@ -46,7 +46,7 @@ export const collectInlineMatches = (doc: PMNode, regex: RegExp): InlineMatch[] 
             }
         }
 
-        return false; // inline content handled — don't recurse into the text nodes
+        return false;
     });
 
     return matches;

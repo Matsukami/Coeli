@@ -68,14 +68,6 @@ export function SettingsProvidersHeader() {
         <div className="flex items-center justify-between gap-4">
             <p className="text-muted-foreground min-w-0 flex-1 truncate">Manage language model providers</p>
 
-            {/*
-             * "Create Provider" is a dropdown trigger, not a submit-style action — it
-             * opens a menu listing provider types (OpenAI, Anthropic, Custom, …). The
-             * `<ChevronDown />` icon plus Radix's `aria-haspopup="menu"` already signal
-             * "menu opens" to sighted and AT users; the explicit aria-label adds the
-             * intent ("create provider") so screen readers don't just announce
-             * "Create Provider, menu" but "Create provider, choose type, menu".
-             */}
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                     <Button

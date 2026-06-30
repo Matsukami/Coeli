@@ -77,8 +77,6 @@ export const MarkdownTable = Table.extend({
     },
 });
 
-// `new Marked()` is a Marked instance, but the `marked` option is typed as the default singleton (which
-// carries extra statics like getDefaults); the cast bridges that structural gap.
 export const createMarkdownLayer = () => [
     Markdown.configure({ marked: createFaithfulMarked() as unknown as typeof import('marked').marked }),
     FaithfulMarkdownText,

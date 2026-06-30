@@ -190,8 +190,6 @@ function MarkdownEditor({
         [editor],
     );
 
-    // Keep external value in sync (e.g. on form reset). Avoid resetting if
-    // the editor already reflects the same markdown to keep cursor stable.
     useEffect(() => {
         if (!editor) {
             return;

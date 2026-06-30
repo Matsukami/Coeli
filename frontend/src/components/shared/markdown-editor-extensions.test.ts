@@ -100,7 +100,6 @@ describe('MarkdownTable — cell pipes escaped + alignment preserved, idempotent
     it('preserves per-column alignment (left :--- / center :---: / right ---:)', () => {
         const save1 = roundTrip('| L | C | R |\n| :-- | :-: | --: |\n| a | b | c |');
 
-        // renderTableToMarkdown emits the alignment colons (dash count padded to column width, min 3).
         expect(save1).toContain('| :--- | :---: | ---: |');
         expect(roundTrip(save1)).toBe(save1);
     });
@@ -120,7 +119,6 @@ describe('nesting & sequencing — content preserved and converges (≤2 saves)'
         const save1 = roundTrip(src);
         const save2 = roundTrip(save1);
 
-        // converges (canonicalizes once, then stable) and no word is dropped.
         expect(save2).toBe(save1);
         sameWords(src, save2);
     });
