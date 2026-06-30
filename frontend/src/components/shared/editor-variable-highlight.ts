@@ -4,55 +4,32 @@ import { Extension } from '@tiptap/core';
 import { Plugin, PluginKey } from '@tiptap/pm/state';
 import { Decoration, DecorationSet } from '@tiptap/pm/view';
 
-// Highlights Go-template actions ({{.Var}}, {{- if .X}}, {{end}}, {{.A | upper}}, …) as
-// VIEW-ONLY decorations. Decorations never touch the document, so getMarkdown() stays
-// byte-identical — and {{ }} already round-trips verbatim (prosemirror-markdown esc()
-// escapes only ` * \ ~ [ ] _, tiptap-markdown escapeHTML only < >; neither touches { }).
-// A node/mark would gain nothing here and would break the variables side-panel, which
-// inserts {{.X}} as plain text and cycles uses by regex over the serialized string.
+import { collectInlineMatches } from './editor-inline-scan';
+
+// Highlights Go-template actions ({{.Var}}, {{- if .X}}, {{end}}, {{.A | upper}}, …) as VIEW-ONLY
+// decorations. Decorations never touch the document, so getMarkdown() stays byte-identical, and {{ }}
+// already round-trips verbatim. A node/mark would gain nothing here and would break the variables
+// side-panel, which inserts {{.X}} as plain text and finds its uses by scanning, not by node identity.
 const variableHighlightKey = new PluginKey('variableHighlight');
 
 // `[^{}]` keeps the scan linear (no catastrophic backtracking); Go actions never nest braces.
 export const VARIABLE_RE = /\{\{[^{}]*\}\}/g;
 
-// Scan per text node — NOT over doc.textContent — or inline positions misalign across blocks.
-const buildDecorations = (doc: PMNode): DecorationSet => {
-    const decorations: Decoration[] = [];
+// Matches one variable's `{{ … .Name … }}` use. Shared with settings-prompt.tsx (panel cycle + count) so the
+// panel's "used" badge and the editor cycle agree on what counts as a use.
+export const variableUseRegex = (variable: string): RegExp =>
+    new RegExp(`\\{\\{[^{}]*?\\.${variable}\\b[^{}]*?\\}\\}`, 'g');
 
-    doc.descendants((node, pos) => {
-        if (!node.isText || !node.text) {
-            return;
-        }
+const buildDecorations = (doc: PMNode): DecorationSet =>
+    DecorationSet.create(
+        doc,
+        collectInlineMatches(doc, VARIABLE_RE).map(({ from, to }) =>
+            Decoration.inline(from, to, { class: 'template-variable' }),
+        ),
+    );
 
-        for (const match of node.text.matchAll(VARIABLE_RE)) {
-            const from = pos + (match.index ?? 0);
-
-            decorations.push(Decoration.inline(from, from + match[0].length, { class: 'template-variable' }));
-        }
-    });
-
-    return DecorationSet.create(doc, decorations);
-};
-
-// Regex mirrors settings-prompt.tsx countVariableUses so the panel's "used" badge and this cycle agree.
-export const findVariableOccurrences = (doc: PMNode, variable: string): { from: number; to: number }[] => {
-    const pattern = new RegExp(`\\{\\{[^{}]*?\\.${variable}\\b[^{}]*?\\}\\}`, 'g');
-    const occurrences: { from: number; to: number }[] = [];
-
-    doc.descendants((node, pos) => {
-        if (!node.isText || !node.text) {
-            return;
-        }
-
-        for (const match of node.text.matchAll(pattern)) {
-            const from = pos + (match.index ?? 0);
-
-            occurrences.push({ from, to: from + match[0].length });
-        }
-    });
-
-    return occurrences;
-};
+export const findVariableOccurrences = (doc: PMNode, variable: string): { from: number; to: number }[] =>
+    collectInlineMatches(doc, variableUseRegex(variable)).map(({ from, to }) => ({ from, to }));
 
 export const VariableHighlight = Extension.create({
     addProseMirrorPlugins() {

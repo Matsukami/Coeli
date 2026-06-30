@@ -52,6 +52,7 @@ import {
     AppHeaderTitle,
 } from '@/components/layouts/app/app-header';
 import ConfirmationDialog from '@/components/shared/confirmation-dialog';
+import { VARIABLE_RE, variableUseRegex } from '@/components/shared/editor-variable-highlight';
 import { UnsavedChangesDialog, useUnsavedChangesGuard } from '@/components/shared/unsaved-changes';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -122,6 +123,23 @@ type HumanFormData = z.infer<typeof humanFormSchema>;
 
 type SystemFormData = z.infer<typeof systemFormSchema>;
 
+// One pass over the `{{ … }}` blocks — the naive per-variable `.match` over the whole template is
+// O(variables × length) on every keystroke.
+function countVariableUses(template: string, variables: string[]): Record<string, number> {
+    const probes = variables.map((variable) => [variable, new RegExp(`\\.${variable}\\b`)] as const);
+    const counts: Record<string, number> = {};
+
+    for (const block of template.match(VARIABLE_RE) ?? []) {
+        for (const [variable, probe] of probes) {
+            if (probe.test(block)) {
+                counts[variable] = (counts[variable] ?? 0) + 1;
+            }
+        }
+    }
+
+    return counts;
+}
+
 function FormCodeItem<T extends FieldValues>({
     control,
     disabled,
@@ -190,27 +208,6 @@ function FormTextareaItem<T extends FieldValues>({
             {fieldState.error && <FormMessage>{fieldState.error.message}</FormMessage>}
         </FormItem>
     );
-}
-
-// .<variable> used in any {{ }} form (bare, if/range/with, nested) — intentionally broader than bare {{.X}}.
-// `[^{}]` (not `[^}]`) keeps a stray unclosed `{{` from driving quadratic backtracking across the whole template.
-const variableActionRegex = (variable: string): RegExp => new RegExp(`\\{\\{[^{}]*?\\.${variable}\\b[^{}]*?\\}\\}`);
-
-// One pass over the `{{ … }}` blocks — the naive per-variable `.match` over the whole template is
-// O(variables × length) on every keystroke.
-function countVariableUses(template: string, variables: string[]): Record<string, number> {
-    const probes = variables.map((variable) => [variable, new RegExp(`\\.${variable}\\b`)] as const);
-    const counts: Record<string, number> = {};
-
-    for (const block of template.match(/\{\{[^{}]*\}\}/g) ?? []) {
-        for (const [variable, probe] of probes) {
-            if (probe.test(block)) {
-                counts[variable] = (counts[variable] ?? 0) + 1;
-            }
-        }
-    }
-
-    return counts;
 }
 
 // Pixel offset of `position` from the textarea content top, measured via a hidden mirror so
@@ -320,7 +317,7 @@ function SettingsPrompt() {
             if (textarea) {
                 const currentValue = field.value || '';
                 const variablePattern = `{{.${variable}}}`;
-                const matches = [...currentValue.matchAll(new RegExp(variableActionRegex(variable).source, 'g'))];
+                const matches = [...currentValue.matchAll(variableUseRegex(variable))];
 
                 if (matches.length > 0) {
                     const { selectionEnd, selectionStart } = textarea;

@@ -158,4 +158,19 @@ describe('findVariableOccurrences — doc spans for the Available-variables cycl
 
         expect(findVariableOccurrences(doc, 'Enabled')).toHaveLength(1);
     });
+
+    it('finds a {{.Var}} split across text nodes by a mark (mark-boundary fix)', () => {
+        const doc = docOf('**{{**.Foo}} tail');
+
+        // sanity — the variable really is split: bolding a brace gives the textblock >1 inline child
+        expect(doc.firstChild?.childCount ?? 0).toBeGreaterThan(1);
+
+        const foo = findVariableOccurrences(doc, 'Foo');
+
+        expect(foo).toHaveLength(1);
+
+        for (const hit of foo) {
+            expect(doc.textBetween(hit.from, hit.to)).toBe('{{.Foo}}');
+        }
+    });
 });
