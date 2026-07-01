@@ -971,9 +971,9 @@ function SettingsPrompt() {
                 </p>
             </div>
 
-            <TabsList className="bg-background w-full">
+            <TabsList className="dark:bg-background w-full">
                 <TabsTrigger
-                    className="data-[state=active]:bg-card flex-1"
+                    className="dark:data-[state=active]:bg-card flex-1"
                     value="system"
                 >
                     <Code className="size-4" />
@@ -981,7 +981,7 @@ function SettingsPrompt() {
                 </TabsTrigger>
                 {promptInfo.type === 'agent' && promptInfo.hasHuman && (
                     <TabsTrigger
-                        className="data-[state=active]:bg-card flex-1"
+                        className="dark:data-[state=active]:bg-card flex-1"
                         value="human"
                     >
                         <User className="size-4" />
