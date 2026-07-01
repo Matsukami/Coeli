@@ -8,6 +8,18 @@ import { Plugin, PluginKey } from '@tiptap/pm/state';
 // survives, and keep pastes inside code literal.
 const RICH_HTML_BLOCK = /<(?:h[1-6]|ul|ol|li|table|thead|tbody|tr|td|th|blockquote|pre|img|hr)\b/i;
 
+export const shouldParseMarkdownOnPaste = (text: string, html: string, isCodeContext: boolean): boolean => {
+    if (!text.trim()) {
+        return false;
+    }
+
+    if (html.includes('data-pm-slice') || RICH_HTML_BLOCK.test(html)) {
+        return false;
+    }
+
+    return !isCodeContext;
+};
+
 export const MarkdownPaste = Extension.create({
     addProseMirrorPlugins() {
         const { editor } = this;
@@ -18,18 +30,11 @@ export const MarkdownPaste = Extension.create({
                 props: {
                     handlePaste(view, event) {
                         const text = event.clipboardData?.getData('text/plain') ?? '';
-
-                        if (!text.trim()) {
-                            return false;
-                        }
-
                         const html = event.clipboardData?.getData('text/html') ?? '';
+                        const isCodeContext =
+                            view.state.selection.$from.parent.type.spec.code || editor.isActive('code');
 
-                        if (html.includes('data-pm-slice') || RICH_HTML_BLOCK.test(html)) {
-                            return false;
-                        }
-
-                        if (view.state.selection.$from.parent.type.spec.code || editor.isActive('code')) {
+                        if (!shouldParseMarkdownOnPaste(text, html, isCodeContext)) {
                             return false;
                         }
 
