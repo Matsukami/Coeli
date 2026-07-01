@@ -148,7 +148,6 @@ function countVariableUses(template: string, variables: string[]): Record<string
     return counts;
 }
 
-// ReactDiffViewer styles aligned with shadcn — Tailwind CSS vars rather than hard-coded colors.
 const diffStyles = {
     content: {
         fontFamily:

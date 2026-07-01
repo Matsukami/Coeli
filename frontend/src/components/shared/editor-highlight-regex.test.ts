@@ -3,8 +3,6 @@ import { describe, expect, it } from 'vitest';
 import { TAG_RE } from './editor-tag-highlight';
 import { findVariableUseRanges, VARIABLE_RE, variableProbe } from './editor-variable-highlight';
 
-// Assert the highlight regexes match the right spans and — critically — do NOT false-positive on prose
-// that merely contains < or {{.
 const matches = (re: RegExp, text: string) => [...text.matchAll(re)].map((m) => m[0]);
 
 describe('VARIABLE_RE — {{ go-template actions }}', () => {

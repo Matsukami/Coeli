@@ -237,8 +237,7 @@ export function KnowledgeForm({ initialValues, isNew, knowledge, onSubmit }: Kno
                 // `isDirty`/`canSubmit` at submit time.
                 const result = await onSubmit(values, form.formState.dirtyFields as DirtyFlags);
 
-                // After save, show the server's canonical (trimmed/normalized) document; fall back to the
-                // submitted values if the mutation hook didn't return the saved fragment.
+                // The backend may trim/normalize fields, so reset to its returned document when present.
                 const resetValues = result.document ? documentToFormValues(result.document) : values;
 
                 // Reset BEFORE the caller navigates so `isDirty` is false by the
