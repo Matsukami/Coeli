@@ -5,8 +5,8 @@ import type {
     KnowledgeGuideType as KnowledgeGuideTypeT,
 } from '@/graphql/types';
 
-import { type EditorViewMode } from '@/components/shared/editor-view-mode';
-import { MarkdownEditor } from '@/components/shared/markdown-editor';
+import { type EditorViewMode } from '@/components/shared/markdown-editor/editor-view-mode';
+import { MarkdownEditor } from '@/components/shared/markdown-editor/markdown-editor';
 import {
     Autocomplete,
     AutocompleteContent,

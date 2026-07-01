@@ -17,8 +17,8 @@ import {
     DetailNavigationToolbar,
 } from '@/components/shared/detail-navigation';
 import { DetailTwoPanelLayout } from '@/components/shared/detail-two-panel-layout';
-import { type EditorViewMode, EditorViewModeToggle } from '@/components/shared/editor-view-mode';
 import { InlineEditInput, useInlineEdit } from '@/components/shared/inline-edit';
+import { type EditorViewMode, EditorViewModeToggle } from '@/components/shared/markdown-editor/editor-view-mode';
 import { UnsavedChangesDialog, useUnsavedChangesGuard } from '@/components/shared/unsaved-changes';
 import { Badge } from '@/components/ui/badge';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage } from '@/components/ui/breadcrumb';
@@ -46,7 +46,7 @@ import { cn } from '@/lib/utils';
 import { type Template, useTemplates } from '@/providers/templates-provider';
 
 const MarkdownEditor = lazy(() =>
-    import('@/components/shared/markdown-editor').then((module) => ({ default: module.MarkdownEditor })),
+    import('@/components/shared/markdown-editor/markdown-editor').then((module) => ({ default: module.MarkdownEditor })),
 );
 
 const formSchema = z.object({
