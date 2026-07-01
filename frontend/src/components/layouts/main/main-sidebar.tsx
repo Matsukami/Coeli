@@ -332,24 +332,24 @@ export function MainSidebar() {
                                         onValueChange={(value) => setTheme(value as Theme)}
                                         value={theme || 'system'}
                                     >
-                                        <TabsList className="h-7 p-0.5">
+                                        <TabsList className="bg-background h-7 p-0.5">
                                             <TabsTrigger
                                                 aria-label="System theme"
-                                                className="h-6 px-2"
+                                                className="data-[state=active]:bg-card h-6 px-2"
                                                 value="system"
                                             >
                                                 <Monitor className="size-4" />
                                             </TabsTrigger>
                                             <TabsTrigger
                                                 aria-label="Light theme"
-                                                className="h-6 px-2"
+                                                className="data-[state=active]:bg-card h-6 px-2"
                                                 value="light"
                                             >
                                                 <Sun className="size-4" />
                                             </TabsTrigger>
                                             <TabsTrigger
                                                 aria-label="Dark theme"
-                                                className="h-6 px-2"
+                                                className="data-[state=active]:bg-card h-6 px-2"
                                                 value="dark"
                                             >
                                                 <Moon className="size-4" />

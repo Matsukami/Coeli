@@ -858,21 +858,8 @@ function SettingsPrompt() {
                             align="end"
                             className="min-w-24"
                         >
-                            <DropdownMenuItem
-                                className="gap-4"
-                                onSelect={(event) => event.preventDefault()}
-                            >
-                                View
-                                <EditorViewModeToggle
-                                    className="-my-1.5 -mr-2 ml-auto"
-                                    mode={viewMode}
-                                    onModeChange={setViewMode}
-                                    rawTooltip="Edit the raw prompt template"
-                                />
-                            </DropdownMenuItem>
                             {hasOverride && (
                                 <>
-                                    <DropdownMenuSeparator />
                                     <DropdownMenuItem onClick={() => setIsDiffDialogOpen(true)}>
                                         <FileDiff className="size-4" />
                                         Diff
@@ -888,8 +875,21 @@ function SettingsPrompt() {
                                         )}
                                         {isDeleteLoading ? 'Resetting...' : 'Reset'}
                                     </DropdownMenuItem>
+                                    <DropdownMenuSeparator />
                                 </>
                             )}
+                            <DropdownMenuItem
+                                className="gap-4"
+                                onSelect={(event) => event.preventDefault()}
+                            >
+                                View
+                                <EditorViewModeToggle
+                                    className="-my-1.5 -mr-2 ml-auto"
+                                    mode={viewMode}
+                                    onModeChange={setViewMode}
+                                    rawTooltip="Edit the raw prompt template"
+                                />
+                            </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
                 </AppHeaderActions>

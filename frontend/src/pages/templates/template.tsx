@@ -495,21 +495,8 @@ function Template() {
                             className="min-w-24"
                             onCloseAutoFocus={handleDropdownCloseAutoFocus}
                         >
-                            <DropdownMenuItem
-                                className="gap-4"
-                                onSelect={(event) => event.preventDefault()}
-                            >
-                                View
-                                <EditorViewModeToggle
-                                    className="-my-1.5 -mr-2 ml-auto"
-                                    mode={viewMode}
-                                    onModeChange={setViewMode}
-                                    rawTooltip="Edit the raw template"
-                                />
-                            </DropdownMenuItem>
                             {canShowActions && (
                                 <>
-                                    <DropdownMenuSeparator />
                                     {isMobile && templateNav.total > 0 && (
                                         <>
                                             <DropdownMenuItem
@@ -533,6 +520,23 @@ function Template() {
                                         <Pencil className="size-3" />
                                         Rename
                                     </DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+                                </>
+                            )}
+                            <DropdownMenuItem
+                                className="gap-4"
+                                onSelect={(event) => event.preventDefault()}
+                            >
+                                View
+                                <EditorViewModeToggle
+                                    className="-my-1.5 -mr-2 ml-auto"
+                                    mode={viewMode}
+                                    onModeChange={setViewMode}
+                                    rawTooltip="Edit the raw template"
+                                />
+                            </DropdownMenuItem>
+                            {canShowActions && (
+                                <>
                                     <DropdownMenuSeparator />
                                     <DropdownMenuItem
                                         disabled={isDeleting}

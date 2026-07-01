@@ -1,4 +1,4 @@
-import { Code, Eye } from 'lucide-react';
+import { SquareMenu, Type } from 'lucide-react';
 
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
@@ -19,21 +19,21 @@ export function EditorViewModeToggle({ className, mode, onModeChange, rawTooltip
             onValueChange={(value) => onModeChange(value as EditorViewMode)}
             value={mode}
         >
-            <TabsList className="h-7 p-0.5">
+            <TabsList className="bg-background h-7 p-0.5">
                 <TabsTrigger
                     aria-label="Rich editor"
-                    className="h-6 px-2"
+                    className="data-[state=active]:bg-card h-6 px-2"
                     value="rich"
                 >
-                    <Eye className="size-4" />
+                    <SquareMenu className="size-4" />
                 </TabsTrigger>
                 <TabsTrigger
                     aria-label="Raw source"
-                    className="h-6 px-2"
+                    className="data-[state=active]:bg-card h-6 px-2"
                     title={rawTooltip}
                     value="raw"
                 >
-                    <Code className="size-4" />
+                    <Type className="size-4" />
                 </TabsTrigger>
             </TabsList>
         </Tabs>

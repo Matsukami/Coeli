@@ -101,6 +101,8 @@ export function KnowledgeHeader({
     // the cache, and the form picks up the new value separately.
     const knowledgeName = knowledge?.question ?? null;
     const canShowActions = !isNew && !!knowledge;
+    const hasAnonymizeRow = isMobile && canAnonymize;
+    const hasNavRow = isMobile && knowledgeNav.total > 0;
 
     const {
         handleDropdownCloseAutoFocus,
@@ -232,29 +234,27 @@ export function KnowledgeHeader({
                                 className="min-w-24"
                                 onCloseAutoFocus={handleDropdownCloseAutoFocus}
                             >
-                                {isMobile && canAnonymize && (
-                                    <>
-                                        <DropdownMenuItem
-                                            disabled={isAnonymizeDisabled}
-                                            onClick={onAnonymize}
-                                        >
-                                            {isAnonymizing ? (
-                                                <>
-                                                    <Loader2 className="size-4 animate-spin" />
-                                                    Anonymizing...
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <HatGlasses className="size-4" />
-                                                    Anonymize
-                                                </>
-                                            )}
-                                        </DropdownMenuItem>
-                                        {(canShowActions || onModeChange) && <DropdownMenuSeparator />}
-                                    </>
+                                {hasAnonymizeRow && (
+                                    <DropdownMenuItem
+                                        disabled={isAnonymizeDisabled}
+                                        onClick={onAnonymize}
+                                    >
+                                        {isAnonymizing ? (
+                                            <>
+                                                <Loader2 className="size-4 animate-spin" />
+                                                Anonymizing...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <HatGlasses className="size-4" />
+                                                Anonymize
+                                            </>
+                                        )}
+                                    </DropdownMenuItem>
                                 )}
-                                {isMobile && knowledgeNav.total > 0 && (
+                                {hasNavRow && (
                                     <>
+                                        {hasAnonymizeRow && <DropdownMenuSeparator />}
                                         <DropdownMenuItem
                                             className="cursor-default hover:bg-transparent focus:bg-transparent"
                                             onSelect={(event) => event.preventDefault()}
@@ -269,30 +269,37 @@ export function KnowledgeHeader({
                                                 />
                                             </div>
                                         </DropdownMenuItem>
-                                        <DropdownMenuSeparator />
                                     </>
                                 )}
-                                {onModeChange ? (
-                                    <DropdownMenuItem
-                                        className="gap-4"
-                                        onSelect={(event) => event.preventDefault()}
-                                    >
-                                        View
-                                        <EditorViewModeToggle
-                                            className="-my-1.5 -mr-2 ml-auto"
-                                            mode={viewMode}
-                                            onModeChange={onModeChange}
-                                            rawTooltip="Edit the raw markdown"
-                                        />
-                                    </DropdownMenuItem>
-                                ) : null}
                                 {canShowActions && (
                                     <>
-                                        {onModeChange ? <DropdownMenuSeparator /> : null}
+                                        {(hasAnonymizeRow || hasNavRow) && <DropdownMenuSeparator />}
                                         <DropdownMenuItem onClick={handleRenameStart}>
                                             <Pencil className="size-3" />
                                             Rename
                                         </DropdownMenuItem>
+                                        <DropdownMenuSeparator />
+                                    </>
+                                )}
+                                {onModeChange ? (
+                                    <>
+                                        {!canShowActions && (hasAnonymizeRow || hasNavRow) && <DropdownMenuSeparator />}
+                                        <DropdownMenuItem
+                                            className="gap-4"
+                                            onSelect={(event) => event.preventDefault()}
+                                        >
+                                            View
+                                            <EditorViewModeToggle
+                                                className="-my-1.5 -mr-2 ml-auto"
+                                                mode={viewMode}
+                                                onModeChange={onModeChange}
+                                                rawTooltip="Edit the raw markdown"
+                                            />
+                                        </DropdownMenuItem>
+                                    </>
+                                ) : null}
+                                {canShowActions && (
+                                    <>
                                         <DropdownMenuSeparator />
                                         <DropdownMenuItem
                                             disabled={isDeleting}
