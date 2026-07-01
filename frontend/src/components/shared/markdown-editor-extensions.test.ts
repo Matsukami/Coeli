@@ -80,6 +80,21 @@ describe('single tildes stay literal — no over-escape, no accidental strikethr
     });
 });
 
+describe('underscore delimiters stay literal — dunders/identifiers survive, * emphasis still works', () => {
+    it.each(['Override __init__ then __call__', 'a _emphasis_ word', 'snake_case_name plus __dunder__'])(
+        'keeps %s byte-identical',
+        (s) => {
+            expect(roundTrip(s)).toBe(s);
+        },
+    );
+
+    it('still renders *star* / **star** emphasis (the toolbar delimiter)', () => {
+        const out = roundTrip('use *italic* and **bold** here');
+        expect(out).toContain('*italic*');
+        expect(out).toContain('**bold**');
+    });
+});
+
 describe('inline marks round-trip', () => {
     it.each(['**bold**', '*italic*', '`code span`', '~~strike~~', '[a link](https://example.com)', '**bold `code` end**'])(
         'preserves %s',

@@ -15,10 +15,13 @@ const createFaithfulMarked = () => {
 
     instance.use({
         tokenizer: {
-            // GFM strikethrough is `~~text~~`; marked also treats a single `~text~` as <del>, which mangles
-            // prose such as `from ~5~ to ~10~` into strikethrough. Defer real `~~` to the default tokenizer
-            // and neutralise a lone `~…~` so it stays literal text.
+            // marked's del + emphasis tokenizers fire on `~` and `_`, mangling literal prose: `~5~` becomes
+            // <del>, and `__init__`/`_word_` become <strong>/<em> (the delimiters are consumed and gone by
+            // serialize time, so no serialize-side escape can recover them). Keep real GFM `~~strike~~` and
+            // `*`/`**` emphasis (what the toolbar emits); neutralise a lone `~…~` and ALL `_`-delimited
+            // emphasis so that text — Python dunders, ranges, snake_case — round-trips verbatim.
             del: (src: string) => (/^~~(?!~)/.test(src) ? false : undefined),
+            emStrong: (src: string) => (/^_/.test(src) ? undefined : false),
             html: () => undefined,
             tag: () => undefined,
         },
