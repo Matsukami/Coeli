@@ -19,17 +19,17 @@ export function EditorViewModeToggle({ className, mode, onModeChange, rawTooltip
             onValueChange={(value) => onModeChange(value as EditorViewMode)}
             value={mode}
         >
-            <TabsList className="bg-background h-7 p-0.5">
+            <TabsList className="dark:bg-background h-7 p-0.5">
                 <TabsTrigger
                     aria-label="Rich editor"
-                    className="data-[state=active]:bg-card h-6 px-2"
+                    className="dark:data-[state=active]:bg-card h-6 px-2"
                     value="rich"
                 >
                     <SquareMenu className="size-4" />
                 </TabsTrigger>
                 <TabsTrigger
                     aria-label="Raw source"
-                    className="data-[state=active]:bg-card h-6 px-2"
+                    className="dark:data-[state=active]:bg-card h-6 px-2"
                     title={rawTooltip}
                     value="raw"
                 >

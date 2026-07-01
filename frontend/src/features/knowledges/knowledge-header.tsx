@@ -285,7 +285,7 @@ export function KnowledgeHeader({
                                     <>
                                         {!canShowActions && (hasAnonymizeRow || hasNavRow) && <DropdownMenuSeparator />}
                                         <DropdownMenuItem
-                                            className="gap-4"
+                                            className="cursor-default gap-4 hover:bg-transparent focus:bg-transparent"
                                             onSelect={(event) => event.preventDefault()}
                                         >
                                             View
