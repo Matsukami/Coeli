@@ -80,8 +80,11 @@ const resetUndoHistory = (editor: Editor): void => {
     view.updateState(newState);
 
     // `view.updateState` bypasses PM's dispatch pipeline, so tiptap's `transaction` subscription doesn't fire
-    // and the toolbar keeps showing a stale `canUndo: true`. Dispatch an empty transaction to wake it.
-    view.dispatch(newState.tr.setMeta('addToHistory', false));
+    // and the toolbar keeps showing a stale `canUndo: true`. Dispatch an empty transaction to wake it — built
+    // from the LIVE `view.state`, not `newState`: updateState can synchronously advance the view (a plugin
+    // view or tiptap's deferred initial-content transaction dispatching during reconfigure), and a tr whose
+    // `before` doc no longer matches `view.state.doc` throws "Applying a mismatched transaction".
+    view.dispatch(view.state.tr.setMeta('addToHistory', false));
 };
 
 interface MarkdownEditorToolbarProps {
