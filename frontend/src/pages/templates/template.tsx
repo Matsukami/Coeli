@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 
 import { skipToken, useQuery } from '@apollo/client/react';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ChevronDown, Code, Ellipsis, FileSymlink, FileText, Loader2, Pencil, Save, Trash, Type } from 'lucide-react';
+import { ChevronDown, Ellipsis, FileSymlink, FileText, Loader2, Pencil, Save, Trash } from 'lucide-react';
 import { lazy, Suspense, useCallback, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -17,6 +17,7 @@ import {
     DetailNavigationToolbar,
 } from '@/components/shared/detail-navigation';
 import { DetailTwoPanelLayout } from '@/components/shared/detail-two-panel-layout';
+import { type EditorViewMode, EditorViewModeToggle } from '@/components/shared/editor-view-mode';
 import { InlineEditInput, useInlineEdit } from '@/components/shared/inline-edit';
 import { UnsavedChangesDialog, useUnsavedChangesGuard } from '@/components/shared/unsaved-changes';
 import { Badge } from '@/components/ui/badge';
@@ -256,7 +257,7 @@ function Template() {
     const [isRenaming, setIsRenaming] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-    const [viewMode, setViewMode] = useState<'code' | 'plain'>('code');
+    const [viewMode, setViewMode] = useState<EditorViewMode>('rich');
 
     const {
         handleDropdownCloseAutoFocus,
@@ -495,10 +496,16 @@ function Template() {
                             onCloseAutoFocus={handleDropdownCloseAutoFocus}
                         >
                             <DropdownMenuItem
-                                onClick={() => setViewMode((mode) => (mode === 'code' ? 'plain' : 'code'))}
+                                className="gap-4"
+                                onSelect={(event) => event.preventDefault()}
                             >
-                                {viewMode === 'code' ? <Type className="size-4" /> : <Code className="size-4" />}
-                                {viewMode === 'code' ? 'Plain text' : 'Code editor'}
+                                View
+                                <EditorViewModeToggle
+                                    className="-my-1.5 -mr-2 ml-auto"
+                                    mode={viewMode}
+                                    onModeChange={setViewMode}
+                                    rawTooltip="Edit the raw template"
+                                />
                             </DropdownMenuItem>
                             {canShowActions && (
                                 <>
@@ -667,7 +674,7 @@ function Template() {
             render={({ field }) => (
                 <FormItem className="flex min-h-0 flex-1 flex-col">
                     <FormControl>
-                        {viewMode === 'code' ? (
+                        {viewMode === 'rich' ? (
                             <Suspense
                                 fallback={
                                     <div className="flex min-h-0 flex-1 items-center justify-center rounded-md border">

@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 
-import { Code, Ellipsis, Eye, HatGlasses, LibraryBig, Loader2, Pencil, Trash } from 'lucide-react';
+import { Ellipsis, HatGlasses, LibraryBig, Loader2, Pencil, Trash } from 'lucide-react';
 import { useCallback, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -14,6 +14,7 @@ import {
     DetailNavigationSheet,
     DetailNavigationToolbar,
 } from '@/components/shared/detail-navigation';
+import { type EditorViewMode, EditorViewModeToggle } from '@/components/shared/editor-view-mode';
 import { InlineEditInput, useInlineEdit } from '@/components/shared/inline-edit';
 import { Badge } from '@/components/ui/badge';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage } from '@/components/ui/breadcrumb';
@@ -52,9 +53,9 @@ interface KnowledgeHeaderProps {
      */
     onAnonymize?: () => void;
     onBeforeNavigateAway?: () => void;
-    onToggleViewMode?: () => void;
+    onModeChange?: (mode: EditorViewMode) => void;
     saveButton?: ReactNode;
-    viewMode?: 'plain' | 'visual';
+    viewMode?: EditorViewMode;
 }
 
 const renderKnowledgeItem = (item: Knowledge, isCurrent: boolean): ReactNode => (
@@ -77,9 +78,9 @@ export function KnowledgeHeader({
     knowledge,
     onAnonymize,
     onBeforeNavigateAway,
-    onToggleViewMode,
+    onModeChange,
     saveButton,
-    viewMode = 'visual',
+    viewMode = 'rich',
 }: KnowledgeHeaderProps) {
     const navigate = useNavigate();
     const { isMobile } = useBreakpoint();
@@ -214,7 +215,7 @@ export function KnowledgeHeader({
                         />
                     )}
                     {saveButton}
-                    {(canShowActions || (isMobile && canAnonymize) || !!onToggleViewMode) && (
+                    {(canShowActions || (isMobile && canAnonymize) || !!onModeChange) && (
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <Button
@@ -249,7 +250,7 @@ export function KnowledgeHeader({
                                                 </>
                                             )}
                                         </DropdownMenuItem>
-                                        {(canShowActions || onToggleViewMode) && <DropdownMenuSeparator />}
+                                        {(canShowActions || onModeChange) && <DropdownMenuSeparator />}
                                     </>
                                 )}
                                 {isMobile && knowledgeNav.total > 0 && (
@@ -271,19 +272,23 @@ export function KnowledgeHeader({
                                         <DropdownMenuSeparator />
                                     </>
                                 )}
-                                {onToggleViewMode ? (
-                                    <DropdownMenuItem onClick={onToggleViewMode}>
-                                        {viewMode === 'plain' ? (
-                                            <Eye className="size-4" />
-                                        ) : (
-                                            <Code className="size-4" />
-                                        )}
-                                        {viewMode === 'plain' ? 'Visual editor' : 'Plain text'}
+                                {onModeChange ? (
+                                    <DropdownMenuItem
+                                        className="gap-4"
+                                        onSelect={(event) => event.preventDefault()}
+                                    >
+                                        View
+                                        <EditorViewModeToggle
+                                            className="-my-1.5 -mr-2 ml-auto"
+                                            mode={viewMode}
+                                            onModeChange={onModeChange}
+                                            rawTooltip="Edit the raw markdown"
+                                        />
                                     </DropdownMenuItem>
                                 ) : null}
                                 {canShowActions && (
                                     <>
-                                        {onToggleViewMode ? <DropdownMenuSeparator /> : null}
+                                        {onModeChange ? <DropdownMenuSeparator /> : null}
                                         <DropdownMenuItem onClick={handleRenameStart}>
                                             <Pencil className="size-3" />
                                             Rename

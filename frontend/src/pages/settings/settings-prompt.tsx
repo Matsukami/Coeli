@@ -12,7 +12,6 @@ import {
     Loader2,
     RotateCcw,
     Save,
-    Type,
     User,
     Wrench,
     XCircle,
@@ -47,6 +46,8 @@ import type {
     PromptType,
     ValidatePromptMutation,
 } from '@/graphql/types';
+
+import { type EditorViewMode, EditorViewModeToggle } from '@/components/shared/editor-view-mode';
 
 type AgentPrompt = AgentPrompts;
 type AgentPrompts = { human?: DefaultPrompt; system: DefaultPrompt };
@@ -384,14 +385,14 @@ function SettingsPrompt() {
     const [validationResult, setValidationResult] = useState<null | ValidatePromptMutation['validatePrompt']>(null);
     const [validationDialogOpen, setValidationDialogOpen] = useState(false);
     const [isDiffDialogOpen, setIsDiffDialogOpen] = useState(false);
-    const [viewMode, setViewMode] = useState<'code' | 'plain'>('code');
+    const [viewMode, setViewMode] = useState<EditorViewMode>('rich');
     const editorRef = useRef<MarkdownEditorHandle>(null);
 
     const isLoading = isCreateLoading || isUpdateLoading || isDeleteLoading || isValidateLoading;
 
     const handleVariableClick = useCallback(
         (variable: string, field: { onChange: (value: string) => void; value: string }, formId: string) => {
-            if (viewMode === 'code') {
+            if (viewMode === 'rich') {
                 if (!editorRef.current?.cycleToVariable(variable)) {
                     editorRef.current?.insertAtCursor(`{{.${variable}}}`);
                 }
@@ -858,10 +859,16 @@ function SettingsPrompt() {
                             className="min-w-24"
                         >
                             <DropdownMenuItem
-                                onClick={() => setViewMode((mode) => (mode === 'code' ? 'plain' : 'code'))}
+                                className="gap-4"
+                                onSelect={(event) => event.preventDefault()}
                             >
-                                {viewMode === 'code' ? <Type className="size-4" /> : <Code className="size-4" />}
-                                {viewMode === 'code' ? 'Plain text' : 'Code editor'}
+                                View
+                                <EditorViewModeToggle
+                                    className="-my-1.5 -mr-2 ml-auto"
+                                    mode={viewMode}
+                                    onModeChange={setViewMode}
+                                    rawTooltip="Edit the raw prompt template"
+                                />
                             </DropdownMenuItem>
                             {hasOverride && (
                                 <>
@@ -1008,7 +1015,7 @@ function SettingsPrompt() {
                         id="system-prompt-form"
                         onSubmit={systemForm.handleSubmit(handleSystemSubmit)}
                     >
-                        {viewMode === 'code' ? (
+                        {viewMode === 'rich' ? (
                             <FormCodeItem
                                 control={systemForm.control}
                                 disabled={isLoading}
@@ -1039,7 +1046,7 @@ function SettingsPrompt() {
                             id="human-prompt-form"
                             onSubmit={humanForm.handleSubmit(handleHumanSubmit)}
                         >
-                            {viewMode === 'code' ? (
+                            {viewMode === 'rich' ? (
                                 <FormCodeItem
                                     control={humanForm.control}
                                     disabled={isLoading}

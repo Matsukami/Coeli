@@ -14,6 +14,7 @@ import type {
 } from '@/graphql/types';
 
 import { AppHeaderAction } from '@/components/layouts/app/app-header';
+import { type EditorViewMode } from '@/components/shared/editor-view-mode';
 import { UnsavedChangesDialog, useUnsavedChangesGuard } from '@/components/shared/unsaved-changes';
 import { Form } from '@/components/ui/form';
 import { Spinner } from '@/components/ui/spinner';
@@ -193,7 +194,7 @@ export function KnowledgeForm({ initialValues, isNew, knowledge, onSubmit }: Kno
     const { isDesktop } = useBreakpoint();
     const [isSaving, setIsSaving] = useState(false);
     const [isAnonymizing, setIsAnonymizing] = useState(false);
-    const [viewMode, setViewMode] = useState<'plain' | 'visual'>('visual');
+    const [viewMode, setViewMode] = useState<EditorViewMode>('rich');
     const [anonymizeMutation] = useMutation(AnonymizeTextDocument);
     const { authInfo } = useUser();
     const canAnonymize = authInfo?.privileges?.includes('anonymize.call') ?? false;
@@ -382,7 +383,7 @@ export function KnowledgeForm({ initialValues, isNew, knowledge, onSubmit }: Kno
                         knowledge={knowledge}
                         onAnonymize={handleAnonymize}
                         onBeforeNavigateAway={skipNextBlock}
-                        onToggleViewMode={() => setViewMode((m) => (m === 'visual' ? 'plain' : 'visual'))}
+                        onModeChange={setViewMode}
                         saveButton={saveButton}
                         viewMode={viewMode}
                     />

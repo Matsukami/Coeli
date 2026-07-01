@@ -3,6 +3,7 @@ import type { Control } from 'react-hook-form';
 import type { KnowledgeDocumentFragmentFragment } from '@/graphql/types';
 
 import { DetailTwoPanelLayout } from '@/components/shared/detail-two-panel-layout';
+import { type EditorViewMode } from '@/components/shared/editor-view-mode';
 import { Badge } from '@/components/ui/badge';
 
 import type { FormValues } from './knowledge-form';
@@ -14,7 +15,7 @@ interface KnowledgeFormLayoutProps {
     isNew: boolean;
     isSaving: boolean;
     knowledge?: KnowledgeDocumentFragmentFragment | null;
-    viewMode?: 'plain' | 'visual';
+    viewMode?: EditorViewMode;
 }
 
 interface KnowledgeIntroBlockProps {

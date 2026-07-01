@@ -5,6 +5,7 @@ import type {
     KnowledgeGuideType as KnowledgeGuideTypeT,
 } from '@/graphql/types';
 
+import { type EditorViewMode } from '@/components/shared/editor-view-mode';
 import { MarkdownEditor } from '@/components/shared/markdown-editor';
 import {
     Autocomplete,
@@ -76,8 +77,7 @@ interface KnowledgeContentFieldProps {
     fillParent?: boolean;
     hasLabel?: boolean;
     isSaving: boolean;
-    /** 'visual' (default) = rich MarkdownEditor; 'plain' = raw-markdown textarea. */
-    viewMode?: 'plain' | 'visual';
+    viewMode?: EditorViewMode;
 }
 
 interface KnowledgeMetaFieldsProps {
@@ -91,7 +91,7 @@ export function KnowledgeContentField({
     fillParent = false,
     hasLabel = false,
     isSaving,
-    viewMode = 'visual',
+    viewMode = 'rich',
 }: KnowledgeContentFieldProps) {
     return (
         <FormField
@@ -101,7 +101,7 @@ export function KnowledgeContentField({
                 <FormItem className={fillParent ? 'flex min-h-0 flex-1 flex-col' : undefined}>
                     {hasLabel ? <FormLabel>Content</FormLabel> : null}
                     <FormControl>
-                        {viewMode === 'plain' ? (
+                        {viewMode === 'raw' ? (
                             <Textarea
                                 autoSize={false}
                                 className={cn(
