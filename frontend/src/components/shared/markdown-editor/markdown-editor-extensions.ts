@@ -5,6 +5,7 @@ import { Placeholder } from '@tiptap/extensions';
 import StarterKit from '@tiptap/starter-kit';
 
 import { createMarkdownLayer, MarkdownTable } from './editor-markdown';
+import { MarkdownPaste } from './editor-paste';
 import { TagHighlight } from './editor-tag-highlight';
 import { VariableHighlight } from './editor-variable-highlight';
 
@@ -25,4 +26,5 @@ export const createMarkdownExtensions = (placeholder?: string) => [
     TagHighlight,
     Placeholder.configure({ emptyEditorClass: 'is-editor-empty', placeholder }),
     ...createMarkdownLayer(),
+    MarkdownPaste,
 ];
