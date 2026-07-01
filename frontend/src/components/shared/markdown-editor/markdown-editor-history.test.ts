@@ -18,7 +18,7 @@ beforeAll(() => {
 // pre-updateState `newState` has a `before` doc that no longer matches — ProseMirror throws "Applying a
 // mismatched transaction". This synthetic plugin forces that advance on demand; jsdom's real editor never
 // hits the browser timing that triggers it, so the fault has to be simulated to be regression-tested.
-let armed = false;
+let isArmed = false;
 
 const AdvanceStateOnUpdate = Extension.create({
     addProseMirrorPlugins() {
@@ -30,8 +30,8 @@ const AdvanceStateOnUpdate = Extension.create({
                 // calling `update`. Dispatching here fires mid-reconfigure, advancing view.state exactly as the
                 // real prod crash does.
                 view: (view) => {
-                    if (armed) {
-                        armed = false;
+                    if (isArmed) {
+                        isArmed = false;
 
                         let pos = 1;
 
@@ -63,7 +63,7 @@ it('resetUndoHistory survives view.state advancing during updateState', () => {
         extensions: [...createMarkdownExtensions(), AdvanceStateOnUpdate],
     });
 
-    armed = true;
+    isArmed = true;
 
     expect(() => resetUndoHistory(editor)).not.toThrow();
 
