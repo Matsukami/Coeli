@@ -943,6 +943,7 @@ function SettingsPrompt() {
     }
 
     const defaultTemplate = activeTab === 'system' ? promptInfo.defaultSystemTemplate : promptInfo.defaultHumanTemplate;
+    const hasHumanPrompt = promptInfo.type === 'agent' && promptInfo.hasHuman;
 
     const promptMeta = (
         <>
@@ -979,15 +980,14 @@ function SettingsPrompt() {
                     <Code className="size-4" />
                     System Prompt
                 </TabsTrigger>
-                {promptInfo.type === 'agent' && promptInfo.hasHuman && (
-                    <TabsTrigger
-                        className="dark:data-[state=active]:bg-card flex-1"
-                        value="human"
-                    >
-                        <User className="size-4" />
-                        Human Prompt
-                    </TabsTrigger>
-                )}
+                <TabsTrigger
+                    className="dark:data-[state=active]:bg-card flex-1"
+                    disabled={!hasHumanPrompt}
+                    value="human"
+                >
+                    <User className="size-4" />
+                    Human Prompt
+                </TabsTrigger>
             </TabsList>
         </>
     );
@@ -1035,7 +1035,7 @@ function SettingsPrompt() {
                 </Form>
             </TabsContent>
 
-            {promptInfo.type === 'agent' && promptInfo.hasHuman && (
+            {hasHumanPrompt && (
                 <TabsContent
                     className="mt-0 flex min-h-0 flex-1 flex-col"
                     value="human"
