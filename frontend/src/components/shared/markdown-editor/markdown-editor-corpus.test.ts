@@ -27,7 +27,7 @@ const variables = (s: string) => s.match(/\{\{[^{}]*\}\}/g) ?? [];
 const words = (s: string) => s.match(/[\p{L}\p{N}]+/gu) ?? [];
 
 describe('corpus — every real prompt .tmpl survives the round-trip with no content loss', () => {
-    const dir = join(__dirname, '..', '..', '..', '..', 'backend', 'pkg', 'templates', 'prompts');
+    const dir = join(__dirname, '..', '..', '..', '..', '..', 'backend', 'pkg', 'templates', 'prompts');
     const files = readdirSync(dir).filter((file) => file.endsWith('.tmpl'));
 
     for (const file of files) {
