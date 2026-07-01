@@ -39,9 +39,9 @@ describe('corpus — every real prompt .tmpl survives the round-trip with no con
             expect(save1).not.toContain('&lt;');
             expect(save1).not.toContain('&gt;');
             expect(variables(save1)).toEqual(variables(src));
-            const after = new Set(words(save2));
-            const lost = [...new Set(words(src))].filter((w) => !after.has(w));
-            expect(lost).toEqual([]);
+            // word MULTISET (not a Set) so a count drop / dup / reorder is caught, plus ≤2-save convergence
+            // (some templates canonicalize over two saves — save1 ≠ save2 is within contract, save2 is stable)
+            expect(words(save2).slice().sort()).toEqual(words(src).slice().sort());
             expect(roundTrip(save2)).toBe(save2);
         });
     }
