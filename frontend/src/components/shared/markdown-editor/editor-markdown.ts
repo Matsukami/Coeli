@@ -14,6 +14,24 @@ const createFaithfulMarked = () => {
     const instance = new Marked();
 
     instance.use({
+        extensions: [
+            // @tiptap/markdown runs decodeHtmlEntities (`&lt;`→`<`, `&amp;`→`&`, `&gt;`→`>`, `&quot;`→`"`) on
+            // every text token during parse — a module-scope call its `.lexer()`/`.inlineTokens()` path never
+            // routes through marked's walkTokens/hooks, so those can't intercept it. Emit each literal `&` as
+            // its own text token pre-encoded to `&amp;`; the decode then nets back to the original byte
+            // (`&amp;`→`&`), leaving a source `&lt;`/`&amp;quot;` intact instead of collapsing it to `<`/`"`.
+            {
+                level: 'inline',
+                name: 'literalAmpersand',
+                start: (src: string) => {
+                    const index = src.indexOf('&');
+
+                    return index < 0 ? undefined : index;
+                },
+                tokenizer: (src: string) =>
+                    src[0] === '&' ? { raw: '&', text: '&amp;', type: 'text' as const } : undefined,
+            },
+        ],
         tokenizer: {
             // These marked tokenizers auto-convert literal text into markup a serialize-side escape can't undo,
             // mangling Go-template / pentest prose on round-trip. Neutralise the lossy cases, keep what the

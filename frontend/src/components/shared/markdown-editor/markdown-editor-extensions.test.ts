@@ -105,6 +105,22 @@ describe('literal backslashes survive — no doubling (regex classes, Windows pa
     });
 });
 
+describe('HTML entities stay literal — decode neutralized (a pentest doc teaching &lt;script&gt; keeps its source)', () => {
+    it.each([
+        'encode &lt;script&gt; as text',
+        'ampersand AT&T and a &amp; b',
+        'quote &quot;value&quot; and &gt; alone and &lt; too',
+    ])('keeps %s byte-identical', (s) => {
+        expect(roundTrip(s)).toBe(s);
+    });
+
+    it('literal <tags> (no entity) still stay literal, never entity-encoded', () => {
+        expect(roundTrip('use <input> and <container_environment> here')).toBe(
+            'use <input> and <container_environment> here',
+        );
+    });
+});
+
 describe('Underline disabled — ++ never parses, C++/++flags prose survives', () => {
     it.each(['C++ then C++ again', 'a ++ b ++ c', 'compile ++flags++ here'])(
         'keeps %s byte-identical (no ++ collapse)',
@@ -257,7 +273,9 @@ describe('typing matches load — underscore emphasis + bare-URL autolink disabl
 
         for (const ch of input) {
             const { from } = view.state.selection;
-            const handled = view.someProp('handleTextInput', (handler) => handler(view, from, from, ch));
+            const handled = view.someProp('handleTextInput', (handler) =>
+                handler(view, from, from, ch, () => view.state.tr),
+            );
 
             if (!handled) {
                 view.dispatch(view.state.tr.insertText(ch));
