@@ -15,15 +15,19 @@ const createFaithfulMarked = () => {
 
     instance.use({
         tokenizer: {
-            // marked's del + emphasis tokenizers fire on `~` and `_`, mangling literal prose: `~5~` becomes
-            // <del>, and `__init__`/`_word_` become <strong>/<em> (the delimiters are consumed and gone by
-            // serialize time, so no serialize-side escape can recover them). Keep real GFM `~~strike~~` and
-            // `*`/`**` emphasis (what the toolbar emits); neutralise a lone `~…~` and ALL `_`-delimited
-            // emphasis so that text — Python dunders, ranges, snake_case — round-trips verbatim.
+            // These marked tokenizers auto-convert literal text into markup a serialize-side escape can't undo,
+            // mangling Go-template / pentest prose on round-trip. Neutralise the lossy cases, keep what the
+            // toolbar emits:
+            //   • del      — keep GFM `~~strike~~`, drop a lone `~…~` (else `~5~` / ranges become <del>)
+            //   • emStrong — keep `*`/`**`, drop `_`-delimited emphasis (else `__init__`/`_word_` become em/strong)
+            //   • html/tag — keep `<xml-like>` tags literal (marked swallows real-HTML-element names)
+            //   • autolink/url — keep bare `https://…` / `<url>` / emails literal (marked wraps them in [](…))
+            autolink: () => undefined,
             del: (src: string) => (/^~~(?!~)/.test(src) ? false : undefined),
             emStrong: (src: string) => (/^_/.test(src) ? undefined : false),
             html: () => undefined,
             tag: () => undefined,
+            url: () => undefined,
         },
     });
 

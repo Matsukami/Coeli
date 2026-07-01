@@ -95,6 +95,19 @@ describe('underscore delimiters stay literal — dunders/identifiers survive, * 
     });
 });
 
+describe('bare URLs and emails stay literal — explicit [links] still work', () => {
+    it.each(['see https://example.com/path now', 'contact me@example.com today', 'a <https://example.com> ref'])(
+        'keeps %s byte-identical',
+        (s) => {
+            expect(roundTrip(s)).toBe(s);
+        },
+    );
+
+    it('still round-trips an explicit [link](url)', () => {
+        expect(roundTrip('[docs](https://example.com)')).toContain('[docs](https://example.com)');
+    });
+});
+
 describe('inline marks round-trip', () => {
     it.each(['**bold**', '*italic*', '`code span`', '~~strike~~', '[a link](https://example.com)', '**bold `code` end**'])(
         'preserves %s',
