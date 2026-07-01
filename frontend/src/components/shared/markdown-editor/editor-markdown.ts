@@ -33,16 +33,19 @@ const createFaithfulMarked = () => {
             },
         ],
         tokenizer: {
-            // These marked tokenizers auto-convert literal text into markup a serialize-side escape can't undo,
-            // mangling Go-template / pentest prose on round-trip. Neutralise the lossy cases, keep what the
-            // toolbar emits:
+            // These marked tokenizers auto-convert literal text into markup, mangling Go-template / pentest
+            // prose on round-trip. Returning `undefined` forces the char to stay literal text; `false` defers
+            // to marked's default. Neutralise the lossy cases, keep what the toolbar emits:
             //   • del      — keep GFM `~~strike~~`, drop a lone `~…~` (else `~5~` / ranges become <del>)
             //   • emStrong — keep `*`/`**`, drop `_`-delimited emphasis (else `__init__`/`_word_` become em/strong)
+            //   • escape   — keep `\`+punct literal (`\.` `\*` `\|` `\\`); marked's default DROPS the backslash
+            //                (CommonMark unescape), silently corrupting regex/paths on the first load
             //   • html/tag — keep `<xml-like>` tags literal (marked swallows real-HTML-element names)
             //   • autolink/url — keep bare `https://…` / `<url>` / emails literal (marked wraps them in [](…))
             autolink: () => undefined,
             del: (src: string) => (/^~~(?!~)/.test(src) ? false : undefined),
             emStrong: (src: string) => (/^_/.test(src) ? undefined : false),
+            escape: () => undefined,
             html: () => undefined,
             tag: () => undefined,
             url: () => undefined,
@@ -53,34 +56,13 @@ const createFaithfulMarked = () => {
     return instance;
 };
 
-// marked-side parsing keeps tags literal; this is the serialize-side counterpart. @tiptap/markdown's
-// MarkdownManager.encodeTextForMarkdown HTML-entity-encodes text (`<` → `&lt;`) and backslash-escapes
-// ``` ` * _ [ ] ~ \ ``` — both corrupt our content (tags become entities, `[1-1000]`/`*.php`/`snake_case`
-// gain stray backslashes). Text serialization is hard-coded in the manager (no per-extension hook), so we
-// retune that one method: drop the entity-encoding entirely, and backslash-escape only what would
-// otherwise re-parse as inline syntax — a backtick always, a doubled `~` (GFM strike), and a `\` ONLY when
-// it precedes a CommonMark-escapable punctuation char. marked leaves a `\` before a letter/digit/space
-// literal, so escaping it unconditionally doubled `C:\Users` → `C:\\Users` and `\d` → `\\d` on every save.
-const ESCAPABLE_AFTER_BACKSLASH = /[!"#$%&'()*+,\-./:;<=>?@[\]\\^_`{|}~]/;
-
-const faithfulEscape = (text: string): string =>
-    text.replace(/`|~+|\\/g, (match: string, offset: number, source: string) => {
-        if (match === '`') {
-            return '\\`';
-        }
-
-        if (match[0] === '~') {
-            return match.length > 1 ? match.replace(/~/g, '\\~') : match;
-        }
-
-        return ESCAPABLE_AFTER_BACKSLASH.test(source[offset + 1] ?? '') ? '\\\\' : '\\';
-    });
-
-type ManagerWithEncode = {
-    codeTypes: Set<string>;
-    encodeTextForMarkdown: (text: string, node: MarkdownNode, parentNode?: MarkdownNode) => string;
-};
-type MarkdownNode = { marks?: (string | { type: string })[]; text?: string; type?: string };
+// The serialize-side counterpart to createFaithfulMarked. @tiptap/markdown's MarkdownManager
+// .encodeTextForMarkdown HTML-entity-encodes text (`<` → `&lt;`) and backslash-escapes ``` ` * _ [ ] ~ \ ```.
+// Both are wrong here: the load side neutralises marked's escape/html/tag tokenizers, so a `\`-escape or
+// `&lt;`-entity is NEVER decoded on parse — anything we encode now resurfaces as a literal backslash / entity
+// on the next load, the exact corruption this editor avoids. Serialization is hard-coded in the manager (no
+// per-extension hook), so replace that one method with identity, keeping load and save byte-symmetric.
+type ManagerWithEncode = { encodeTextForMarkdown: (text: string) => string };
 
 export const FaithfulMarkdownText = Extension.create({
     name: 'faithfulMarkdownText',
@@ -91,13 +73,7 @@ export const FaithfulMarkdownText = Extension.create({
             return;
         }
 
-        manager.encodeTextForMarkdown = function encodeTextForMarkdown(text, node, parentNode) {
-            const isInsideCode =
-                (parentNode?.type != null && this.codeTypes.has(parentNode.type)) ||
-                (node.marks ?? []).some((mark) => this.codeTypes.has(typeof mark === 'string' ? mark : mark.type));
-
-            return isInsideCode ? text : faithfulEscape(text);
-        };
+        manager.encodeTextForMarkdown = (text) => text;
     },
     // Lower priority than the Markdown extension so this runs AFTER its onBeforeCreate has created the
     // manager and assigned editor.markdown. onBeforeCreate (not onCreate) because it is synchronous —

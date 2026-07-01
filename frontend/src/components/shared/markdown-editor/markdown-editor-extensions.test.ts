@@ -105,6 +105,23 @@ describe('literal backslashes survive — no doubling (regex classes, Windows pa
     });
 });
 
+describe('backslash before punctuation survives — escape tokenizer neutralized (regex/glob/UNC content)', () => {
+    it.each([
+        'regex \\d+ and \\.php extension',
+        'glob \\* and \\? wildcards',
+        'escaped \\[ \\] \\( \\) \\{ \\} brackets',
+        'dunder path C:\\Users\\_admin\\app',
+        'table pipe \\| and plus \\+ and dot \\.',
+        'unc \\\\server\\share and double \\\\ backslash',
+    ])('keeps %s byte-identical', (s) => {
+        expect(roundTrip(s)).toBe(s);
+    });
+
+    it('a line-leading \\* stays a paragraph, never a bullet list', () => {
+        expect(roundTrip('\\* not a bullet, literal star')).toBe('\\* not a bullet, literal star');
+    });
+});
+
 describe('HTML entities stay literal — decode neutralized (a pentest doc teaching &lt;script&gt; keeps its source)', () => {
     it.each([
         'encode &lt;script&gt; as text',
