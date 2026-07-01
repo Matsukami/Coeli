@@ -114,7 +114,12 @@ function MarkdownEditor({
 
     const hasResetInitialHistoryRef = useRef(false);
 
-    const extensions = useMemo(() => createMarkdownExtensions(placeholder), [placeholder]);
+    // `placeholder` is captured at mount, like the native <input placeholder>. tiptap's setOptions merges
+    // options without re-registering extensions, so a later change can't reach the already-built Placeholder
+    // plugin regardless; keeping it out of the deps makes that explicit and stops rebuilding the whole
+    // extension array on every placeholder change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const extensions = useMemo(() => createMarkdownExtensions(placeholder), []);
 
     // tiptap invokes onBlur/onUpdate from its live options ref, so these closures always read the latest props.
     const editor = useEditor({
