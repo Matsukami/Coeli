@@ -44,6 +44,9 @@ const ATOMS = [
     '<br>',
     'match \\d+ then \\w*',
     'C:\\Users\\bob\\a.txt',
+    'regex \\.php files',
+    'glob \\* and \\?',
+    'escaped \\[ \\| \\+ here',
     '&lt;script&gt;',
     'AT&T',
     'x &amp; y',
@@ -103,5 +106,18 @@ describe('generative content-integrity — atoms survive load↔serialize across
                 );
             }
         }
+    });
+
+    // Source-fidelity is strictly stronger than the survives/converges oracles above: a backslash-escaped
+    // punctuation char is dropped on the FIRST load and then converges, so convergence passes while the byte
+    // is already gone. Assert byte-exact round-trip for the escape class directly.
+    it.each([
+        'regex \\.php and \\d+',
+        'glob \\* \\? and range \\[a-z\\]',
+        'table \\| pipe and plus \\+',
+        'unc \\\\server\\\\share double \\\\',
+        '\\* line-leading star, not a bullet',
+    ])('round-trips %s byte-identical', (source) => {
+        expect(roundTrip(source)).toBe(source);
     });
 });
