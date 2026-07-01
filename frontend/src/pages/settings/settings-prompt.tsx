@@ -526,6 +526,7 @@ function SettingsPrompt() {
             template: '',
         },
         mode: 'onTouched',
+        resetOptions: { keepDirtyValues: true },
         resolver: zodResolver(systemFormSchema),
     });
 
@@ -534,6 +535,7 @@ function SettingsPrompt() {
             template: '',
         },
         mode: 'onTouched',
+        resetOptions: { keepDirtyValues: true },
         resolver: zodResolver(humanFormSchema),
     });
 
@@ -642,6 +644,9 @@ function SettingsPrompt() {
         [activeTab, variablesData, systemForm, humanForm, handleVariableClick],
     );
 
+    // Re-sync both tabs to the server prompt. A Save refetches settingsPrompts → promptInfo gets a new
+    // identity → this fires; keepDirtyValues (on both form configs) preserves the OTHER tab's unsaved edits,
+    // which an unguarded reset would silently wipe.
     useEffect(() => {
         if (promptInfo) {
             systemForm.reset({
