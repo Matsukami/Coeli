@@ -95,6 +95,16 @@ describe('underscore delimiters stay literal — dunders/identifiers survive, * 
     });
 });
 
+describe('literal backslashes survive — no doubling (regex classes, Windows paths, escape sequences)', () => {
+    it.each([
+        'match \\d+ digits, \\w+ words, \\s whitespace, \\b boundary',
+        'path C:\\Users\\bob\\report.txt',
+        'escape \\n \\t \\r sequences and a\\Zb',
+    ])('keeps %s byte-identical', (s) => {
+        expect(roundTrip(s)).toBe(s);
+    });
+});
+
 describe('bare URLs and emails stay literal — explicit [links] still work', () => {
     it.each(['see https://example.com/path now', 'contact me@example.com today', 'a <https://example.com> ref'])(
         'keeps %s byte-identical',

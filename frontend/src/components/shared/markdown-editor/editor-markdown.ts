@@ -37,15 +37,26 @@ const createFaithfulMarked = () => {
 
 // marked-side parsing keeps tags literal; this is the serialize-side counterpart. @tiptap/markdown's
 // MarkdownManager.encodeTextForMarkdown HTML-entity-encodes text (`<` → `&lt;`) and backslash-escapes
-// ``` ` * _ [ ] ~ ``` — both corrupt our content (tags become entities, `[1-1000]`/`*.php`/`snake_case`
+// ``` ` * _ [ ] ~ \ ``` — both corrupt our content (tags become entities, `[1-1000]`/`*.php`/`snake_case`
 // gain stray backslashes). Text serialization is hard-coded in the manager (no per-extension hook), so we
-// retune that one method: drop the entity-encoding entirely, and backslash-escape only the chars that
-// would otherwise re-parse as inline syntax: `` ` `` and `\` always, and `~` only when doubled — a lone
-// `~` is literal in GFM, so escaping it would inject a stray `\` into prose like `~10%`.
+// retune that one method: drop the entity-encoding entirely, and backslash-escape only what would
+// otherwise re-parse as inline syntax — a backtick always, a doubled `~` (GFM strike), and a `\` ONLY when
+// it precedes a CommonMark-escapable punctuation char. marked leaves a `\` before a letter/digit/space
+// literal, so escaping it unconditionally doubled `C:\Users` → `C:\\Users` and `\d` → `\\d` on every save.
+const ESCAPABLE_AFTER_BACKSLASH = /[!"#$%&'()*+,\-./:;<=>?@[\]\\^_`{|}~]/;
+
 const faithfulEscape = (text: string): string =>
-    text.replace(/[\\`]|~+/g, (match) =>
-        match[0] === '~' ? (match.length > 1 ? match.replace(/~/g, '\\~') : match) : `\\${match}`,
-    );
+    text.replace(/`|~+|\\/g, (match: string, offset: number, source: string) => {
+        if (match === '`') {
+            return '\\`';
+        }
+
+        if (match[0] === '~') {
+            return match.length > 1 ? match.replace(/~/g, '\\~') : match;
+        }
+
+        return ESCAPABLE_AFTER_BACKSLASH.test(source[offset + 1] ?? '') ? '\\\\' : '\\';
+    });
 
 type ManagerWithEncode = {
     codeTypes: Set<string>;
