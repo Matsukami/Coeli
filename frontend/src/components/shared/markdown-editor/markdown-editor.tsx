@@ -51,7 +51,7 @@ export interface MarkdownEditorProps {
 
 // Clears the undo/redo stack by swapping the history plugin for a fresh instance. MUST NOT run on user
 // edits (value changes carry user input too) — that would wipe the user's own Ctrl+Z history.
-const resetUndoHistory = (editor: Editor): void => {
+export const resetUndoHistory = (editor: Editor): void => {
     const { state, view } = editor;
     // A fresh history() shares prosemirror-history's module-level singleton PluginKey, so match the
     // existing plugin by key identity rather than sniffing the stringified key name.
