@@ -105,6 +105,15 @@ describe('literal backslashes survive — no doubling (regex classes, Windows pa
     });
 });
 
+describe('Underline disabled — ++ never parses, C++/++flags prose survives', () => {
+    it.each(['C++ then C++ again', 'a ++ b ++ c', 'compile ++flags++ here'])(
+        'keeps %s byte-identical (no ++ collapse)',
+        (s) => {
+            expect(roundTrip(s)).toBe(s);
+        },
+    );
+});
+
 describe('bare URLs and emails stay literal — explicit [links] still work', () => {
     it.each(['see https://example.com/path now', 'contact me@example.com today', 'a <https://example.com> ref'])(
         'keeps %s byte-identical',
@@ -238,5 +247,45 @@ describe('findVariableOccurrences — doc spans for the Available-variables cycl
         for (const hit of foo) {
             expect(doc.textBetween(hit.from, hit.to)).toBe('{{.Foo}}');
         }
+    });
+});
+
+describe('typing matches load — underscore emphasis + bare-URL autolink disabled while typing', () => {
+    const typeString = (input: string): { html: string; md: string } => {
+        const editor = new Editor({ content: '', contentType: 'markdown', extensions: createMarkdownExtensions() });
+        const { view } = editor;
+
+        for (const ch of input) {
+            const { from } = view.state.selection;
+            const handled = view.someProp('handleTextInput', (handler) => handler(view, from, from, ch));
+
+            if (!handled) {
+                view.dispatch(view.state.tr.insertText(ch));
+            }
+        }
+
+        const result = { html: editor.getHTML(), md: editor.getMarkdown() };
+        editor.destroy();
+
+        return result;
+    };
+
+    it('typed __dunder__ / _word_ stay literal (identifiers survive), matching load', () => {
+        const { html, md } = typeString('call __init__ and _word_ done');
+
+        expect(html).not.toContain('<strong>');
+        expect(html).not.toContain('<em>');
+        expect(md).toContain('__init__');
+        expect(md).toContain('_word_');
+    });
+
+    it('typed bare URL stays literal — no autolink', () => {
+        expect(typeString('see https://evil.example.com/x done').html).not.toContain('<a ');
+    });
+
+    it('typed *italic* / **bold** / ~~strike~~ still convert (star + double-tilde kept)', () => {
+        expect(typeString('a **bold** b').html).toContain('<strong>');
+        expect(typeString('a *ital* b').html).toContain('<em>');
+        expect(typeString('a ~~del~~ b').html).toContain('<s>');
     });
 });
