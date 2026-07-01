@@ -13,7 +13,16 @@ import { Marked } from 'marked';
 const createFaithfulMarked = () => {
     const instance = new Marked();
 
-    instance.use({ tokenizer: { html: () => undefined, tag: () => undefined } });
+    instance.use({
+        tokenizer: {
+            // GFM strikethrough is `~~text~~`; marked also treats a single `~text~` as <del>, which mangles
+            // prose such as `from ~5~ to ~10~` into strikethrough. Defer real `~~` to the default tokenizer
+            // and neutralise a lone `~…~` so it stays literal text.
+            del: (src: string) => (/^~~(?!~)/.test(src) ? false : undefined),
+            html: () => undefined,
+            tag: () => undefined,
+        },
+    });
 
     // A PRIVATE instance — mutating the shared global `marked` would also affect report-pdf.
     return instance;

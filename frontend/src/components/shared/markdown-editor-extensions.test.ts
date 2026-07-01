@@ -63,15 +63,19 @@ describe('selective escape — no stray backslashes on literal punctuation', () 
     );
 });
 
-describe('lone tilde stays literal — no stray backslash injected (M1)', () => {
-    it.each(['~10% for environment setup', 'approximately ~5 minutes', 'a ~ b ~ c'])(
-        'keeps %s byte-identical',
-        (s) => {
-            expect(roundTrip(s)).toBe(s);
-        },
-    );
+describe('single tildes stay literal — no over-escape, no accidental strikethrough', () => {
+    it.each([
+        '~10% for environment setup',
+        'approximately ~5 minutes',
+        'a ~ b ~ c',
+        'from ~5~ to ~10~',
+        'price ~5~ dollars',
+        'path a~b~c here',
+    ])('keeps %s byte-identical', (s) => {
+        expect(roundTrip(s)).toBe(s);
+    });
 
-    it('still round-trips ~~strikethrough~~ (double tilde unaffected)', () => {
+    it('still round-trips ~~strikethrough~~ (double tilde is GFM strike)', () => {
         expect(roundTrip('use ~~deprecated~~ here')).toContain('~~deprecated~~');
     });
 });
