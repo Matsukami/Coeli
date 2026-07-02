@@ -1,5 +1,5 @@
-import { ChevronRightIcon, DotsHorizontalIcon } from '@radix-ui/react-icons';
 import { Slot } from '@radix-ui/react-slot';
+import { ChevronRight, MoreHorizontal } from 'lucide-react';
 import * as React from 'react';
 
 import { cn } from '@/lib/utils';
@@ -25,7 +25,7 @@ function BreadcrumbEllipsis({ className, ...props }: React.ComponentProps<'span'
             role="presentation"
             {...props}
         >
-            <DotsHorizontalIcon className="h-4 w-4" />
+            <MoreHorizontal className="h-4 w-4" />
             <span className="sr-only">More</span>
         </span>
     );
@@ -89,7 +89,7 @@ function BreadcrumbSeparator({ children, className, ...props }: React.ComponentP
             role="presentation"
             {...props}
         >
-            {children ?? <ChevronRightIcon />}
+            {children ?? <ChevronRight />}
         </li>
     );
 }
