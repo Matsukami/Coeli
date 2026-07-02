@@ -208,17 +208,15 @@ describe('nesting & sequencing — content preserved and converges (≤2 saves)'
     });
 });
 
-// KNOWN @tiptap/markdown BUG (not marked, not our customizations). A code block nested in a bullet sublist
-// inside an ordered list is SILENTLY DROPPED. Root cause verified: marked's lexer KEEPS the code token
-// (marked.lexer retains it, marked.parse emits <pre><code>); the loss is downstream in @tiptap/markdown's
-// list-item token→ProseMirror reconstruction, so a marked-side hook can't recover it and there is no clean
-// fix short of patching @tiptap. 0 corpus docs hit it. This test pins the CURRENT (buggy) behavior so we
-// notice if an upstream @tiptap/markdown release fixes it (then flip it to a passing round-trip + drop this).
-describe('KNOWN @tiptap/markdown BUG — ordered > bullet > code drops the code block', () => {
-    it('still loses the deeply-nested code (remove this test once @tiptap/markdown fixes it)', () => {
+// A code block nested in a list (ordered > bullet > code) has an indented opening fence, so
+// @tiptap/extension-code-block's `startsWith('```')` gate used to drop it — the same root cause as a
+// top-level indented fence, fixed by parseFaithfulCodeBlock (see markdown-editor-extensions.ts). This was
+// once a pinned KNOWN-BUG test asserting the loss; the fix now keeps the code.
+describe('ordered > bullet > code — indented nested code survives', () => {
+    it('keeps the deeply-nested code block', () => {
         const out = roundTrip('1. lvl1\n   - lvl2\n\n     ```\n     deepcode\n     ```');
 
-        expect(out).not.toContain('deepcode');
+        expect(out).toContain('deepcode');
     });
 });
 
