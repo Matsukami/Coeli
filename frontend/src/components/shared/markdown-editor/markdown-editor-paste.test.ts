@@ -2,8 +2,8 @@ import { Editor } from '@tiptap/core';
 import { Slice } from '@tiptap/pm/model';
 import { beforeAll, describe, expect, it } from 'vitest';
 
-import { shouldParseMarkdownOnPaste } from './editor-paste';
 import { createMarkdownExtensions } from './markdown-editor-extensions';
+import { shouldParseMarkdownOnPaste } from './markdown-editor-paste';
 
 beforeAll(() => {
     document.elementFromPoint = () => null;

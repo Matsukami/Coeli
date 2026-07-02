@@ -4,7 +4,7 @@ import { Extension } from '@tiptap/core';
 import { Plugin, PluginKey } from '@tiptap/pm/state';
 import { Decoration, DecorationSet } from '@tiptap/pm/view';
 
-import { collectInlineMatches } from './editor-inline-scan';
+import { collectInlineMatches } from './markdown-editor-inline-scan';
 
 // Highlights Go-template actions ({{.Var}}, {{- if .X}}, {{end}}, {{.A | upper}}, …) as VIEW-ONLY
 // decorations. Decorations never touch the document, so getMarkdown() stays byte-identical, and {{ }}

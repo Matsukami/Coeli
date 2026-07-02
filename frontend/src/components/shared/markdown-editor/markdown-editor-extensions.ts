@@ -4,10 +4,10 @@ import { TableCell, TableHeader, TableRow } from '@tiptap/extension-table';
 import { Placeholder } from '@tiptap/extensions';
 import StarterKit from '@tiptap/starter-kit';
 
-import { createMarkdownLayer, MarkdownTable } from './editor-markdown';
-import { MarkdownPaste } from './editor-paste';
-import { TagHighlight } from './editor-tag-highlight';
-import { VariableHighlight } from './editor-variable-highlight';
+import { createMarkdownLayer, MarkdownTable } from './markdown-editor-marked';
+import { MarkdownPaste } from './markdown-editor-paste';
+import { TagHighlight } from './markdown-editor-tag-highlight';
+import { VariableHighlight } from './markdown-editor-variable-highlight';
 
 const dropUnderscore = (rules: { find: unknown }[]) =>
     rules.filter((rule) => !(rule.find instanceof RegExp && rule.find.source.includes('_')));

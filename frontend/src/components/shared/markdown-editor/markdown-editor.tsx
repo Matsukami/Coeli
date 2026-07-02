@@ -29,8 +29,8 @@ import { Separator } from '@/components/ui/separator';
 import { Toggle } from '@/components/ui/toggle';
 import { cn } from '@/lib/utils';
 
-import { findVariableOccurrences } from './editor-variable-highlight';
 import { createMarkdownExtensions } from './markdown-editor-extensions';
+import { findVariableOccurrences } from './markdown-editor-variable-highlight';
 
 export interface MarkdownEditorHandle {
     cycleToVariable: (variable: string) => boolean;

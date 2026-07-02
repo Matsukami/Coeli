@@ -47,12 +47,11 @@ import type {
     ValidatePromptMutation,
 } from '@/graphql/types';
 
-import { type EditorViewMode, EditorViewModeToggle } from '@/components/shared/markdown-editor/editor-view-mode';
+import { type EditorViewMode, EditorViewModeToggle, findVariableUseRanges, type MarkdownEditorHandle, VARIABLE_RE, variableProbe } from '@/components/shared/markdown-editor';
 
 type AgentPrompt = AgentPrompts;
 type AgentPrompts = { human?: DefaultPrompt; system: DefaultPrompt };
 
-import type { MarkdownEditorHandle } from '@/components/shared/markdown-editor/markdown-editor';
 
 import {
     AppHeader,
@@ -63,7 +62,6 @@ import {
 } from '@/components/layouts/app/app-header';
 import ConfirmationDialog from '@/components/shared/confirmation-dialog';
 import { DetailTwoPanelLayout } from '@/components/shared/detail-two-panel-layout';
-import { findVariableUseRanges, VARIABLE_RE, variableProbe } from '@/components/shared/markdown-editor/editor-variable-highlight';
 import { UnsavedChangesDialog, useUnsavedChangesGuard } from '@/components/shared/unsaved-changes';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -94,7 +92,7 @@ import { cn } from '@/lib/utils';
 
 // Dynamic-only import: a static import would merge the tiptap editor chunk into this route bundle.
 const MarkdownEditor = lazy(() =>
-    import('@/components/shared/markdown-editor/markdown-editor').then((module) => ({ default: module.MarkdownEditor })),
+    import('@/components/shared/markdown-editor').then((module) => ({ default: module.MarkdownEditor })),
 );
 
 const systemFormSchema = z.object({

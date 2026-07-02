@@ -14,7 +14,7 @@ import type {
 } from '@/graphql/types';
 
 import { AppHeaderAction } from '@/components/layouts/app/app-header';
-import { type EditorViewMode } from '@/components/shared/markdown-editor/editor-view-mode';
+import { type EditorViewMode } from '@/components/shared/markdown-editor';
 import { UnsavedChangesDialog, useUnsavedChangesGuard } from '@/components/shared/unsaved-changes';
 import { Form } from '@/components/ui/form';
 import { Spinner } from '@/components/ui/spinner';

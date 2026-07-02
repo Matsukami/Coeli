@@ -1,8 +1,8 @@
 import { Editor } from '@tiptap/core';
 import { beforeAll, describe, expect, it } from 'vitest';
 
-import { findVariableOccurrences } from './editor-variable-highlight';
 import { createMarkdownExtensions } from './markdown-editor-extensions';
+import { findVariableOccurrences } from './markdown-editor-variable-highlight';
 
 beforeAll(() => {
     document.elementFromPoint = () => null;

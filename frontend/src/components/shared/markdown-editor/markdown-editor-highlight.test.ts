@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { TAG_RE } from './editor-tag-highlight';
-import { findVariableUseRanges, VARIABLE_RE, variableProbe } from './editor-variable-highlight';
+import { TAG_RE } from './markdown-editor-tag-highlight';
+import { findVariableUseRanges, VARIABLE_RE, variableProbe } from './markdown-editor-variable-highlight';
 
 const matches = (re: RegExp, text: string) => [...text.matchAll(re)].map((m) => m[0]);
 

@@ -4,7 +4,7 @@ import { Extension } from '@tiptap/core';
 import { Plugin, PluginKey } from '@tiptap/pm/state';
 import { Decoration, DecorationSet } from '@tiptap/pm/view';
 
-import { collectInlineMatches } from './editor-inline-scan';
+import { collectInlineMatches } from './markdown-editor-inline-scan';
 
 // Highlights xml-like tags (<container_environment>, </language_policy>, <specialist name="x">)
 // as VIEW-ONLY decorations — same byte-neutral approach as editor-variable-highlight. A node would

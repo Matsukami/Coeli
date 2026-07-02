@@ -15,7 +15,7 @@ import {
     DetailNavigationToolbar,
 } from '@/components/shared/detail-navigation';
 import { InlineEditInput, useInlineEdit } from '@/components/shared/inline-edit';
-import { type EditorViewMode, EditorViewModeToggle } from '@/components/shared/markdown-editor/editor-view-mode';
+import { type EditorViewMode, EditorViewModeToggle } from '@/components/shared/markdown-editor';
 import { Badge } from '@/components/ui/badge';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage } from '@/components/ui/breadcrumb';
 import { Button } from '@/components/ui/button';

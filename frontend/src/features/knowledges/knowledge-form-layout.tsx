@@ -3,7 +3,7 @@ import type { Control } from 'react-hook-form';
 import type { KnowledgeDocumentFragmentFragment } from '@/graphql/types';
 
 import { DetailTwoPanelLayout } from '@/components/shared/detail-two-panel-layout';
-import { type EditorViewMode } from '@/components/shared/markdown-editor/editor-view-mode';
+import { type EditorViewMode } from '@/components/shared/markdown-editor';
 import { Badge } from '@/components/ui/badge';
 
 import type { FormValues } from './knowledge-form';
