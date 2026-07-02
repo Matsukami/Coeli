@@ -303,7 +303,7 @@ function MarkdownEditor({
 
 // The Image extension (unlike Link) doesn't validate the src protocol, so reject non-http(s)/non-image-data
 // URLs (javascript:, data:text/html, …) before they're stored — defense-in-depth for saved content.
-const isSafeImageSrc = (url: string): boolean => {
+export const isSafeImageSrc = (url: string): boolean => {
     try {
         const { protocol } = new URL(url, window.location.href);
 
