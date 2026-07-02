@@ -64,7 +64,7 @@ const createFaithfulMarked = () => {
 // per-extension hook), so replace that one method with identity, keeping load and save byte-symmetric.
 type ManagerWithEncode = { encodeTextForMarkdown: (text: string) => string };
 
-export const FaithfulMarkdownText = Extension.create({
+const FaithfulMarkdownText = Extension.create({
     name: 'faithfulMarkdownText',
     onBeforeCreate() {
         const manager = this.editor.markdown as unknown as ManagerWithEncode | undefined;

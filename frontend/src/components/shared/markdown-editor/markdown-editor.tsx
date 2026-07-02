@@ -234,10 +234,6 @@ function MarkdownEditor({
         //   - on every external `setContent` (e.g. parent calls
         //     form.reset(serverDocument)), because that transaction is
         //     not a user edit either.
-        //
-        // We MUST NOT reset on every render: when the user types,
-        // `value` changes too, and resetting then would erase the
-        // user's own undo history.
         if (!hasResetInitialHistoryRef.current || shouldExternalSync) {
             hasResetInitialHistoryRef.current = true;
             resetUndoHistory(editor);
