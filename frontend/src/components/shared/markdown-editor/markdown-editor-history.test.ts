@@ -4,14 +4,9 @@ import { beforeAll, expect, it } from 'vitest';
 
 import { resetUndoHistory } from './markdown-editor';
 import { createMarkdownExtensions } from './markdown-editor-extensions';
+import { setupEditorJsdom } from './markdown-editor-test-setup';
 
-beforeAll(() => {
-    document.elementFromPoint = () => null;
-    const r = { bottom: 0, height: 0, left: 0, right: 0, toJSON: () => ({}), top: 0, width: 0, x: 0, y: 0 };
-    Range.prototype.getBoundingClientRect = () => r as DOMRect;
-    Range.prototype.getClientRects = () =>
-        ({ item: () => null, length: 0, [Symbol.iterator]: [][Symbol.iterator] }) as unknown as DOMRectList;
-});
+beforeAll(setupEditorJsdom);
 
 // Reproduces the production-only crash class: `view.updateState` inside resetUndoHistory can synchronously
 // advance `view.state` (a plugin view dispatching during reconfigure), so a poke transaction built from the

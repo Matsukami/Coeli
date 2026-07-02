@@ -1,27 +1,11 @@
-import { Editor } from '@tiptap/core';
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { beforeAll, describe, expect, it } from 'vitest';
 
-import { createMarkdownExtensions } from './markdown-editor-extensions';
+import { roundTrip, setupEditorJsdom } from './markdown-editor-test-setup';
 
-// The editor's Placeholder extension tracks the viewport via document.elementFromPoint +
-// Range.getClientRects, which jsdom lacks — stub them or every editor mount throws.
-beforeAll(() => {
-    document.elementFromPoint = () => null;
-    const r = { bottom: 0, height: 0, left: 0, right: 0, toJSON: () => ({}), top: 0, width: 0, x: 0, y: 0 };
-    Range.prototype.getBoundingClientRect = () => r as DOMRect;
-    Range.prototype.getClientRects = () =>
-        ({ item: () => null, length: 0, [Symbol.iterator]: [][Symbol.iterator] }) as unknown as DOMRectList;
-});
 
-const roundTrip = (content: string): string => {
-    const editor = new Editor({ content, contentType: 'markdown', extensions: createMarkdownExtensions() });
-    const out = editor.getMarkdown();
-    editor.destroy();
-
-    return out;
-};
+beforeAll(setupEditorJsdom);
 
 const variables = (s: string) => s.match(/\{\{[^{}]*\}\}/g) ?? [];
 const words = (s: string) => s.match(/[\p{L}\p{N}]+/gu) ?? [];

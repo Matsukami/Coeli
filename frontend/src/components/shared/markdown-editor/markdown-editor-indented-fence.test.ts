@@ -2,14 +2,9 @@ import { Editor } from '@tiptap/core';
 import { beforeAll, describe, expect, it } from 'vitest';
 
 import { createMarkdownExtensions } from './markdown-editor-extensions';
+import { setupEditorJsdom } from './markdown-editor-test-setup';
 
-beforeAll(() => {
-    document.elementFromPoint = () => null;
-    const r = { bottom: 0, height: 0, left: 0, right: 0, toJSON: () => ({}), top: 0, width: 0, x: 0, y: 0 };
-    Range.prototype.getBoundingClientRect = () => r as DOMRect;
-    Range.prototype.getClientRects = () =>
-        ({ item: () => null, length: 0, [Symbol.iterator]: [][Symbol.iterator] }) as unknown as DOMRectList;
-});
+beforeAll(setupEditorJsdom);
 
 const load = (md: string) => {
     const editor = new Editor({ content: md, contentType: 'markdown', extensions: createMarkdownExtensions() });

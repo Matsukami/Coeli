@@ -3,14 +3,9 @@ import { createRef } from 'react';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 
 import { MarkdownEditor, type MarkdownEditorHandle } from './markdown-editor';
+import { setupEditorJsdom } from './markdown-editor-test-setup';
 
-beforeAll(() => {
-    document.elementFromPoint = () => null;
-    const r = { bottom: 0, height: 0, left: 0, right: 0, toJSON: () => ({}), top: 0, width: 0, x: 0, y: 0 };
-    Range.prototype.getBoundingClientRect = () => r as DOMRect;
-    Range.prototype.getClientRects = () =>
-        ({ item: () => null, length: 0, [Symbol.iterator]: [][Symbol.iterator] }) as unknown as DOMRectList;
-});
+beforeAll(setupEditorJsdom);
 
 const proseMirror = (c: HTMLElement) => c.querySelector('.ProseMirror');
 

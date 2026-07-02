@@ -1,23 +1,9 @@
-import { Editor } from '@tiptap/core';
 import { beforeAll, describe, expect, it } from 'vitest';
 
-import { createMarkdownExtensions } from './markdown-editor-extensions';
+import { roundTrip, setupEditorJsdom } from './markdown-editor-test-setup';
 
-beforeAll(() => {
-    document.elementFromPoint = () => null;
-    const r = { bottom: 0, height: 0, left: 0, right: 0, toJSON: () => ({}), top: 0, width: 0, x: 0, y: 0 };
-    Range.prototype.getBoundingClientRect = () => r as DOMRect;
-    Range.prototype.getClientRects = () =>
-        ({ item: () => null, length: 0, [Symbol.iterator]: [][Symbol.iterator] }) as unknown as DOMRectList;
-});
 
-const roundTrip = (md: string): string => {
-    const editor = new Editor({ content: md, contentType: 'markdown', extensions: createMarkdownExtensions() });
-    const out = editor.getMarkdown();
-    editor.destroy();
-
-    return out;
-};
+beforeAll(setupEditorJsdom);
 
 const mulberry32 = (seed: number) => () => {
     seed = (seed + 0x6d2b79f5) | 0;
