@@ -1,6 +1,6 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 
-import { roundTrip, setupEditorJsdom } from './markdown-editor-test-setup';
+import { roundTrip, setupEditorJsdom, structuralCounts } from './markdown-editor-test-setup';
 
 beforeAll(setupEditorJsdom);
 
@@ -42,8 +42,8 @@ const ATOMS = [
 const WORDS = ['firewall', 'payload', 'exploit', 'nmap', 'recon', 'shell', 'token', 'vector'];
 
 // Block contexts that keep inline content literal: paragraph, heading, bullet item, ordered item,
-// blockquote, inline code. (ordered>bullet>code nesting is intentionally NOT generated — it hits the
-// pinned @tiptap/markdown code-drop bug covered separately.)
+// blockquote, inline code. (Nested compositions — ordered>bullet>code, fence-in-fence — are exercised
+// separately below; the historical ordered>bullet>code drop is fixed by the indented-fence + fence-widen work.)
 const wrap = (context: number, text: string): string => {
     switch (context) {
         case 1:
@@ -104,5 +104,34 @@ describe('generative content-integrity — atoms survive load↔serialize across
         '\\* line-leading star, not a bullet',
     ])('round-trips %s byte-identical', (source) => {
         expect(roundTrip(source)).toBe(source);
+    });
+
+    // M3: the survives/converges oracles above only place atoms in SINGLE contexts. Nesting primitives inside
+    // one another (ordered>bullet, blockquote>list, list>code, fence-in-fence) is exactly the class that
+    // produced the historical ordered>bullet>code drop — assert structure (via structuralCounts, catching a
+    // dropped block/item) AND convergence AND atom survival across depth-≥2 compositions.
+    it('nested primitive compositions preserve structure, content, and converge', () => {
+        const rng = mulberry32(0x5eeded);
+        const nestAtoms = ['{{.TargetURL}}', '<container_environment>', '__init__', 'C++ then C++', 'os.execute()'];
+        const nesters: ((a: string) => string)[] = [
+            (a) => `1. first ${a}\n   - nested ${a}\n2. second ${a}`,
+            (a) => `> quote ${a}\n> - list item ${a}`,
+            (a) => `- top ${a}\n  - mid ${a}\n    - deep ${a}`,
+            (a) => `1. step ${a}\n\n   \`\`\`\n   payload ${a}\n   \`\`\``,
+            (a) => `\`\`\`\`\nouter ${a}\n\`\`\`\ninner ${a}\n\`\`\`\n\`\`\`\``,
+        ];
+
+        for (let i = 0; i < 120; i++) {
+            const nester = nesters[Math.floor(rng() * nesters.length)] as (a: string) => string;
+            const atom = nestAtoms[Math.floor(rng() * nestAtoms.length)] as string;
+            const doc = nester(atom);
+            const out = roundTrip(doc);
+
+            expect(structuralCounts(out), `structure changed (i=${i}):\n${doc}\n-->\n${out}`).toEqual(
+                structuralCounts(doc),
+            );
+            expect(roundTrip(out), `did not converge (i=${i}):\n${doc}`).toBe(out);
+            expect(out.includes(atom), `atom "${atom}" lost (i=${i}):\n${doc}\n-->\n${out}`).toBe(true);
+        }
     });
 });

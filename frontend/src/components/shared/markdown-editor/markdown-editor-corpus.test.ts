@@ -2,7 +2,7 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { beforeAll, describe, expect, it } from 'vitest';
 
-import { roundTrip, setupEditorJsdom } from './markdown-editor-test-setup';
+import { roundTrip, setupEditorJsdom, structuralCounts } from './markdown-editor-test-setup';
 
 beforeAll(setupEditorJsdom);
 
@@ -14,7 +14,7 @@ describe('corpus — every real prompt .tmpl survives the round-trip with no con
     const files = readdirSync(dir).filter((file) => file.endsWith('.tmpl'));
 
     for (const file of files) {
-        it(file + ': tags literal, {{ }} preserved, no word dropped, converges', () => {
+        it(file + ': tags literal, {{ }} preserved, structure + words intact, converges', () => {
             const src = readFileSync(join(dir, file), 'utf8');
             const save1 = roundTrip(src);
             const save2 = roundTrip(save1);
@@ -25,6 +25,9 @@ describe('corpus — every real prompt .tmpl survives the round-trip with no con
             // word MULTISET (not a Set) so a count drop / dup / reorder is caught, plus ≤2-save convergence
             // (some templates canonicalize over two saves — save1 ≠ save2 is within contract, save2 is stable)
             expect(words(save2).slice().sort()).toEqual(words(src).slice().sort());
+            // structural node counts (code blocks, list items, headings, tables) — a word-preserving structural
+            // downgrade (block split / dropped cell) passes the multiset check but fails this.
+            expect(structuralCounts(save2)).toEqual(structuralCounts(src));
             expect(roundTrip(save2)).toBe(save2);
         });
     }

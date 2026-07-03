@@ -20,3 +20,38 @@ export const roundTrip = (markdown: string): string => {
 
     return out;
 };
+
+// Structural node types whose counts must survive a round-trip. paragraph/text/hardBreak are excluded: benign
+// reflow (a paragraph splitting, whitespace) changes those without losing content, whereas a change in a
+// structural count is a real downgrade — a dropped code block, list item, table cell, heading. Complements the
+// word-multiset oracle (which a structure-only downgrade can pass while every word survives).
+const STRUCTURAL_TYPES = new Set([
+    'blockquote',
+    'bulletList',
+    'codeBlock',
+    'heading',
+    'horizontalRule',
+    'image',
+    'listItem',
+    'orderedList',
+    'table',
+    'tableCell',
+    'tableHeader',
+    'tableRow',
+    'taskItem',
+    'taskList',
+]);
+
+export const structuralCounts = (markdown: string): Record<string, number> => {
+    const editor = new Editor({ content: markdown, contentType: 'markdown', extensions: createMarkdownExtensions() });
+    const counts: Record<string, number> = {};
+
+    editor.state.doc.descendants((node) => {
+        if (STRUCTURAL_TYPES.has(node.type.name)) {
+            counts[node.type.name] = (counts[node.type.name] ?? 0) + 1;
+        }
+    });
+    editor.destroy();
+
+    return counts;
+};
