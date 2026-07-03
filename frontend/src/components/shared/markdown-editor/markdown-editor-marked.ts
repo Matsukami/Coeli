@@ -41,14 +41,13 @@ const createFaithfulMarked = () => {
             //   • escape   — keep `\`+punct literal (`\.` `\*` `\|` `\\`); marked's default DROPS the backslash
             //                (CommonMark unescape), silently corrupting regex/paths on the first load
             //   • html/tag — keep `<xml-like>` tags literal (marked swallows real-HTML-element names)
-            //   • autolink/url — keep bare `https://…` / `<url>` / emails literal (marked wraps them in [](…))
-            autolink: () => undefined,
+            // NB: autolink/url are intentionally NOT neutralised — a bare `https://…`, `<url>` or email is
+            // meant to become a link (see markdown-editor-extensions.ts link config, kept symmetric with typing).
             del: (src: string) => (/^~~(?!~)/.test(src) ? false : undefined),
             emStrong: (src: string) => (/^_/.test(src) ? undefined : false),
             escape: () => undefined,
             html: () => undefined,
             tag: () => undefined,
-            url: () => undefined,
         },
     });
 

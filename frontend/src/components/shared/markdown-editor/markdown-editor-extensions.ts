@@ -73,7 +73,7 @@ const parseFaithfulCodeBlock = (token: MarkdownCodeToken, helpers: MarkdownParse
 // `_`-emphasis literal on load/paste, so leaving the underscore TYPING rules on would diverge — typed
 // `__init__`/`_word_` would emphasize (→ `**init**`/`*word*`) while the same text loaded stays literal,
 // breaking identifiers. Drop only the underscore rules (their `find` regex mentions `_`; the `*` rules stay)
-// so typing matches load. codeBlock gets the indented-fence fix above. (Link autolink + Underline off below.)
+// so typing matches load. codeBlock gets the indented-fence fix above. (Underline off below.)
 const StarterKitFaithful = StarterKit.extend({
     addExtensions() {
         return (this.parent?.() ?? []).map((extension) => {
@@ -105,12 +105,13 @@ const StarterKitFaithful = StarterKit.extend({
 // tuned for our content (see markdown-editor-marked.ts); VariableHighlight/TagHighlight are view-only decorations
 // ({{vars}} / <tags>) that don't affect serialization.
 //   • underline: false — its `++text++` markdown corrupts `C++ … C++` prose on load and Ctrl+U emits `++`.
-//   • link autolink/linkOnPaste: false — a typed/pasted bare URL stays literal (matches load); explicit
-//     [text](url) and the toolbar link button still work.
+//   • link autolink/linkOnPaste: true — a bare URL/email becomes a link on load, paste, AND typing, kept
+//     symmetric with the marked layer (which no longer neutralises autolink/url). Do NOT set false: it
+//     diverges typing from load and re-freezes bare URLs as text.
 export const createMarkdownExtensions = (placeholder?: string) => [
     StarterKitFaithful.configure({
         codeBlock: { HTMLAttributes: { class: 'hljs' } },
-        link: { autolink: false, linkOnPaste: false },
+        link: { autolink: true, linkOnPaste: true },
         underline: false,
     }),
     MarkdownTable.configure({ resizable: true }),

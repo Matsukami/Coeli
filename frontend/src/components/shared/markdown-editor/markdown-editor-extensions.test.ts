@@ -134,13 +134,16 @@ describe('Underline disabled — ++ never parses, C++/++flags prose survives', (
     );
 });
 
-describe('bare URLs and emails stay literal — explicit [links] still work', () => {
-    it.each(['see https://example.com/path now', 'contact me@example.com today', 'a <https://example.com> ref'])(
-        'keeps %s byte-identical',
-        (s) => {
-            expect(roundTrip(s)).toBe(s);
-        },
-    );
+describe('bare URLs / emails / <autolinks> become links and converge; explicit [links] still work', () => {
+    it.each([
+        ['see https://example.com/path now', 'see [https://example.com/path](https://example.com/path) now'],
+        ['contact me@example.com today', 'contact [me@example.com](mailto:me@example.com) today'],
+        ['a <https://example.com> ref', 'a [https://example.com](https://example.com) ref'],
+    ])('links %s then stays stable', (src, expected) => {
+        const out = roundTrip(src);
+        expect(out).toBe(expected);
+        expect(roundTrip(out)).toBe(out);
+    });
 
     it('still round-trips an explicit [link](url)', () => {
         expect(roundTrip('[docs](https://example.com)')).toContain('[docs](https://example.com)');
@@ -282,7 +285,7 @@ describe('findVariableOccurrences — doc spans for the Available-variables cycl
     });
 });
 
-describe('typing matches load — underscore emphasis + bare-URL autolink disabled while typing', () => {
+describe('typing matches load — underscore emphasis literal, bare URL autolinks like load', () => {
     const typeString = (input: string): { html: string; md: string } => {
         const editor = new Editor({ content: '', contentType: 'markdown', extensions: createMarkdownExtensions() });
         const { view } = editor;
@@ -313,8 +316,11 @@ describe('typing matches load — underscore emphasis + bare-URL autolink disabl
         expect(md).toContain('_word_');
     });
 
-    it('typed bare URL stays literal — no autolink', () => {
-        expect(typeString('see https://evil.example.com/x done').html).not.toContain('<a ');
+    it('typed bare URL autolinks — matches load', () => {
+        const { html, md } = typeString('see https://evil.example.com/x done');
+
+        expect(html).toContain('<a ');
+        expect(md).toContain('[https://evil.example.com/x](https://evil.example.com/x)');
     });
 
     it('typed *italic* / **bold** / ~~strike~~ still convert (star + double-tilde kept)', () => {
