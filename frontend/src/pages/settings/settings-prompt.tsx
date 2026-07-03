@@ -47,11 +47,17 @@ import type {
     ValidatePromptMutation,
 } from '@/graphql/types';
 
-import { type EditorViewMode, EditorViewModeToggle, findVariableUseRanges, type MarkdownEditorHandle, VARIABLE_RE, variableProbe } from '@/components/shared/markdown-editor';
+import {
+    type EditorViewMode,
+    EditorViewModeToggle,
+    findVariableUseRanges,
+    type MarkdownEditorHandle,
+    VARIABLE_RE,
+    variableProbe,
+} from '@/components/shared/markdown-editor';
 
 type AgentPrompt = AgentPrompts;
 type AgentPrompts = { human?: DefaultPrompt; system: DefaultPrompt };
-
 
 import {
     AppHeader,

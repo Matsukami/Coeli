@@ -43,7 +43,9 @@ describe('shouldParseMarkdownOnPaste — markdown-parse plain text, defer rich s
 describe('MarkdownPaste — the parsed payload matches load (same faithful markdown layer)', () => {
     const pasteEvent = (text: string, html = ''): ClipboardEvent =>
         ({
-            clipboardData: { getData: (type: string) => (type === 'text/html' ? html : type === 'text/plain' ? text : '') },
+            clipboardData: {
+                getData: (type: string) => (type === 'text/html' ? html : type === 'text/plain' ? text : ''),
+            },
         }) as unknown as ClipboardEvent;
 
     const pasteHtml = (text: string, html = ''): string => {

@@ -13,7 +13,11 @@ describe('MarkdownEditor imperative handle', () => {
     it('cycleToVariable: rejects a missing variable, cycles an existing one (with wrap) without throwing', async () => {
         const ref = createRef<MarkdownEditorHandle>();
         const { container } = render(
-            <MarkdownEditor onChange={vi.fn()} ref={ref} value={'a {{.Foo}} b {{.Foo}} c {{.Bar}}'} />,
+            <MarkdownEditor
+                onChange={vi.fn()}
+                ref={ref}
+                value={'a {{.Foo}} b {{.Foo}} c {{.Bar}}'}
+            />,
         );
         await waitFor(() => expect(proseMirror(container)?.textContent).toContain('Foo'));
 
@@ -28,7 +32,13 @@ describe('MarkdownEditor imperative handle', () => {
     it('insertAtCursor: emits the inserted text through onChange', async () => {
         const onChange = vi.fn();
         const ref = createRef<MarkdownEditorHandle>();
-        const { container } = render(<MarkdownEditor onChange={onChange} ref={ref} value={'seed'} />);
+        const { container } = render(
+            <MarkdownEditor
+                onChange={onChange}
+                ref={ref}
+                value={'seed'}
+            />,
+        );
         await waitFor(() => expect(proseMirror(container)?.textContent).toContain('seed'));
         onChange.mockClear();
 
@@ -42,7 +52,13 @@ describe('MarkdownEditor value↔editor sync', () => {
     it('suppresses onChange for an echoed value and applies a real external change', async () => {
         const onChange = vi.fn();
         const ref = createRef<MarkdownEditorHandle>();
-        const { container, rerender } = render(<MarkdownEditor onChange={onChange} ref={ref} value={'start'} />);
+        const { container, rerender } = render(
+            <MarkdownEditor
+                onChange={onChange}
+                ref={ref}
+                value={'start'}
+            />,
+        );
         await waitFor(() => expect(proseMirror(container)?.textContent).toContain('start'));
 
         ref.current?.insertAtCursor(' edited');
@@ -51,12 +67,24 @@ describe('MarkdownEditor value↔editor sync', () => {
         onChange.mockClear();
 
         // Echo our own emitted value back → the sync effect must early-return, not re-fire onChange.
-        rerender(<MarkdownEditor onChange={onChange} ref={ref} value={emitted} />);
+        rerender(
+            <MarkdownEditor
+                onChange={onChange}
+                ref={ref}
+                value={emitted}
+            />,
+        );
         await Promise.resolve();
         expect(onChange).not.toHaveBeenCalled();
 
         // A genuine external change → the editor content updates (setContent uses emitUpdate:false, so no onChange).
-        rerender(<MarkdownEditor onChange={onChange} ref={ref} value={'external replacement text'} />);
+        rerender(
+            <MarkdownEditor
+                onChange={onChange}
+                ref={ref}
+                value={'external replacement text'}
+            />,
+        );
         await waitFor(() => expect(proseMirror(container)?.textContent).toContain('external replacement text'));
         expect(onChange).not.toHaveBeenCalled();
     });

@@ -18,12 +18,9 @@ describe('VARIABLE_RE — {{ go-template actions }}', () => {
         expect(matches(VARIABLE_RE, input)).toEqual(expected);
     });
 
-    it.each(['{single brace}', '${shell}', 'open {{ no close', 'a }} before {{ open'])(
-        'does NOT match %s',
-        (input) => {
-            expect(matches(VARIABLE_RE, input)).toEqual([]);
-        },
-    );
+    it.each(['{single brace}', '${shell}', 'open {{ no close', 'a }} before {{ open'])('does NOT match %s', (input) => {
+        expect(matches(VARIABLE_RE, input)).toEqual([]);
+    });
 });
 
 describe('TAG_RE — <xml-like tags>', () => {

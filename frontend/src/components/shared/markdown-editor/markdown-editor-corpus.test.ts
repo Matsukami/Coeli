@@ -4,7 +4,6 @@ import { beforeAll, describe, expect, it } from 'vitest';
 
 import { roundTrip, setupEditorJsdom } from './markdown-editor-test-setup';
 
-
 beforeAll(setupEditorJsdom);
 
 const variables = (s: string) => s.match(/\{\{[^{}]*\}\}/g) ?? [];

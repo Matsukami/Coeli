@@ -41,12 +41,22 @@ vi.mock('./knowledge-form-layout', () => {
             <Controller
                 control={control}
                 name="content"
-                render={({ field }) => <textarea aria-label="content" {...field} />}
+                render={({ field }) => (
+                    <textarea
+                        aria-label="content"
+                        {...field}
+                    />
+                )}
             />
             <Controller
                 control={control}
                 name="question"
-                render={({ field }) => <input aria-label="question" {...field} />}
+                render={({ field }) => (
+                    <input
+                        aria-label="question"
+                        {...field}
+                    />
+                )}
             />
         </>
     );

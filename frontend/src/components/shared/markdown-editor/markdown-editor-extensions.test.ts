@@ -148,18 +148,30 @@ describe('bare URLs and emails stay literal — explicit [links] still work', ()
 });
 
 describe('inline marks round-trip', () => {
-    it.each(['**bold**', '*italic*', '`code span`', '~~strike~~', '[a link](https://example.com)', '**bold `code` end**'])(
-        'preserves %s',
-        (s) => {
-            expect(roundTrip(s)).toContain(s);
-        },
-    );
+    it.each([
+        '**bold**',
+        '*italic*',
+        '`code span`',
+        '~~strike~~',
+        '[a link](https://example.com)',
+        '**bold `code` end**',
+    ])('preserves %s', (s) => {
+        expect(roundTrip(s)).toContain(s);
+    });
 });
 
 describe('MarkdownTable — cell pipes escaped + alignment preserved, idempotent', () => {
     it.each([
-        ['pipe in a code-span cell', '| Op | Meaning |\n| --- | --- |\n| `\\|` | pipe op |\n| `\\|\\|` | or op |', 'pipe op'],
-        ['pipes inside inline code', '| Name | Payload |\n| --- | --- |\n| chain | `echo \\| base64 \\| sh` |', 'base64'],
+        [
+            'pipe in a code-span cell',
+            '| Op | Meaning |\n| --- | --- |\n| `\\|` | pipe op |\n| `\\|\\|` | or op |',
+            'pipe op',
+        ],
+        [
+            'pipes inside inline code',
+            '| Name | Payload |\n| --- | --- |\n| chain | `echo \\| base64 \\| sh` |',
+            'base64',
+        ],
     ])('cell content survives two saves: %s', (_l, src, marker) => {
         const save1 = roundTrip(src);
         const save2 = roundTrip(save1);

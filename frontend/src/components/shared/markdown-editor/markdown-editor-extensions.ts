@@ -63,7 +63,9 @@ const StarterKitFaithful = StarterKit.extend({
             }
 
             if (extension.name === 'codeBlock') {
-                return extension.extend({ parseMarkdown: parseFaithfulCodeBlock } as Parameters<typeof extension.extend>[0]);
+                return extension.extend({ parseMarkdown: parseFaithfulCodeBlock } as Parameters<
+                    typeof extension.extend
+                >[0]);
             }
 
             return extension;

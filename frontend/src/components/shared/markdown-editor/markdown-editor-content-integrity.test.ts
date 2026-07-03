@@ -2,7 +2,6 @@ import { beforeAll, describe, expect, it } from 'vitest';
 
 import { roundTrip, setupEditorJsdom } from './markdown-editor-test-setup';
 
-
 beforeAll(setupEditorJsdom);
 
 const mulberry32 = (seed: number) => () => {
