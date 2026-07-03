@@ -40,7 +40,7 @@ describe('shouldParseMarkdownOnPaste — markdown-parse plain text, defer rich s
     });
 });
 
-describe('MarkdownPaste — the parsed payload matches load (same faithful markdown layer)', () => {
+describe('MarkdownPaste — the parsed payload matches load (same tuned markdown layer)', () => {
     const pasteEvent = (text: string, html = ''): ClipboardEvent =>
         ({
             clipboardData: {

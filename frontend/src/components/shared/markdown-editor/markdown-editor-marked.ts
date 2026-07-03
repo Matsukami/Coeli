@@ -10,7 +10,7 @@ import { Marked } from 'marked';
 // that must survive verbatim; marked silently swallows the ones whose names match real HTML elements
 // (`<input>`, `<br>`, …). Neutralising marked's block (`html`) and inline (`tag`) HTML tokenizers makes
 // every `<...>` fall through to plain text, recreating markdown-it's `html: false`.
-const createFaithfulMarked = () => {
+const createTunedMarked = () => {
     const instance = new Marked();
 
     instance.use({
@@ -41,7 +41,7 @@ const createFaithfulMarked = () => {
     return instance;
 };
 
-// The serialize-side counterpart to createFaithfulMarked. @tiptap/markdown's MarkdownManager
+// The serialize-side counterpart to createTunedMarked. @tiptap/markdown's MarkdownManager
 // .encodeTextForMarkdown HTML-entity-encodes text (`<` → `&lt;`) and backslash-escapes ``` ` * _ [ ] ~ \ ```.
 // Both are wrong here: the load side keeps `\`+punct literal (escape tokenizer off), so re-escaping on save
 // would double every backslash; and named HTML entities are DECODED on load (`&lt;`→`<`), so re-encoding
@@ -49,8 +49,8 @@ const createFaithfulMarked = () => {
 // replace that one method with identity — save emits exactly the text the doc holds.
 type ManagerWithEncode = { encodeTextForMarkdown: (text: string) => string };
 
-const FaithfulMarkdownText = Extension.create({
-    name: 'faithfulMarkdownText',
+const TunedMarkdownText = Extension.create({
+    name: 'tunedMarkdownText',
     onBeforeCreate() {
         const manager = this.editor.markdown as unknown as ManagerWithEncode | undefined;
 
@@ -86,6 +86,6 @@ export const MarkdownTable = Table.extend({
 });
 
 export const createMarkdownLayer = () => [
-    Markdown.configure({ marked: createFaithfulMarked() as unknown as typeof import('marked').marked }),
-    FaithfulMarkdownText,
+    Markdown.configure({ marked: createTunedMarked() as unknown as typeof import('marked').marked }),
+    TunedMarkdownText,
 ];

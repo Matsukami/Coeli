@@ -223,7 +223,7 @@ describe('nesting & sequencing — content preserved and converges (≤2 saves)'
 
 // A code block nested in a list (ordered > bullet > code) has an indented opening fence, so
 // @tiptap/extension-code-block's `startsWith('```')` gate used to drop it — the same root cause as a
-// top-level indented fence, fixed by parseFaithfulCodeBlock (see markdown-editor-extensions.ts). This was
+// top-level indented fence, fixed by parseTunedCodeBlock (see markdown-editor-extensions.ts). This was
 // once a pinned KNOWN-BUG test asserting the loss; the fix now keeps the code.
 describe('ordered > bullet > code — indented nested code survives', () => {
     it('keeps the deeply-nested code block', () => {
