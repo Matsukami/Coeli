@@ -194,7 +194,6 @@ function MarkdownEditor({
 
                 const { state, view } = editor;
 
-                // Focus before scroll — PM won't scrollIntoView an unfocused view (same as cycleToVariable).
                 view.focus();
                 view.dispatch(state.tr.insertText(text).scrollIntoView());
             },

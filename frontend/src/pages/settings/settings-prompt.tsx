@@ -392,6 +392,10 @@ function SettingsPrompt() {
     const [validationDialogOpen, setValidationDialogOpen] = useState(false);
     const [isDiffDialogOpen, setIsDiffDialogOpen] = useState(false);
     const [viewMode, setViewMode] = useState<EditorViewMode>('rich');
+    // One ref shared by both tab editors (System + Human): safe only because Radix TabsContent unmounts the
+    // inactive tab (no forceMount here), so exactly one MarkdownEditor is ever mounted and the ref is
+    // unambiguous. If a forceMount / exit-animation is ever added, both mount and cycleToVariable would race —
+    // switch to one ref per tab.
     const editorRef = useRef<MarkdownEditorHandle>(null);
 
     const isLoading = isCreateLoading || isUpdateLoading || isDeleteLoading || isValidateLoading;
