@@ -98,7 +98,9 @@ import { cn } from '@/lib/utils';
 
 // Dynamic-only import: a static import would merge the tiptap editor chunk into this route bundle.
 const MarkdownEditor = lazy(() =>
-    import('@/components/shared/markdown-editor').then((module) => ({ default: module.MarkdownEditor })),
+    import('@/components/shared/markdown-editor/markdown-editor').then((module) => ({
+        default: module.MarkdownEditor,
+    })),
 );
 
 const systemFormSchema = z.object({

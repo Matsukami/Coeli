@@ -46,7 +46,9 @@ import { cn } from '@/lib/utils';
 import { type Template, useTemplates } from '@/providers/templates-provider';
 
 const MarkdownEditor = lazy(() =>
-    import('@/components/shared/markdown-editor').then((module) => ({ default: module.MarkdownEditor })),
+    import('@/components/shared/markdown-editor/markdown-editor').then((module) => ({
+        default: module.MarkdownEditor,
+    })),
 );
 
 const formSchema = z.object({
