@@ -24,6 +24,32 @@ interface MarkdownParseHelpers {
     createTextNode: (text: string) => unknown;
 }
 
+interface MarkdownRenderHelpers {
+    renderChildren: (content: unknown) => string;
+}
+
+type MarkdownRenderNode = { attrs?: { language?: null | string }; content?: unknown };
+
+const longestBacktickRun = (text: string): number =>
+    (text.match(/`+/g) ?? []).reduce((max, run) => Math.max(max, run.length), 0);
+
+// @tiptap/extension-code-block's renderMarkdown always emits a 3-backtick fence, so a code block whose content
+// contains a ``` line (a doc demonstrating fenced markdown — common in knowledge/prompt examples) re-parses as
+// TWO blocks on the next load: the inner fence closes the outer one. CommonMark requires the fence to be longer
+// than any backtick run inside — widen it. Otherwise identical to upstream.
+const renderFaithfulCodeBlock = (node: MarkdownRenderNode, h: MarkdownRenderHelpers): string => {
+    const language = node.attrs?.language || '';
+
+    if (!node.content) {
+        return `\`\`\`${language}\n\n\`\`\``;
+    }
+
+    const content = h.renderChildren(node.content);
+    const fence = '`'.repeat(Math.max(3, longestBacktickRun(content) + 1));
+
+    return [`${fence}${language}`, content, fence].join('\n');
+};
+
 // @tiptap/extension-code-block's own parseMarkdown gates on `token.raw.startsWith('```')`, but CommonMark
 // lets a fenced code block's opening fence be indented up to 3 spaces — marked then emits a valid `code`
 // token whose `raw` starts with that whitespace, the gate rejects it, and the block is dropped on load. When
@@ -63,9 +89,10 @@ const StarterKitFaithful = StarterKit.extend({
             }
 
             if (extension.name === 'codeBlock') {
-                return extension.extend({ parseMarkdown: parseFaithfulCodeBlock } as Parameters<
-                    typeof extension.extend
-                >[0]);
+                return extension.extend({
+                    parseMarkdown: parseFaithfulCodeBlock,
+                    renderMarkdown: renderFaithfulCodeBlock,
+                } as Parameters<typeof extension.extend>[0]);
             }
 
             return extension;
@@ -75,7 +102,7 @@ const StarterKitFaithful = StarterKit.extend({
 
 // Single source of truth for the editor's extension stack — shared by markdown-editor.tsx AND the
 // round-trip tests so they can never drift. createMarkdownLayer is the official @tiptap/markdown layer
-// tuned for our content (see editor-markdown.ts); VariableHighlight/TagHighlight are view-only decorations
+// tuned for our content (see markdown-editor-marked.ts); VariableHighlight/TagHighlight are view-only decorations
 // ({{vars}} / <tags>) that don't affect serialization.
 //   • underline: false — its `++text++` markdown corrupts `C++ … C++` prose on load and Ctrl+U emits `++`.
 //   • link autolink/linkOnPaste: false — a typed/pasted bare URL stays literal (matches load); explicit
