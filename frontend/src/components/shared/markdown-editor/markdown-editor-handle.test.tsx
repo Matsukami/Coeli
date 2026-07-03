@@ -29,6 +29,32 @@ describe('MarkdownEditor imperative handle', () => {
         expect(ref.current?.cycleToVariable('Bar')).toBe(true);
     });
 
+    it('cycleToVariable advances across occurrences (observed: insertAtCursor replaces the targeted one)', async () => {
+        const onChange = vi.fn();
+        const ref = createRef<MarkdownEditorHandle>();
+        const { container } = render(
+            <MarkdownEditor
+                onChange={onChange}
+                ref={ref}
+                value={'{{.Foo}} MID {{.Foo}} END'}
+            />,
+        );
+        await waitFor(() => expect(proseMirror(container)?.textContent).toContain('Foo'));
+
+        // Two cycles advance the selection from the first {{.Foo}} to the second; jsdom has no layout so the
+        // selection isn't readable directly — insertAtCursor replaces the SELECTED range, making the target
+        // observable. A regression to "always select hits[0]" would replace the first occurrence instead.
+        ref.current?.cycleToVariable('Foo');
+        ref.current?.cycleToVariable('Foo');
+        ref.current?.insertAtCursor('REPLACED');
+        await waitFor(() => expect(onChange).toHaveBeenCalled());
+
+        const out = String(onChange.mock.calls.at(-1)?.[0]);
+
+        expect(out).toContain('{{.Foo}} MID REPLACED');
+        expect(out).not.toContain('{{.Foo}} MID {{.Foo}}');
+    });
+
     it('insertAtCursor: emits the inserted text through onChange', async () => {
         const onChange = vi.fn();
         const ref = createRef<MarkdownEditorHandle>();
