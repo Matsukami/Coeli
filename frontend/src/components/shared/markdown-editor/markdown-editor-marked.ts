@@ -82,9 +82,11 @@ const FaithfulMarkdownText = Extension.create({
 });
 
 // @tiptap/extension-table's renderTableToMarkdown is alignment-aware but never escapes pipes, so a literal
-// `|` in a cell (even inside inline code) re-parses as a column delimiter on the next save and drops cells
-// (tiptap PR #7884, still open). renderTableToMarkdown only emits cell content via h.renderChildren, so
-// wrapping that one call to escape pipes is enough — and it stays on the official, alignment-aware renderer.
+// `|` a cell emits (even from inside inline code) would re-parse as a column delimiter on the next SAVE and
+// drop cells (tiptap PR #7884). renderTableToMarkdown emits cell content only via h.renderChildren, so wrapping
+// that one call to escape pipes fixes the save side, on the official alignment-aware renderer.
+// This does NOT (and cannot) help the LOAD side: a raw `|` inside inline code arriving in external markdown is
+// split by marked's GFM table tokenizer BEFORE the inline-code tokenizer runs — a marked limitation.
 type RenderHelpers = { renderChildren: (nodes: JSONContent | JSONContent[], separator?: string) => string };
 
 export const MarkdownTable = Table.extend({

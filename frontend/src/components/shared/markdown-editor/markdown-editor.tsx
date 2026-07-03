@@ -37,7 +37,7 @@ export interface MarkdownEditorHandle {
     insertAtCursor: (text: string) => void;
 }
 
-export interface MarkdownEditorProps {
+interface MarkdownEditorProps {
     autoFocus?: boolean;
     className?: string;
     contentClassName?: string;
@@ -91,6 +91,10 @@ interface MarkdownEditorToolbarProps {
     disabled?: boolean;
     editor: Editor;
 }
+
+// Shared by the loading shell and the mounted editor so the two wrappers cannot drift.
+const WRAPPER_CLASS =
+    'border-input dark:bg-input/30 group/markdown-editor flex w-full flex-col overflow-hidden rounded-md border shadow-2xs outline-hidden transition-[color,box-shadow]';
 
 function MarkdownEditor({
     autoFocus,
@@ -214,13 +218,8 @@ function MarkdownEditor({
         const shouldExternalSync = current !== value;
 
         if (shouldExternalSync) {
-            // @tiptap/markdown only wires `contentType: 'markdown'` into the initial
-            // content + insertContent — NOT setContent — so parse the markdown explicitly.
-            const parsed = editor.markdown?.parse(value);
-
-            if (parsed) {
-                editor.commands.setContent(parsed, { emitUpdate: false });
-            }
+            // emitUpdate:false — an external sync (form.reset) is not a user edit, so it must not fire onChange.
+            editor.commands.setContent(value, { contentType: 'markdown', emitUpdate: false });
         }
 
         // Seed with the editor's serialized markdown, not the raw `value` — else the first user keystroke
@@ -263,11 +262,7 @@ function MarkdownEditor({
         return (
             <div
                 aria-busy="true"
-                className={cn(
-                    'border-input dark:bg-input/30 group/markdown-editor flex w-full flex-col overflow-hidden rounded-md border shadow-2xs outline-hidden transition-[color,box-shadow]',
-                    disabled && 'pointer-events-none opacity-60',
-                    className,
-                )}
+                className={cn(WRAPPER_CLASS, disabled && 'pointer-events-none opacity-60', className)}
                 data-slot="markdown-editor"
             />
         );
@@ -276,7 +271,7 @@ function MarkdownEditor({
     return (
         <div
             className={cn(
-                'border-input dark:bg-input/30 group/markdown-editor flex w-full flex-col overflow-hidden rounded-md border shadow-2xs outline-hidden transition-[color,box-shadow]',
+                WRAPPER_CLASS,
                 'focus-within:ring-ring focus-within:ring-1',
                 disabled && 'pointer-events-none opacity-60',
                 className,
@@ -301,8 +296,9 @@ function MarkdownEditor({
     );
 }
 
-// The Image extension (unlike Link) doesn't validate the src protocol, so reject non-http(s)/non-image-data
-// URLs (javascript:, data:text/html, …) before they're stored — defense-in-depth for saved content.
+// The Image extension doesn't validate the src protocol, so the toolbar Insert-image button rejects
+// non-http(s)/non-image-data URLs (javascript:, data:text/html, …). Guards ONLY that button — images entering
+// via markdown load/paste bypass it (inert in an <img src>; the read-only viewer sanitizes protocols on render).
 export const isSafeImageSrc = (url: string): boolean => {
     try {
         const { protocol } = new URL(url, window.location.href);
