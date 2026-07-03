@@ -109,16 +109,27 @@ describe('backslash before punctuation survives — escape tokenizer neutralized
     });
 });
 
-describe('HTML entities stay literal — decode neutralized (a pentest doc teaching &lt;script&gt; keeps its source)', () => {
+describe('named HTML entities decode outside code; numeric refs, bare & and raw <tags> survive', () => {
     it.each([
-        'encode &lt;script&gt; as text',
-        'ampersand AT&T and a &amp; b',
-        'quote &quot;value&quot; and &gt; alone and &lt; too',
+        ['encode &lt;script&gt; as text', 'encode <script> as text'],
+        ['ampersand AT&amp;T and a &amp; b', 'ampersand AT&T and a & b'],
+        ['quote &quot;value&quot; and &gt; alone and &lt; too', 'quote "value" and > alone and < too'],
+    ])('decodes %s to its characters', (src, expected) => {
+        expect(roundTrip(src)).toBe(expected);
+    });
+
+    it.each([
+        'numeric &#123; and &#40; and &#x25; stay', // numeric refs are not decoded
+        'bare AT&T and a & b and 2>&1 survive', // a lone & is left literal
     ])('keeps %s byte-identical', (s) => {
         expect(roundTrip(s)).toBe(s);
     });
 
-    it('literal <tags> (no entity) still stay literal, never entity-encoded', () => {
+    it('entities inside inline code are preserved (code content is not decoded)', () => {
+        expect(roundTrip('`&lt;script&gt;`')).toBe('`&lt;script&gt;`');
+    });
+
+    it('literal <tags> (raw, no entity) still stay literal, never entity-encoded', () => {
         expect(roundTrip('use <input> and <container_environment> here')).toBe(
             'use <input> and <container_environment> here',
         );

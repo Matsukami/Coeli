@@ -14,24 +14,6 @@ const createFaithfulMarked = () => {
     const instance = new Marked();
 
     instance.use({
-        extensions: [
-            // @tiptap/markdown runs decodeHtmlEntities (`&lt;`→`<`, `&amp;`→`&`, `&gt;`→`>`, `&quot;`→`"`) on
-            // every text token during parse — a module-scope call its `.lexer()`/`.inlineTokens()` path never
-            // routes through marked's walkTokens/hooks, so those can't intercept it. Emit each literal `&` as
-            // its own text token pre-encoded to `&amp;`; the decode then nets back to the original byte
-            // (`&amp;`→`&`), leaving a source `&lt;`/`&amp;quot;` intact instead of collapsing it to `<`/`"`.
-            {
-                level: 'inline',
-                name: 'literalAmpersand',
-                start: (src: string) => {
-                    const index = src.indexOf('&');
-
-                    return index < 0 ? undefined : index;
-                },
-                tokenizer: (src: string) =>
-                    src[0] === '&' ? { raw: '&', text: '&amp;', type: 'text' as const } : undefined,
-            },
-        ],
         tokenizer: {
             // These marked tokenizers auto-convert literal text into markup, mangling Go-template / pentest
             // prose on round-trip. Returning `undefined` forces the char to stay literal text; `false` defers
@@ -43,6 +25,10 @@ const createFaithfulMarked = () => {
             //   • html/tag — keep `<xml-like>` tags literal (marked swallows real-HTML-element names)
             // NB: autolink/url are intentionally NOT neutralised — a bare `https://…`, `<url>` or email is
             // meant to become a link (see markdown-editor-extensions.ts link config, kept symmetric with typing).
+            // NB: named HTML entities (`&lt; &gt; &amp; &quot;`) are LEFT to marked's decoder — a bare-prose
+            // `&lt;` decodes to `<` (fixes HTML-encoding artifacts from ingestion). Numeric refs (`&#123;`) and
+            // anything inside code are untouched; a bare `&` survives as `&`. Don't re-add a literalAmpersand
+            // token to "preserve" `&lt;` — that re-freezes the artifacts.
             del: (src: string) => (/^~~(?!~)/.test(src) ? false : undefined),
             emStrong: (src: string) => (/^_/.test(src) ? undefined : false),
             escape: () => undefined,
@@ -57,10 +43,10 @@ const createFaithfulMarked = () => {
 
 // The serialize-side counterpart to createFaithfulMarked. @tiptap/markdown's MarkdownManager
 // .encodeTextForMarkdown HTML-entity-encodes text (`<` → `&lt;`) and backslash-escapes ``` ` * _ [ ] ~ \ ```.
-// Both are wrong here: the load side neutralises marked's escape/html/tag tokenizers, so a `\`-escape or
-// `&lt;`-entity is NEVER decoded on parse — anything we encode now resurfaces as a literal backslash / entity
-// on the next load, the exact corruption this editor avoids. Serialization is hard-coded in the manager (no
-// per-extension hook), so replace that one method with identity, keeping load and save byte-symmetric.
+// Both are wrong here: the load side keeps `\`+punct literal (escape tokenizer off), so re-escaping on save
+// would double every backslash; and named HTML entities are DECODED on load (`&lt;`→`<`), so re-encoding
+// would freeze them back into `&lt;`. Serialization is hard-coded in the manager (no per-extension hook), so
+// replace that one method with identity — save emits exactly the text the doc holds.
 type ManagerWithEncode = { encodeTextForMarkdown: (text: string) => string };
 
 const FaithfulMarkdownText = Extension.create({

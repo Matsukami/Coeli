@@ -13,8 +13,9 @@ const mulberry32 = (seed: number) => () => {
 };
 
 // Content atoms that MUST survive load→serialize verbatim: identifiers/dunders, Go-template variables,
-// xml-like tags, regex/path backslashes, HTML entities, C++. Whitespace/formatting may reflow; these
-// bytes may not disappear or mutate.
+// xml-like tags, regex/path backslashes, numeric HTML entities + a bare `&`, C++. Whitespace/formatting may
+// reflow; these bytes may not disappear or mutate. (Named entities like `&lt;` decode to `<` by design —
+// see markdown-editor-marked.ts — so they are NOT survive-verbatim atoms.)
 const ATOMS = [
     '__init__',
     '__call__',
@@ -32,9 +33,9 @@ const ATOMS = [
     'regex \\.php files',
     'glob \\* and \\?',
     'escaped \\[ \\| \\+ here',
-    '&lt;script&gt;',
+    '&#40;paren&#41;',
     'AT&T',
-    'x &amp; y',
+    '2>&1 redirect',
     'C++ then C++',
     '~10% left',
 ];
