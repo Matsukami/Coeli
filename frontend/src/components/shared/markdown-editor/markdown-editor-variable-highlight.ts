@@ -7,12 +7,8 @@ import { Decoration, DecorationSet } from '@tiptap/pm/view';
 import { collectInlineMatches } from './markdown-editor-inline-scan';
 import { VARIABLE_RE, variableProbe } from './markdown-editor-variable-syntax';
 
-// Highlights Go-template actions ({{.Var}}, {{- if .X}}, {{end}}, {{.A | upper}}, …) as VIEW-ONLY
-// decorations. Decorations never touch the document, so getMarkdown() stays byte-identical, and {{ }}
-// already round-trips verbatim. A node/mark would gain nothing here and would break the variables
-// side-panel, which inserts {{.X}} as plain text and finds its uses by scanning, not by node identity.
-// The pure `{{ }}` matching (VARIABLE_RE / variableProbe / findVariableUseRanges) lives in
-// markdown-editor-variable-syntax.ts so tiptap-free consumers can use it without the decoration/PM code.
+// View-only decorations, never a node/mark: a mark would alter the document (corrupting save) and defeat the
+// variables side-panel, which inserts {{.X}} as plain text and finds its uses by scanning, not node identity.
 const variableHighlightKey = new PluginKey('variableHighlight');
 
 const buildDecorations = (doc: PMNode): DecorationSet =>

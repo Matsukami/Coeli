@@ -52,11 +52,10 @@ type ManagerWithEncode = { encodeTextForMarkdown: (text: string) => string };
 const TunedMarkdownText = Extension.create({
     name: 'tunedMarkdownText',
     onBeforeCreate() {
-        const manager = this.editor.markdown as unknown as ManagerWithEncode | undefined;
-
-        if (!manager) {
-            return;
-        }
+        // editor.markdown is always assigned by the Markdown extension (priority ordering below); the
+        // non-optional cast makes a future regression throw here instead of silently reverting save to the
+        // lossy default encoder.
+        const manager = this.editor.markdown as unknown as ManagerWithEncode;
 
         manager.encodeTextForMarkdown = (text) => text;
     },

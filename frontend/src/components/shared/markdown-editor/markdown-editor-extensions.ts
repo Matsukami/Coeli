@@ -37,14 +37,14 @@ const longestBacktickRun = (text: string): number =>
 // contains a ``` line (a doc demonstrating fenced markdown — common in knowledge/prompt examples) re-parses as
 // TWO blocks on the next load: the inner fence closes the outer one. CommonMark requires the fence to be longer
 // than any backtick run inside — widen it. Otherwise identical to upstream.
-const renderTunedCodeBlock = (node: MarkdownRenderNode, h: MarkdownRenderHelpers): string => {
+const renderTunedCodeBlock = (node: MarkdownRenderNode, helpers: MarkdownRenderHelpers): string => {
     const language = node.attrs?.language || '';
 
     if (!node.content) {
         return `\`\`\`${language}\n\n\`\`\``;
     }
 
-    const content = h.renderChildren(node.content);
+    const content = helpers.renderChildren(node.content);
     const fence = '`'.repeat(Math.max(3, longestBacktickRun(content) + 1));
 
     return [`${fence}${language}`, content, fence].join('\n');

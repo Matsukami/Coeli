@@ -23,7 +23,7 @@ import {
     Table,
     Undo,
 } from 'lucide-react';
-import { type Ref, useCallback, useEffect, useImperativeHandle, useMemo, useRef } from 'react';
+import { type Ref, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 
 import { Separator } from '@/components/ui/separator';
 import { Toggle } from '@/components/ui/toggle';
@@ -118,6 +118,11 @@ function MarkdownEditor({
 
     const hasResetInitialHistoryRef = useRef(false);
 
+    // Captured at mount: tiptap only reads `content` at construction, and the value-sync effect below owns
+    // every later update. Passing `value` reactively would make useEditor's compareOptions see content change
+    // on each keystroke and fire a redundant setOptions → view.updateState.
+    const [initialContent] = useState(() => value);
+
     // `placeholder` is captured at mount, like the native <input placeholder>. tiptap's setOptions merges
     // options without re-registering extensions, so a later change can't reach the already-built Placeholder
     // plugin regardless; keeping it out of the deps makes that explicit and stops rebuilding the whole
@@ -127,7 +132,7 @@ function MarkdownEditor({
 
     // tiptap invokes onBlur/onUpdate from its live options ref, so these closures always read the latest props.
     const editor = useEditor({
-        content: value,
+        content: initialContent,
         contentType: 'markdown',
         editable: !disabled,
         extensions,
@@ -239,7 +244,7 @@ function MarkdownEditor({
     }, [editor, value]);
 
     useEffect(() => {
-        if (!editor) {
+        if (!editor || editor.isEditable === !disabled) {
             return;
         }
 
