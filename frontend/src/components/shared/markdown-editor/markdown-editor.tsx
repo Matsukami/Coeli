@@ -2,7 +2,7 @@ import type { Editor } from '@tiptap/react';
 
 import { history } from '@tiptap/pm/history';
 import { EditorState, TextSelection } from '@tiptap/pm/state';
-import { EditorContent, useEditor } from '@tiptap/react';
+import { EditorContent, useEditor, useEditorState } from '@tiptap/react';
 import {
     Bold,
     Code,
@@ -327,6 +327,31 @@ function MarkdownEditorToolbar({ disabled, editor }: MarkdownEditorToolbarProps)
         editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
     }, [editor]);
 
+    // tiptap v3's useEditor does NOT re-render on every transaction, so reading editor.isActive/can() inline
+    // would leave the toolbar stale on selection-only moves (click into a bold word → Bold stays unlit).
+    // useEditorState re-runs this selector per transaction and re-renders only when a button's state flips.
+    const state = useEditorState({
+        editor,
+        selector: ({ editor }) => ({
+            canRedo: editor.can().redo(),
+            canUndo: editor.can().undo(),
+            isBlockquote: editor.isActive('blockquote'),
+            isBold: editor.isActive('bold'),
+            isBulletList: editor.isActive('bulletList'),
+            isCode: editor.isActive('code'),
+            isCodeBlock: editor.isActive('codeBlock'),
+            isH1: editor.isActive('heading', { level: 1 }),
+            isH2: editor.isActive('heading', { level: 2 }),
+            isH3: editor.isActive('heading', { level: 3 }),
+            isItalic: editor.isActive('italic'),
+            isLink: editor.isActive('link'),
+            isOrderedList: editor.isActive('orderedList'),
+            isStrike: editor.isActive('strike'),
+            isTable: editor.isActive('table'),
+            isTaskList: editor.isActive('taskList'),
+        }),
+    });
+
     return (
         <div
             className={cn(
@@ -338,7 +363,7 @@ function MarkdownEditorToolbar({ disabled, editor }: MarkdownEditorToolbarProps)
             <Toggle
                 aria-label="Bold"
                 onPressedChange={() => editor.chain().focus().toggleBold().run()}
-                pressed={editor.isActive('bold')}
+                pressed={state.isBold}
                 size="sm"
                 title="Bold (Ctrl+B)"
             >
@@ -347,7 +372,7 @@ function MarkdownEditorToolbar({ disabled, editor }: MarkdownEditorToolbarProps)
             <Toggle
                 aria-label="Italic"
                 onPressedChange={() => editor.chain().focus().toggleItalic().run()}
-                pressed={editor.isActive('italic')}
+                pressed={state.isItalic}
                 size="sm"
                 title="Italic (Ctrl+I)"
             >
@@ -356,7 +381,7 @@ function MarkdownEditorToolbar({ disabled, editor }: MarkdownEditorToolbarProps)
             <Toggle
                 aria-label="Strikethrough"
                 onPressedChange={() => editor.chain().focus().toggleStrike().run()}
-                pressed={editor.isActive('strike')}
+                pressed={state.isStrike}
                 size="sm"
                 title="Strikethrough"
             >
@@ -365,7 +390,7 @@ function MarkdownEditorToolbar({ disabled, editor }: MarkdownEditorToolbarProps)
             <Toggle
                 aria-label="Inline code"
                 onPressedChange={() => editor.chain().focus().toggleCode().run()}
-                pressed={editor.isActive('code')}
+                pressed={state.isCode}
                 size="sm"
                 title="Inline code"
             >
@@ -380,7 +405,7 @@ function MarkdownEditorToolbar({ disabled, editor }: MarkdownEditorToolbarProps)
             <Toggle
                 aria-label="Heading 1"
                 onPressedChange={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-                pressed={editor.isActive('heading', { level: 1 })}
+                pressed={state.isH1}
                 size="sm"
                 title="Heading 1"
             >
@@ -389,7 +414,7 @@ function MarkdownEditorToolbar({ disabled, editor }: MarkdownEditorToolbarProps)
             <Toggle
                 aria-label="Heading 2"
                 onPressedChange={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-                pressed={editor.isActive('heading', { level: 2 })}
+                pressed={state.isH2}
                 size="sm"
                 title="Heading 2"
             >
@@ -398,7 +423,7 @@ function MarkdownEditorToolbar({ disabled, editor }: MarkdownEditorToolbarProps)
             <Toggle
                 aria-label="Heading 3"
                 onPressedChange={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
-                pressed={editor.isActive('heading', { level: 3 })}
+                pressed={state.isH3}
                 size="sm"
                 title="Heading 3"
             >
@@ -413,7 +438,7 @@ function MarkdownEditorToolbar({ disabled, editor }: MarkdownEditorToolbarProps)
             <Toggle
                 aria-label="Bullet list"
                 onPressedChange={() => editor.chain().focus().toggleBulletList().run()}
-                pressed={editor.isActive('bulletList')}
+                pressed={state.isBulletList}
                 size="sm"
                 title="Bullet list"
             >
@@ -422,7 +447,7 @@ function MarkdownEditorToolbar({ disabled, editor }: MarkdownEditorToolbarProps)
             <Toggle
                 aria-label="Ordered list"
                 onPressedChange={() => editor.chain().focus().toggleOrderedList().run()}
-                pressed={editor.isActive('orderedList')}
+                pressed={state.isOrderedList}
                 size="sm"
                 title="Ordered list"
             >
@@ -431,7 +456,7 @@ function MarkdownEditorToolbar({ disabled, editor }: MarkdownEditorToolbarProps)
             <Toggle
                 aria-label="Task list"
                 onPressedChange={() => editor.chain().focus().toggleTaskList().run()}
-                pressed={editor.isActive('taskList')}
+                pressed={state.isTaskList}
                 size="sm"
                 title="Task list"
             >
@@ -446,7 +471,7 @@ function MarkdownEditorToolbar({ disabled, editor }: MarkdownEditorToolbarProps)
             <Toggle
                 aria-label="Blockquote"
                 onPressedChange={() => editor.chain().focus().toggleBlockquote().run()}
-                pressed={editor.isActive('blockquote')}
+                pressed={state.isBlockquote}
                 size="sm"
                 title="Blockquote"
             >
@@ -455,7 +480,7 @@ function MarkdownEditorToolbar({ disabled, editor }: MarkdownEditorToolbarProps)
             <Toggle
                 aria-label="Code block"
                 onPressedChange={() => editor.chain().focus().toggleCodeBlock().run()}
-                pressed={editor.isActive('codeBlock')}
+                pressed={state.isCodeBlock}
                 size="sm"
                 title="Code block"
             >
@@ -464,7 +489,7 @@ function MarkdownEditorToolbar({ disabled, editor }: MarkdownEditorToolbarProps)
             <Toggle
                 aria-label="Link"
                 onPressedChange={handleSetLink}
-                pressed={editor.isActive('link')}
+                pressed={state.isLink}
                 size="sm"
                 title="Insert link"
             >
@@ -499,7 +524,7 @@ function MarkdownEditorToolbar({ disabled, editor }: MarkdownEditorToolbarProps)
                 onPressedChange={() =>
                     editor.chain().focus().insertTable({ cols: 3, rows: 3, withHeaderRow: true }).run()
                 }
-                pressed={editor.isActive('table')}
+                pressed={state.isTable}
                 size="sm"
                 title="Insert table"
             >
@@ -509,7 +534,7 @@ function MarkdownEditorToolbar({ disabled, editor }: MarkdownEditorToolbarProps)
             <div className="ml-auto flex items-center gap-0.5">
                 <Toggle
                     aria-label="Undo"
-                    disabled={!editor.can().undo()}
+                    disabled={!state.canUndo}
                     onPressedChange={() => editor.chain().focus().undo().run()}
                     pressed={false}
                     size="sm"
@@ -519,7 +544,7 @@ function MarkdownEditorToolbar({ disabled, editor }: MarkdownEditorToolbarProps)
                 </Toggle>
                 <Toggle
                     aria-label="Redo"
-                    disabled={!editor.can().redo()}
+                    disabled={!state.canRedo}
                     onPressedChange={() => editor.chain().focus().redo().run()}
                     pressed={false}
                     size="sm"
