@@ -135,4 +135,36 @@ describe('generative content-integrity — atoms survive load↔serialize across
             expect(out.includes(atom), `atom "${atom}" lost (i=${i}):\n${doc}\n-->\n${out}`).toBe(true);
         }
     });
+
+    // A raw `|` inside a table cell is the one context the single-atom oracle above cannot generate: marked
+    // splits the row on it before inline-tokenizing, so an unprotected pipe drops the trailing cells. Build
+    // tables whose cells carry pipe-bearing atoms inside code spans / Go actions, plus a sentinel trailing
+    // cell; assert the sentinel and the atom's words survive and the table converges.
+    it('pipe-bearing atoms inside table cells keep their row intact and converge', () => {
+        const rng = mulberry32(0x7ab1e);
+        const pipeAtoms = ['x | y', '{{.Host | lower}}', 'a || b', 'grep foo | wc -l', 'no-pipe-here'];
+
+        for (let i = 0; i < 120; i++) {
+            const rowCount = 1 + Math.floor(rng() * 3);
+            const rows: string[] = [];
+            const sentinels: string[] = [];
+
+            for (let row = 0; row < rowCount; row++) {
+                const atom = pipeAtoms[Math.floor(rng() * pipeAtoms.length)] as string;
+                const sentinel = `${WORDS[Math.floor(rng() * WORDS.length)]}${row}`;
+
+                sentinels.push(sentinel);
+                rows.push(`| \`${atom}\` | ${sentinel} |`);
+            }
+
+            const doc = `| code | note |\n| --- | --- |\n${rows.join('\n')}`;
+            const out = roundTrip(doc);
+
+            expect(roundTrip(out), `did not converge (i=${i}):\n${doc}\n-->\n${out}`).toBe(out);
+
+            for (const sentinel of sentinels) {
+                expect(out.includes(sentinel), `cell "${sentinel}" dropped (i=${i}):\n${doc}\n-->\n${out}`).toBe(true);
+            }
+        }
+    });
 });
