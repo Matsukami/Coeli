@@ -31,8 +31,28 @@ describe('shouldParseMarkdownOnPaste — markdown-parse plain text, defer rich s
         expect(shouldParseMarkdownOnPaste('# x', html, false)).toBe(false);
     });
 
-    it('still parses when the HTML is only styled-inline (e.g. a VS Code span, no block tags)', () => {
+    it('still parses when the HTML is only styled-inline but the text IS markdown (VS Code markdown copy)', () => {
         expect(shouldParseMarkdownOnPaste('**x**', '<span style="color:red">**x**</span>', false)).toBe(true);
+    });
+
+    it.each([
+        ['# heading', '<span># heading</span>'],
+        ['- item one\n- item two', '<span>- item one<br>- item two</span>'],
+        ['| a | b |', '<span>| a | b |</span>'],
+        ['```\ncode\n```', '<span>```</span>'],
+        ['> quoted', '<span>&gt; quoted</span>'],
+        ['see [docs](https://x.dev)', '<span>see [docs](https://x.dev)</span>'],
+        ['1. first', '<span>1. first</span>'],
+    ])('parses markdown-looking text %s despite an inline-only HTML wrapper', (text, html) => {
+        expect(shouldParseMarkdownOnPaste(text, html, false)).toBe(true);
+    });
+
+    it.each([
+        ['hello world', '<b style="font-weight:700">hello world</b>'], // Google Docs bold paragraph
+        ['see the docs', '<a href="https://example.com">see the docs</a>'], // inline link
+        ['plain sentence', '<span style="font-style:italic">plain sentence</span>'], // Word italic
+    ])('defers inline-formatted HTML whose text %s has no markdown (native parse keeps the marks)', (text, html) => {
+        expect(shouldParseMarkdownOnPaste(text, html, false)).toBe(false);
     });
 
     it('keeps a paste inside a code context literal', () => {
@@ -77,5 +97,11 @@ describe('MarkdownPaste — the parsed payload matches load (same tuned markdown
         const html = pasteHtml('# fake', '<ul><li>web item</li></ul>');
 
         expect(html).not.toContain('<h1>');
+    });
+
+    it('defers inline-formatted HTML with markdown-free text (plugin inserts nothing)', () => {
+        const html = pasteHtml('hello bold world', '<b>hello bold world</b>');
+
+        expect(html).not.toContain('hello bold world');
     });
 });
