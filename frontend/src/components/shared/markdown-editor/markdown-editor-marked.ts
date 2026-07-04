@@ -25,10 +25,11 @@ const createTunedMarked = () => {
             //   • html/tag — keep `<xml-like>` tags literal (marked swallows real-HTML-element names)
             // NB: autolink/url are intentionally NOT neutralised — a bare `https://…`, `<url>` or email is
             // meant to become a link (see markdown-editor-extensions.ts link config, kept symmetric with typing).
-            // NB: named HTML entities (`&lt; &gt; &amp; &quot;`) are LEFT to marked's decoder — a bare-prose
-            // `&lt;` decodes to `<` (fixes HTML-encoding artifacts from ingestion). Numeric refs (`&#123;`) and
-            // anything inside code are untouched; a bare `&` survives as `&`. Don't re-add a literalAmpersand
-            // token to "preserve" `&lt;` — that re-freezes the artifacts.
+            // NB: named HTML entities (`&lt; &gt; &amp; &quot;`) are decoded downstream — @tiptap/markdown's
+            // token parsing runs @tiptap/core's decodeHtmlEntities, so a bare-prose `&lt;` becomes `<` (fixes
+            // HTML-encoding artifacts from ingestion). Numeric refs (`&#123;`) and anything inside code are
+            // untouched; a bare `&` survives as `&`. Don't re-add a literalAmpersand token to "preserve"
+            // `&lt;` — that re-freezes the artifacts.
             del: (src: string) => (/^~~(?!~)/.test(src) ? false : undefined),
             emStrong: (src: string) => (/^_/.test(src) ? undefined : false),
             escape: () => undefined,

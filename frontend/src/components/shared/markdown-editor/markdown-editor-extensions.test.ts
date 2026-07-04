@@ -134,6 +134,26 @@ describe('named HTML entities decode outside code; numeric refs, bare & and raw 
             'use <input> and <container_environment> here',
         );
     });
+
+    // INTENTIONAL (product decision): a multi-encoded entity in prose loses ONE encoding level per open+save
+    // cycle until fully decoded — outside code, `&lt;` means `<`. Do NOT "fix" by re-encoding `&` on save:
+    // that would freeze the single-level ingestion artifacts the decode exists to clean.
+    it('multi-encoded prose entity decodes one level per cycle, then stabilizes', () => {
+        const p1 = roundTrip('literal &amp;lt; here');
+        const p2 = roundTrip(p1);
+        const p3 = roundTrip(p2);
+
+        expect(p1).toBe('literal &lt; here');
+        expect(p2).toBe('literal < here');
+        expect(p3).toBe(p2);
+    });
+
+    it('multi-encoded entity inside inline code is byte-stable across cycles', () => {
+        const p1 = roundTrip('code `&amp;lt;` here');
+
+        expect(p1).toBe('code `&amp;lt;` here');
+        expect(roundTrip(p1)).toBe(p1);
+    });
 });
 
 describe('Underline disabled — ++ never parses, C++/++flags prose survives', () => {
