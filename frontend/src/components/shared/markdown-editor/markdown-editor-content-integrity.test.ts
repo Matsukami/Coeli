@@ -146,6 +146,9 @@ describe('generative content-integrity — atoms survive load↔serialize across
 
         for (let i = 0; i < 120; i++) {
             const rowCount = 1 + Math.floor(rng() * 3);
+            // GFM makes the outer pipe optional; generate BOTH styles so the pipe-less body-row path is exercised.
+            const outerPipe = rng() < 0.5;
+            const wrap = (cells: string) => (outerPipe ? `| ${cells} |` : cells);
             const rows: string[] = [];
             const sentinels: string[] = [];
 
@@ -154,10 +157,10 @@ describe('generative content-integrity — atoms survive load↔serialize across
                 const sentinel = `${WORDS[Math.floor(rng() * WORDS.length)]}${row}`;
 
                 sentinels.push(sentinel);
-                rows.push(`| \`${atom}\` | ${sentinel} |`);
+                rows.push(wrap(`\`${atom}\` | ${sentinel}`));
             }
 
-            const doc = `| code | note |\n| --- | --- |\n${rows.join('\n')}`;
+            const doc = `${wrap('code | note')}\n${wrap('--- | ---')}\n${rows.join('\n')}`;
             const out = roundTrip(doc);
 
             expect(roundTrip(out), `did not converge (i=${i}):\n${doc}\n-->\n${out}`).toBe(out);

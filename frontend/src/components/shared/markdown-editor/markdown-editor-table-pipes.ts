@@ -1,21 +1,39 @@
 // marked's GFM table tokenizer splits every row on raw `|` BEFORE inline tokenization, so a pipe inside a
-// code span (`` `x | y` ``) or a Go-template action (`{{.X | upper}}`) in a body cell creates a phantom
+// code span (`` `x | y` ``) or a Go-template action (`{{.X | upper}}`) in a cell creates a phantom
 // column and the trailing cells are silently DROPPED on load. The splitter does honor `\|` — and unescapes
 // it in the cell text — so pre-escaping those pipes before marked lexes protects the load side the same way
 // TunedTable's renderChildren escape protects the save side.
 //
-// Scope is deliberately conservative — only rows that marked itself would treat as a table:
+// Scope must match EXACTLY the rows marked itself treats as the table — no more, no less:
 //   • the header/delimiter pair must already parse as a table (matching cell counts, delimiter has |/:) —
-//     escaping pipes in a NON-table line would surface literal `\|` (and could even turn a setext heading
-//     into a table by changing the header's cell count);
-//   • only BODY rows starting with `|` are transformed (header cell counts are structural; a body row is
-//     truncated/padded to the header width, so protecting its pipes only ever preserves more content);
+//     escaping pipes in a NON-table line would surface a literal `\|` (the escape tokenizer is neutralised,
+//     so `\|` outside a real table row does NOT unescape) and could even turn a setext heading into a table;
+//   • the leading/trailing pipe is OPTIONAL in GFM, so the header row AND every body row are transformed
+//     (marked's own gfmTable body capture — `(?!blank|hr|heading|blockquote|code|fences|list).*` — has no
+//     leading-pipe requirement; gating on a leading `|` dropped cells for the common no-outer-pipe style);
+//   • a table's rows run until a blank line or the start of another block (mirrored by ENDS_TABLE_BODY);
 //   • fenced code blocks are never touched.
+// Not covered: an HTML-block line (a standard block tag) immediately following a table with no blank line —
+// marked would end the table there; we do not replicate its HTML-block interrupt (vanishingly rare in this
+// content, and our html tokenizers render such lines as literal text anyway).
 
 const FENCE_LINE = /^ {0,3}(```|~~~)/;
 const TABLE_DELIMITER_LINE = /^ {0,3}\|? *:?-+:? *(?:\| *:?-+:? *)*\|? *$/;
-const BODY_ROW_LINE = /^ {0,3}\|/;
 const TEMPLATE_ACTION = /\{\{[^{}]*\}\}/g;
+
+// A table's body ends at a blank line or the first line that starts a different block — the same interrupts
+// marked's gfmTable body-row negative lookahead lists (heading, blockquote, fences, list, hr, indented code).
+const ENDS_TABLE_BODY = [
+    /^[ \t]*$/,
+    FENCE_LINE,
+    /^ {0,3}#{1,6}(?: |\t|$)/,
+    /^ {0,3}>/,
+    /^ {0,3}(?:[*+-]|1[.)])[ \t]/,
+    /^ {0,3}(?:(?:- *){3,}|(?:_ *){3,}|(?:\* *){3,})$/,
+    /^(?: {4}| {0,3}\t)/,
+];
+
+const endsTableBody = (line: string): boolean => ENDS_TABLE_BODY.some((rule) => rule.test(line));
 
 const isEscapedAt = (text: string, offset: number): boolean => {
     let isEscaped = false;
@@ -115,6 +133,15 @@ export const escapeTablePipes = (markdown: string): string => {
     let openFence: null | string = null;
     let isChanged = false;
 
+    const escapeRow = (row: number): void => {
+        const escaped = escapeRowPipes(lines[row]!);
+
+        if (escaped !== lines[row]) {
+            lines[row] = escaped;
+            isChanged = true;
+        }
+    };
+
     for (let index = 0; index < lines.length; index++) {
         const line = lines[index]!;
         const fence = FENCE_LINE.exec(line);
@@ -139,13 +166,12 @@ export const escapeTablePipes = (markdown: string): string => {
             continue;
         }
 
-        for (let row = index + 2; row < lines.length && BODY_ROW_LINE.test(lines[row]!); row++) {
-            const escaped = escapeRowPipes(lines[row]!);
+        // Header + every body row up to the block boundary; the delimiter row (index + 1) holds no cell
+        // content. escapeRowPipes leaves structural pipes alone, so escaping the header can't skew its cell count.
+        escapeRow(index);
 
-            if (escaped !== lines[row]) {
-                lines[row] = escaped;
-                isChanged = true;
-            }
+        for (let row = index + 2; row < lines.length && !endsTableBody(lines[row]!); row++) {
+            escapeRow(row);
         }
     }
 
