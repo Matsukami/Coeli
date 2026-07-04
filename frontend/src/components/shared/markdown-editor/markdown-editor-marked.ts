@@ -2,7 +2,7 @@ import type { JSONContent, MarkdownRendererHelpers } from '@tiptap/core';
 
 import { Extension } from '@tiptap/core';
 import { renderTableToMarkdown, Table } from '@tiptap/extension-table';
-import { Markdown, MarkdownManager } from '@tiptap/markdown';
+import { Markdown } from '@tiptap/markdown';
 import { Marked } from 'marked';
 
 import { escapeTablePipes } from './markdown-editor-table-pipes';
@@ -40,6 +40,20 @@ const createTunedMarked = () => {
         },
     });
 
+    // Load-side counterpart to TunedTable's save-side pipe escape: protect a `|` inside a code span / Go
+    // action in a table cell BEFORE marked's table tokenizer splits the row (it splits raw `|` before inline
+    // tokenization, dropping trailing cells). @tiptap/markdown's manager builds its block lexer via
+    // `new markedInstance.Lexer(...)` — including for the construction-time initial parse — so subclassing
+    // this PRIVATE instance's Lexer keeps the transform instance-scoped (no shared-class mutation) and still
+    // catches every load. `inlineTokens` is inherited unchanged, so inline fragments are not touched.
+    const BaseLexer = instance.Lexer;
+
+    instance.Lexer = class extends BaseLexer {
+        override lex(src: string) {
+            return super.lex(escapeTablePipes(src));
+        }
+    } as typeof BaseLexer;
+
     // A PRIVATE instance — mutating the shared global `marked` would also affect report-pdf.
     return instance;
 };
@@ -68,36 +82,11 @@ const TunedMarkdownText = Extension.create({
     priority: 50,
 });
 
-// The load-side counterpart to TunedTable's save-side pipe escape: protect a `|` inside a code span / Go
-// action in a table cell BEFORE marked's table tokenizer splits the row (it splits raw `|` before inline
-// tokenization, dropping trailing cells). This has to patch MarkdownManager.parse on the PROTOTYPE, not the
-// instance: the Markdown extension parses the INITIAL `content` inside its own onBeforeCreate (before any
-// lower-priority extension can touch the manager), so an instance patch would miss the initial load. The
-// manager also lexes via `new Lexer()`, bypassing Marked.parse — so a marked-level hooks.preprocess never
-// runs. Idempotent + guarded; the escape is a no-op fast-path for content without a table.
-let isManagerParsePatched = false;
-
-const patchManagerParse = () => {
-    if (isManagerParsePatched) {
-        return;
-    }
-
-    isManagerParsePatched = true;
-
-    const proto = MarkdownManager.prototype as unknown as { parse: (markdown: string) => unknown };
-    const parse = proto.parse;
-
-    proto.parse = function tunedParse(markdown: string) {
-        return parse.call(this, escapeTablePipes(markdown));
-    };
-};
-
 // @tiptap/extension-table's renderTableToMarkdown is alignment-aware but never escapes pipes, so a literal
 // `|` a cell emits (even from inside inline code) would re-parse as a column delimiter on the next SAVE and
 // drop cells (tiptap PR #7884). renderTableToMarkdown emits cell content only via h.renderChildren, so wrapping
 // that one call to escape pipes fixes the save side, on the official alignment-aware renderer.
-// The LOAD side of the same class (a raw `|` inside inline code arriving in external markdown) is covered by
-// patchManagerParse above.
+// The LOAD side of the same class is covered by the tuned Lexer subclass in createTunedMarked above.
 export const TunedTable = Table.extend({
     renderMarkdown(node: JSONContent, helpers: MarkdownRendererHelpers) {
         const pipeEscaping: MarkdownRendererHelpers = {
@@ -109,13 +98,7 @@ export const TunedTable = Table.extend({
     },
 });
 
-export const createMarkdownLayer = () => {
-    // Installed here (before `new Editor` consumes these extensions) so the prototype patch is in place
-    // when the Markdown extension parses the initial content during construction.
-    patchManagerParse();
-
-    return [
-        Markdown.configure({ marked: createTunedMarked() as unknown as typeof import('marked').marked }),
-        TunedMarkdownText,
-    ];
-};
+export const createMarkdownLayer = () => [
+    Markdown.configure({ marked: createTunedMarked() as unknown as typeof import('marked').marked }),
+    TunedMarkdownText,
+];
