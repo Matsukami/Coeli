@@ -86,8 +86,13 @@ export default defineConfig(({ mode }) => {
                         if (/[\\/](monaco-editor|@monaco-editor[\\/]react)[\\/]/.test(id)) {
                             return 'monaco';
                         }
-                        if (/[\\/](@tiptap|tiptap-markdown|prosemirror-[a-z-]+)[\\/]/.test(id)) {
+                        if (/[\\/](@tiptap|prosemirror-[a-z-]+)[\\/]/.test(id)) {
                             return 'tiptap';
+                        }
+                        // Without an own chunk, marked gets folded into the 527KB tiptap chunk, and report-pdf's
+                        // static `import { marked }` would download all of it for a ~40KB library.
+                        if (/[\\/]node_modules[\\/]marked[\\/]/.test(id)) {
+                            return 'marked';
                         }
                         if (/[\\/](react|react-dom|react-router-dom)[\\/]/.test(id)) {
                             return 'react-vendor';

@@ -44,7 +44,7 @@ const WORDS = ['firewall', 'payload', 'exploit', 'nmap', 'recon', 'shell', 'toke
 
 // Block contexts that keep inline content literal: paragraph, heading, bullet item, ordered item,
 // blockquote, inline code. (Nested compositions — ordered>bullet>code, fence-in-fence — are exercised
-// separately below; the historical ordered>bullet>code drop is fixed by the indented-fence + fence-widen work.)
+// separately below.)
 const wrap = (context: number, text: string): string => {
     switch (context) {
         case 1:
@@ -107,10 +107,10 @@ describe('generative content-integrity — atoms survive load↔serialize across
         expect(roundTrip(source)).toBe(source);
     });
 
-    // M3: the survives/converges oracles above only place atoms in SINGLE contexts. Nesting primitives inside
-    // one another (ordered>bullet, blockquote>list, list>code, fence-in-fence) is exactly the class that
-    // produced the historical ordered>bullet>code drop — assert structure (via structuralCounts, catching a
-    // dropped block/item) AND convergence AND atom survival across depth-≥2 compositions.
+    // The survives/converges oracles above only place atoms in SINGLE contexts. Nesting primitives inside
+    // one another (ordered>bullet, blockquote>list, list>code, fence-in-fence) is exactly the class where a
+    // whole block can drop silently — assert structure (via structuralCounts, catching a dropped block/item)
+    // AND convergence AND atom survival across depth-≥2 compositions.
     it('nested primitive compositions preserve structure, content, and converge', () => {
         const rng = mulberry32(0x5eeded);
         const nestAtoms = ['{{.TargetURL}}', '<container_environment>', '__init__', 'C++ then C++', 'os.execute()'];

@@ -1,4 +1,4 @@
-import type { JSONContent } from '@tiptap/core';
+import type { JSONContent, MarkdownRendererHelpers } from '@tiptap/core';
 
 import { Extension } from '@tiptap/core';
 import { renderTableToMarkdown, Table } from '@tiptap/extension-table';
@@ -71,16 +71,14 @@ const TunedMarkdownText = Extension.create({
 // that one call to escape pipes fixes the save side, on the official alignment-aware renderer.
 // This does NOT (and cannot) help the LOAD side: a raw `|` inside inline code arriving in external markdown is
 // split by marked's GFM table tokenizer BEFORE the inline-code tokenizer runs — a marked limitation.
-type RenderHelpers = { renderChildren: (nodes: JSONContent | JSONContent[], separator?: string) => string };
-
-export const MarkdownTable = Table.extend({
-    renderMarkdown(node: JSONContent, helpers: RenderHelpers) {
-        const pipeEscaping: RenderHelpers = {
+export const TunedTable = Table.extend({
+    renderMarkdown(node: JSONContent, helpers: MarkdownRendererHelpers) {
+        const pipeEscaping: MarkdownRendererHelpers = {
             ...helpers,
             renderChildren: (nodes, separator) => helpers.renderChildren(nodes, separator).replace(/\|/g, '\\|'),
         };
 
-        return renderTableToMarkdown(node, pipeEscaping as Parameters<typeof renderTableToMarkdown>[1]);
+        return renderTableToMarkdown(node, pipeEscaping);
     },
 });
 

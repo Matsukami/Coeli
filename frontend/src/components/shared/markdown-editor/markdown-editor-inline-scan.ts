@@ -37,7 +37,7 @@ export const collectInlineMatches = (doc: PMNode, regex: RegExp): InlineMatch[] 
         });
 
         for (const match of text.matchAll(regex)) {
-            const start = match.index ?? 0;
+            const start = match.index;
             const from = positions[start];
             const last = positions[start + match[0].length - 1];
 

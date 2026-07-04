@@ -201,11 +201,8 @@ export function KnowledgeForm({ initialValues, isNew, knowledge, onSubmit }: Kno
 
     const form = useForm<FormValues>({
         defaultValues: initialValues,
-        // `onTouched` validates a field on its first blur and on every change
-        // afterwards. With `onChange` we'd run the entire Zod schema on every
-        // keystroke (including every emit from the multi-kilobyte `content`
-        // markdown editor) — same UX after the first interaction, no waste
-        // on initial mount or untouched fields.
+        // Not `onChange`: that would run the entire Zod schema on every keystroke, including every emit
+        // from the multi-kilobyte `content` markdown editor.
         mode: 'onTouched',
         resetOptions: {
             // When `values` changes (e.g. a GraphQL subscription pushes an

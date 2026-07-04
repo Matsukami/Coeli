@@ -118,12 +118,12 @@ describe('named HTML entities decode outside code; numeric refs, bare & and raw 
         expect(roundTrip(src)).toBe(expected);
     });
 
-    it.each([
-        'numeric &#123; and &#40; and &#x25; stay', // numeric refs are not decoded
-        'bare AT&T and a & b and 2>&1 survive', // a lone & is left literal
-    ])('keeps %s byte-identical', (s) => {
-        expect(roundTrip(s)).toBe(s);
-    });
+    it.each(['numeric &#123; and &#40; and &#x25; stay', 'bare AT&T and a & b and 2>&1 survive'])(
+        'keeps %s byte-identical',
+        (s) => {
+            expect(roundTrip(s)).toBe(s);
+        },
+    );
 
     it('entities inside inline code are preserved (code content is not decoded)', () => {
         expect(roundTrip('`&lt;script&gt;`')).toBe('`&lt;script&gt;`');
@@ -174,7 +174,7 @@ describe('inline marks round-trip', () => {
     });
 });
 
-describe('MarkdownTable — cell pipes escaped + alignment preserved, idempotent', () => {
+describe('TunedTable — cell pipes escaped + alignment preserved, idempotent', () => {
     it.each([
         [
             'pipe in a code-span cell',
@@ -221,10 +221,8 @@ describe('nesting & sequencing — content preserved and converges (≤2 saves)'
     });
 });
 
-// A code block nested in a list (ordered > bullet > code) has an indented opening fence, so
-// @tiptap/extension-code-block's `startsWith('```')` gate used to drop it — the same root cause as a
-// top-level indented fence, fixed by parseTunedCodeBlock (see markdown-editor-extensions.ts). This was
-// once a pinned KNOWN-BUG test asserting the loss; the fix now keeps the code.
+// A code block nested in a list (ordered > bullet > code) has an indented opening fence — the same root
+// cause as a top-level indented fence, covered by parseTunedCodeBlock (see markdown-editor-extensions.ts).
 describe('ordered > bullet > code — indented nested code survives', () => {
     it('keeps the deeply-nested code block', () => {
         const out = roundTrip('1. lvl1\n   - lvl2\n\n     ```\n     deepcode\n     ```');

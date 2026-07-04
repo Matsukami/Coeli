@@ -12,7 +12,6 @@ export const setupEditorJsdom = (): void => {
         ({ item: () => null, length: 0, [Symbol.iterator]: [][Symbol.iterator] }) as unknown as DOMRectList;
 };
 
-// The folder's standard load↔save round-trip: parse markdown into a headless editor and re-serialize.
 export const roundTrip = (markdown: string): string => {
     const editor = new Editor({ content: markdown, contentType: 'markdown', extensions: createMarkdownExtensions() });
     const out = editor.getMarkdown();

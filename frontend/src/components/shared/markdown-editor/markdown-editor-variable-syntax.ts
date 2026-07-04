@@ -19,7 +19,7 @@ export const findVariableUseRanges = (value: string, variable: string): { index:
     const ranges: { index: number; length: number }[] = [];
 
     for (const match of value.matchAll(VARIABLE_RE)) {
-        if (match.index !== undefined && probe.test(match[0])) {
+        if (probe.test(match[0])) {
             ranges.push({ index: match.index, length: match[0].length });
         }
     }
