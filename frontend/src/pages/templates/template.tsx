@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import { skipToken, useQuery } from '@apollo/client/react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ChevronDown, Ellipsis, FileSymlink, FileText, Loader2, Pencil, Save, Trash } from 'lucide-react';
-import { lazy, Suspense, useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -18,7 +18,7 @@ import {
 } from '@/components/shared/detail-navigation';
 import { DetailTwoPanelLayout } from '@/components/shared/detail-two-panel-layout';
 import { InlineEditInput, useInlineEdit } from '@/components/shared/inline-edit';
-import { type EditorViewMode, EditorViewModeToggle } from '@/components/shared/markdown-editor';
+import { type EditorViewMode, EditorViewModeToggle, MarkdownEditorField } from '@/components/shared/markdown-editor';
 import { UnsavedChangesDialog, useUnsavedChangesGuard } from '@/components/shared/unsaved-changes';
 import { Badge } from '@/components/ui/badge';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage } from '@/components/ui/breadcrumb';
@@ -36,7 +36,6 @@ import { Form, FormControl, FormField, FormItem } from '@/components/ui/form';
 import { FormSubmitButton } from '@/components/ui/form-submit-button';
 import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
-import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useTemplateDetailNavigation } from '@/features/templates/use-template-detail-navigation';
 import { FlowTemplateDocument } from '@/graphql/types';
@@ -44,12 +43,6 @@ import { useBreakpoint } from '@/hooks/use-breakpoint';
 import { routes } from '@/lib/routes';
 import { cn } from '@/lib/utils';
 import { type Template, useTemplates } from '@/providers/templates-provider';
-
-const MarkdownEditor = lazy(() =>
-    import('@/components/shared/markdown-editor/markdown-editor').then((module) => ({
-        default: module.MarkdownEditor,
-    })),
-);
 
 const formSchema = z.object({
     text: z.string().trim().min(1, { message: 'Text is required' }),
@@ -680,32 +673,21 @@ function Template() {
             render={({ field }) => (
                 <FormItem className="flex min-h-0 flex-1 flex-col">
                     <FormControl>
-                        {viewMode === 'rich' ? (
-                            <Suspense
-                                fallback={
-                                    <div className="flex min-h-0 flex-1 items-center justify-center rounded-md border">
-                                        <Spinner variant="circle" />
-                                    </div>
-                                }
-                            >
-                                <MarkdownEditor
-                                    className="min-h-0 flex-1"
-                                    disabled={isSaving}
-                                    onBlur={field.onBlur}
-                                    onChange={field.onChange}
-                                    placeholder="Content"
-                                    value={field.value}
-                                />
-                            </Suspense>
-                        ) : (
-                            <Textarea
-                                {...field}
-                                autoSize={false}
-                                className="min-h-[640px] flex-1 resize-none font-mono text-sm"
-                                disabled={isSaving}
-                                placeholder="Content"
-                            />
-                        )}
+                        <MarkdownEditorField
+                            className="min-h-0 flex-1"
+                            disabled={isSaving}
+                            fallback={
+                                <div className="flex min-h-0 flex-1 items-center justify-center rounded-md border">
+                                    <Spinner variant="circle" />
+                                </div>
+                            }
+                            mode={viewMode}
+                            onBlur={field.onBlur}
+                            onChange={field.onChange}
+                            placeholder="Content"
+                            rawClassName="min-h-[640px] flex-1"
+                            value={field.value}
+                        />
                     </FormControl>
                 </FormItem>
             )}

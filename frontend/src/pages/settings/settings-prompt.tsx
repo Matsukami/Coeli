@@ -16,17 +16,7 @@ import {
     Wrench,
     XCircle,
 } from 'lucide-react';
-import {
-    type ComponentProps,
-    lazy,
-    type Ref,
-    Suspense,
-    useCallback,
-    useEffect,
-    useMemo,
-    useRef,
-    useState,
-} from 'react';
+import { type ComponentProps, type Ref, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import ReactDiffViewer from 'react-diff-viewer-continued';
 import {
     type Control,
@@ -51,6 +41,7 @@ import {
     type EditorViewMode,
     EditorViewModeToggle,
     findVariableUseRanges,
+    MarkdownEditorField,
     type MarkdownEditorHandle,
     VARIABLE_RE,
     variableProbe,
@@ -80,11 +71,10 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Form, FormControl, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Form, FormControl, FormItem, FormMessage } from '@/components/ui/form';
 import { FormSubmitButton } from '@/components/ui/form-submit-button';
 import { StatusCard } from '@/components/ui/status-card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Textarea } from '@/components/ui/textarea';
 import {
     CreatePromptDocument,
     DeletePromptDocument,
@@ -94,14 +84,6 @@ import {
 } from '@/graphql/types';
 import { useBreakpoint } from '@/hooks/use-breakpoint';
 import { formatPromptId } from '@/lib/route-titles/format-prompt-id';
-import { cn } from '@/lib/utils';
-
-// Dynamic-only import: a static import would merge the tiptap editor chunk into this route bundle.
-const MarkdownEditor = lazy(() =>
-    import('@/components/shared/markdown-editor/markdown-editor').then((module) => ({
-        default: module.MarkdownEditor,
-    })),
-);
 
 const systemFormSchema = z.object({
     template: z.string().min(1, 'System template is required'),
@@ -111,27 +93,13 @@ const humanFormSchema = z.object({
     template: z.string().min(1, 'Human template is required'),
 });
 
-interface BaseFieldProps<T extends FieldValues> extends ControllerProps<T> {
-    label?: string;
-}
-interface BaseTextareaProps {
-    className?: string;
-    placeholder?: string;
-}
-
-interface ControllerProps<T extends FieldValues> {
+interface FormMarkdownItemProps<T extends FieldValues> {
     control: Control<T>;
     disabled?: boolean;
-    name: FieldPathByValue<T, string>;
-}
-
-interface FormCodeItemProps<T extends FieldValues> extends ControllerProps<T> {
     editorRef?: Ref<MarkdownEditorHandle>;
+    mode: EditorViewMode;
+    name: FieldPathByValue<T, string>;
     placeholder?: string;
-}
-
-interface FormTextareaItemProps<T extends FieldValues> extends BaseFieldProps<T>, BaseTextareaProps {
-    description?: string;
 }
 
 type HumanFormData = z.infer<typeof humanFormSchema>;
@@ -234,13 +202,14 @@ const diffStyles = {
     },
 } satisfies ComponentProps<typeof ReactDiffViewer>['styles'];
 
-function FormCodeItem<T extends FieldValues>({
+function FormMarkdownItem<T extends FieldValues>({
     control,
     disabled,
     editorRef,
+    mode,
     name,
     placeholder,
-}: FormCodeItemProps<T>) {
+}: FormMarkdownItemProps<T>) {
     const { field, fieldState } = useController({
         control,
         disabled,
@@ -250,53 +219,21 @@ function FormCodeItem<T extends FieldValues>({
     return (
         <FormItem className="flex min-h-0 flex-1 flex-col">
             <FormControl>
-                <Suspense
+                <MarkdownEditorField
+                    className="min-h-0 flex-1"
+                    disabled={disabled}
                     fallback={
                         <div className="flex min-h-0 flex-1 items-center justify-center rounded-md border">
                             <Loader2 className="text-muted-foreground size-5 animate-spin" />
                         </div>
                     }
-                >
-                    <MarkdownEditor
-                        className="min-h-0 flex-1"
-                        disabled={disabled}
-                        onBlur={field.onBlur}
-                        onChange={field.onChange}
-                        placeholder={placeholder}
-                        ref={editorRef}
-                        value={field.value}
-                    />
-                </Suspense>
-            </FormControl>
-            {fieldState.error && <FormMessage>{fieldState.error.message}</FormMessage>}
-        </FormItem>
-    );
-}
-
-function FormTextareaItem<T extends FieldValues>({
-    className,
-    control,
-    disabled,
-    label,
-    name,
-    placeholder,
-}: FormTextareaItemProps<T>) {
-    const { field, fieldState } = useController({
-        control,
-        disabled,
-        name,
-    });
-
-    return (
-        <FormItem className="flex min-h-0 flex-1 flex-col">
-            {label && <FormLabel>{label}</FormLabel>}
-            <FormControl>
-                <Textarea
-                    {...field}
-                    autoSize={false}
-                    className={cn('min-h-[640px] flex-1 resize-none font-mono text-sm', className)}
-                    disabled={disabled}
+                    mode={mode}
+                    onBlur={field.onBlur}
+                    onChange={field.onChange}
                     placeholder={placeholder}
+                    rawClassName="min-h-[640px] flex-1"
+                    ref={editorRef}
+                    value={field.value}
                 />
             </FormControl>
             {fieldState.error && <FormMessage>{fieldState.error.message}</FormMessage>}
@@ -1025,22 +962,14 @@ function SettingsPrompt() {
                         id="system-prompt-form"
                         onSubmit={systemForm.handleSubmit(handleSystemSubmit)}
                     >
-                        {viewMode === 'rich' ? (
-                            <FormCodeItem
-                                control={systemForm.control}
-                                disabled={isLoading}
-                                editorRef={editorRef}
-                                name="template"
-                                placeholder={systemPlaceholder}
-                            />
-                        ) : (
-                            <FormTextareaItem
-                                control={systemForm.control}
-                                disabled={isLoading}
-                                name="template"
-                                placeholder={systemPlaceholder}
-                            />
-                        )}
+                        <FormMarkdownItem
+                            control={systemForm.control}
+                            disabled={isLoading}
+                            editorRef={editorRef}
+                            mode={viewMode}
+                            name="template"
+                            placeholder={systemPlaceholder}
+                        />
                     </form>
                 </Form>
             </TabsContent>
@@ -1056,22 +985,14 @@ function SettingsPrompt() {
                             id="human-prompt-form"
                             onSubmit={humanForm.handleSubmit(handleHumanSubmit)}
                         >
-                            {viewMode === 'rich' ? (
-                                <FormCodeItem
-                                    control={humanForm.control}
-                                    disabled={isLoading}
-                                    editorRef={editorRef}
-                                    name="template"
-                                    placeholder="Enter the human prompt template..."
-                                />
-                            ) : (
-                                <FormTextareaItem
-                                    control={humanForm.control}
-                                    disabled={isLoading}
-                                    name="template"
-                                    placeholder="Enter the human prompt template..."
-                                />
-                            )}
+                            <FormMarkdownItem
+                                control={humanForm.control}
+                                disabled={isLoading}
+                                editorRef={editorRef}
+                                mode={viewMode}
+                                name="template"
+                                placeholder="Enter the human prompt template..."
+                            />
                         </form>
                     </Form>
                 </TabsContent>

@@ -5,8 +5,7 @@ import type {
     KnowledgeGuideType as KnowledgeGuideTypeT,
 } from '@/graphql/types';
 
-import { type EditorViewMode } from '@/components/shared/markdown-editor';
-import { MarkdownEditor } from '@/components/shared/markdown-editor/markdown-editor';
+import { type EditorViewMode, MarkdownEditorField } from '@/components/shared/markdown-editor';
 import {
     Autocomplete,
     AutocompleteContent,
@@ -18,9 +17,7 @@ import {
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { InputGroup, InputGroupTextareaAutosize } from '@/components/ui/input-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
 import { KnowledgeAnswerType, KnowledgeDocType, KnowledgeGuideType } from '@/graphql/types';
-import { cn } from '@/lib/utils';
 
 import type { FormValues } from './knowledge-form';
 
@@ -101,30 +98,17 @@ export function KnowledgeContentField({
                 <FormItem className={fillParent ? 'flex min-h-0 flex-1 flex-col' : undefined}>
                     {hasLabel ? <FormLabel>Content</FormLabel> : null}
                     <FormControl>
-                        {viewMode === 'raw' ? (
-                            <Textarea
-                                autoSize={false}
-                                className={cn(
-                                    'resize-none font-mono text-sm',
-                                    fillParent ? 'min-h-0 flex-1' : 'min-h-[280px]',
-                                )}
-                                disabled={isSaving}
-                                onBlur={field.onBlur}
-                                onChange={field.onChange}
-                                placeholder="Knowledge content (will be embedded into the vector store)"
-                                value={field.value}
-                            />
-                        ) : (
-                            <MarkdownEditor
-                                className={fillParent ? 'min-h-0 flex-1' : 'min-h-[280px]'}
-                                contentClassName={fillParent ? undefined : 'min-h-[240px]'}
-                                disabled={isSaving}
-                                onBlur={field.onBlur}
-                                onChange={field.onChange}
-                                placeholder="Knowledge content (will be embedded into the vector store)"
-                                value={field.value}
-                            />
-                        )}
+                        <MarkdownEditorField
+                            className={fillParent ? 'min-h-0 flex-1' : 'min-h-[280px]'}
+                            contentClassName={fillParent ? undefined : 'min-h-[240px]'}
+                            disabled={isSaving}
+                            mode={viewMode}
+                            onBlur={field.onBlur}
+                            onChange={field.onChange}
+                            placeholder="Knowledge content (will be embedded into the vector store)"
+                            rawClassName={fillParent ? 'min-h-0 flex-1' : 'min-h-[280px]'}
+                            value={field.value}
+                        />
                     </FormControl>
                     <FormMessage />
                 </FormItem>
