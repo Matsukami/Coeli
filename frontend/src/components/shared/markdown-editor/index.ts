@@ -3,6 +3,6 @@
 // owns the lazy() boundary, so importing it is chunk-free until rich mode renders).
 export { MarkdownEditorField } from './markdown-editor-field';
 export type { MarkdownEditorFieldHandle } from './markdown-editor-field';
-export { findVariableUseRanges, VARIABLE_RE, variableProbe } from './markdown-editor-variable-syntax';
+export { findVariableUseRanges, VARIABLE_RE, variableUseRegex } from './markdown-editor-variable-syntax';
 export { EditorViewModeToggle } from './markdown-editor-view-mode';
 export type { EditorViewMode } from './markdown-editor-view-mode';

@@ -5,7 +5,7 @@ import { Plugin, PluginKey } from '@tiptap/pm/state';
 import { Decoration, DecorationSet } from '@tiptap/pm/view';
 
 import { collectInlineMatches } from './markdown-editor-inline-scan';
-import { VARIABLE_RE, variableProbe } from './markdown-editor-variable-syntax';
+import { VARIABLE_RE, variableUseRegex } from './markdown-editor-variable-syntax';
 
 // View-only decorations, never a node/mark: a mark would alter the document (corrupting save) and defeat the
 // variables side-panel, which inserts {{.X}} as plain text and finds its uses by scanning, not node identity.
@@ -20,7 +20,7 @@ const buildDecorations = (doc: PMNode): DecorationSet =>
     );
 
 export const findVariableOccurrences = (doc: PMNode, variable: string): { from: number; to: number }[] => {
-    const probe = variableProbe(variable);
+    const probe = variableUseRegex(variable);
 
     return collectInlineMatches(doc, VARIABLE_RE)
         .filter(({ text }) => probe.test(text))

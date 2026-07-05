@@ -12,7 +12,7 @@ import type { MarkdownEditorHandle } from './markdown-editor';
 import type { EditorViewMode } from './markdown-editor-view-mode';
 
 import { MARKDOWN_EDITOR_WRAPPER_CLASS } from './markdown-editor-styles';
-import { insertTextareaText, selectNextTextareaUse } from './markdown-editor-textarea';
+import { insertAtTextareaCaret, selectNextTextareaUse } from './markdown-editor-textarea';
 
 // Static-importing MarkdownEditor would merge the tiptap chunk into every route that pulls a util from the barrel.
 const MarkdownEditor = lazy(() => import('./markdown-editor').then((module) => ({ default: module.MarkdownEditor })));
@@ -65,7 +65,7 @@ export function MarkdownEditorField({
                       // would splice the value and dirty the form); the rich branch guards on editor.isEditable.
                       insertAtCursor: (text) => {
                           if (!disabled && rawRef.current) {
-                              insertTextareaText(rawRef.current.textarea, text, onChange);
+                              insertAtTextareaCaret(rawRef.current.textarea, text, onChange);
                           }
                       },
                       selectNextUse: (variable) =>

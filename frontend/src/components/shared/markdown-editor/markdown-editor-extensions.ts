@@ -17,7 +17,7 @@ import { MarkdownPaste } from './markdown-editor-paste';
 import { TagHighlight } from './markdown-editor-tag-highlight';
 import { VariableHighlight } from './markdown-editor-variable-highlight';
 
-const dropUnderscore = (rules: { find: unknown }[]) =>
+const dropUnderscoreRules = (rules: { find: unknown }[]) =>
     rules.filter((rule) => !(rule.find instanceof RegExp && rule.find.source.includes('_')));
 
 const longestBacktickRun = (text: string): number =>
@@ -70,10 +70,10 @@ const TunedStarterKit = StarterKit.extend({
             if (extension.name === 'bold' || extension.name === 'italic') {
                 return extension.extend({
                     addInputRules() {
-                        return dropUnderscore(this.parent?.() ?? []);
+                        return dropUnderscoreRules(this.parent?.() ?? []);
                     },
                     addPasteRules() {
-                        return dropUnderscore(this.parent?.() ?? []);
+                        return dropUnderscoreRules(this.parent?.() ?? []);
                     },
                 });
             }

@@ -43,7 +43,7 @@ import {
     MarkdownEditorField,
     type MarkdownEditorFieldHandle,
     VARIABLE_RE,
-    variableProbe,
+    variableUseRegex,
 } from '@/components/shared/markdown-editor';
 
 type AgentPrompt = AgentPrompts;
@@ -109,7 +109,7 @@ type SystemFormData = z.infer<typeof systemFormSchema>;
 // One pass over the `{{ … }}` blocks — the naive per-variable `.match` over the whole template is
 // O(variables × length) on every keystroke.
 function countVariableUses(template: string, variables: string[]): Record<string, number> {
-    const probes = variables.map((variable) => [variable, variableProbe(variable)] as const);
+    const probes = variables.map((variable) => [variable, variableUseRegex(variable)] as const);
     const counts: Record<string, number> = {};
 
     for (const block of template.match(VARIABLE_RE) ?? []) {

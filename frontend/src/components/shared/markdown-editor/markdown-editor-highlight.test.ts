@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { TAG_RE } from './markdown-editor-tag-highlight';
-import { findVariableUseRanges, VARIABLE_RE, variableProbe } from './markdown-editor-variable-syntax';
+import { findVariableUseRanges, VARIABLE_RE, variableUseRegex } from './markdown-editor-variable-syntax';
 
 const matches = (re: RegExp, text: string) => [...text.matchAll(re)].map((m) => m[0]);
 
@@ -69,9 +69,9 @@ describe('findVariableUseRanges — block-first {{ … .Var … }} ranges (ReDoS
     });
 });
 
-describe('variableProbe — escapes the interpolated name', () => {
+describe('variableUseRegex — escapes the interpolated name', () => {
     it('treats a dot in the name as literal, not any-char', () => {
-        expect(variableProbe('Foo').test('.Foo')).toBe(true);
-        expect(variableProbe('F.o').test('.Fxo')).toBe(false);
+        expect(variableUseRegex('Foo').test('.Foo')).toBe(true);
+        expect(variableUseRegex('F.o').test('.Fxo')).toBe(false);
     });
 });

@@ -1,6 +1,6 @@
 import { findVariableUseRanges, nextVariableRange } from './markdown-editor-variable-syntax';
 
-export function insertTextareaText(
+export function insertAtTextareaCaret(
     textarea: HTMLTextAreaElement,
     text: string,
     onChange: (value: string) => void,
