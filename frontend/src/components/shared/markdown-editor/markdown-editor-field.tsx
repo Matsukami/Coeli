@@ -22,10 +22,8 @@ const MarkdownEditor = lazy(() => import('./markdown-editor').then((module) => (
  * each implement them — so a consumer drives the field the same way whether it renders raw source or rich.
  */
 export interface MarkdownEditorFieldHandle {
-    /** Select the next occurrence of `variable` and scroll it into view; `false` when it isn't used. */
     cycleToVariable: (variable: string) => boolean;
     focus: () => void;
-    /** Insert `text` at the caret, replacing any selection. */
     insertAtCursor: (text: string) => void;
 }
 

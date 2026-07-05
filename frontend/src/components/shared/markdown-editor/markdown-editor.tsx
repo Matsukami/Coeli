@@ -103,7 +103,6 @@ function MarkdownEditor({
     // eslint-disable-next-line react-hooks/exhaustive-deps
     const extensions = useMemo(() => createMarkdownExtensions(placeholder), []);
 
-    // tiptap invokes onBlur/onUpdate from its live options ref, so these closures always read the latest props.
     const editor = useEditor({
         content: initialContent,
         contentType: 'markdown',
@@ -207,12 +206,8 @@ function MarkdownEditor({
         // would re-emit the round-trip normalization as if it were an edit.
         lastEmittedRef.current = editor.getMarkdown();
 
-        // Clear the undo stack:
-        //   - on initial mount, to discard the construction-time
-        //     transactions dispatched by extensions like `trailingNode`;
-        //   - on every external `setContent` (e.g. parent calls
-        //     form.reset(serverDocument)), because that transaction is
-        //     not a user edit either.
+        // Clear the undo stack of the construction-time transactions (mount) and each external setContent
+        // (form.reset) — neither is a user edit, so neither should be undoable.
         if (!hasResetInitialHistoryRef.current || isExternalChange) {
             hasResetInitialHistoryRef.current = true;
             resetUndoHistory(editor);

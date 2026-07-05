@@ -1,6 +1,5 @@
 import { findVariableUseRanges, nextVariableRange } from './markdown-editor-variable-syntax';
 
-/** Select the next occurrence of `variable` in the textarea and scroll it to the middle. Returns false if none. */
 export function cycleTextareaToVariable(textarea: HTMLTextAreaElement, variable: string): boolean {
     const ranges = findVariableUseRanges(textarea.value, variable).map(({ index, length }) => ({
         end: index + length,
@@ -19,7 +18,6 @@ export function cycleTextareaToVariable(textarea: HTMLTextAreaElement, variable:
     return true;
 }
 
-/** Splice `text` over the textarea selection, emit through `onChange`, and restore the caret after the value round-trips. */
 export function insertTextareaText(
     textarea: HTMLTextAreaElement,
     text: string,
