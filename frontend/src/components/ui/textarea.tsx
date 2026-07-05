@@ -3,16 +3,17 @@ import { useImperativeHandle } from 'react';
 
 import { cn } from '@/lib/utils';
 
+export type TextareaRef = {
+    focus: () => void;
+    maxHeight: number;
+    minHeight: number;
+    textarea: HTMLTextAreaElement;
+};
+
 type TextareaProps = React.ComponentProps<'textarea'> & {
     autoSize?: boolean;
     maxHeight?: number;
     minHeight?: number;
-};
-
-type TextareaRef = {
-    maxHeight: number;
-    minHeight: number;
-    textarea: HTMLTextAreaElement;
 };
 
 interface UseTextareaProps {
@@ -32,7 +33,7 @@ function Textarea({
     ref,
     value,
     ...props
-}: TextareaProps & { ref?: React.Ref<TextareaRef> }) {
+}: Omit<TextareaProps, 'ref'> & { ref?: React.Ref<TextareaRef> }) {
     const textareaRef = React.useRef<HTMLTextAreaElement | null>(null);
     const [triggerAutoSize, setTriggerAutoSize] = React.useState('');
 

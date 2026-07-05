@@ -676,15 +676,11 @@ function Template() {
                         <MarkdownEditorField
                             className="min-h-0 flex-1"
                             disabled={isSaving}
-                            fallback={
-                                <div className="flex min-h-0 flex-1 items-center justify-center rounded-md border">
-                                    <Spinner variant="circle" />
-                                </div>
-                            }
                             mode={viewMode}
                             onBlur={field.onBlur}
                             onChange={field.onChange}
                             placeholder="Content"
+                            ref={field.ref}
                             value={field.value}
                         />
                     </FormControl>

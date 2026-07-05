@@ -105,6 +105,7 @@ export function KnowledgeContentField({
                             onBlur={field.onBlur}
                             onChange={field.onChange}
                             placeholder="Knowledge content (will be embedded into the vector store)"
+                            ref={field.ref}
                             value={field.value}
                         />
                     </FormControl>

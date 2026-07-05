@@ -14,6 +14,7 @@ import { findVariableOccurrences } from './markdown-editor-variable-highlight';
 
 export interface MarkdownEditorHandle {
     cycleToVariable: (variable: string) => boolean;
+    focus: () => void;
     insertAtCursor: (text: string) => void;
 }
 
@@ -163,6 +164,9 @@ function MarkdownEditor({
                 );
 
                 return true;
+            },
+            focus: () => {
+                editor?.commands.focus();
             },
             insertAtCursor: (text: string) => {
                 if (!editor) {

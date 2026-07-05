@@ -1,7 +1,9 @@
-import type { AriaAttributes, ReactNode, Ref } from 'react';
+import type { AriaAttributes, Ref } from 'react';
 
 import { Loader2 } from 'lucide-react';
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useImperativeHandle, useRef } from 'react';
+
+import type { TextareaRef } from '@/components/ui/textarea';
 
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
@@ -13,18 +15,26 @@ import type { EditorViewMode } from './markdown-editor-view-mode';
 // barrel; the lazy() boundary is what lets the barrel re-export this component eagerly.
 const MarkdownEditor = lazy(() => import('./markdown-editor').then((module) => ({ default: module.MarkdownEditor })));
 
+// The imperative handle a consumer gets via `ref`. `focus()` is honored in BOTH modes (so RHF's
+// focus-on-validation-error reaches the field whether it renders a textarea or the rich editor). The
+// variable-panel methods exist only in rich mode — raw has no ProseMirror doc to cycle — so they are optional.
+export interface MarkdownEditorFieldHandle {
+    cycleToVariable?: (variable: string) => boolean;
+    focus: () => void;
+    insertAtCursor?: (text: string) => void;
+}
+
 interface MarkdownEditorFieldProps extends Pick<AriaAttributes, 'aria-describedby' | 'aria-invalid'> {
     // Sizes the field's outer box in both modes — the rich editor wrapper and the raw <textarea> take the
     // same flex/min-height layout. The byte-exact font-mono / no-resize raw config is baked in, not overridable.
     className?: string;
     disabled?: boolean;
-    fallback?: ReactNode;
     id?: string;
     mode: EditorViewMode;
     onBlur?: () => void;
     onChange: (value: string) => void;
     placeholder?: string;
-    ref?: Ref<MarkdownEditorHandle>;
+    ref?: Ref<MarkdownEditorFieldHandle>;
     value: string;
 }
 
@@ -33,7 +43,6 @@ export function MarkdownEditorField({
     'aria-invalid': ariaInvalid,
     className,
     disabled,
-    fallback,
     id,
     mode,
     onBlur,
@@ -42,6 +51,22 @@ export function MarkdownEditorField({
     ref,
     value,
 }: MarkdownEditorFieldProps) {
+    const rawRef = useRef<TextareaRef>(null);
+    const richRef = useRef<MarkdownEditorHandle>(null);
+
+    useImperativeHandle(
+        ref,
+        () =>
+            mode === 'raw'
+                ? { focus: () => rawRef.current?.focus() }
+                : {
+                      cycleToVariable: (variable) => richRef.current?.cycleToVariable(variable) ?? false,
+                      focus: () => richRef.current?.focus(),
+                      insertAtCursor: (text) => richRef.current?.insertAtCursor(text),
+                  },
+        [mode],
+    );
+
     if (mode === 'raw') {
         return (
             <Textarea
@@ -54,6 +79,7 @@ export function MarkdownEditorField({
                 onBlur={onBlur}
                 onChange={(event) => onChange(event.target.value)}
                 placeholder={placeholder}
+                ref={rawRef}
                 value={value}
             />
         );
@@ -62,11 +88,12 @@ export function MarkdownEditorField({
     return (
         <Suspense
             fallback={
-                fallback ?? (
-                    <div className={cn('flex items-center justify-center rounded-md border', className)}>
-                        <Loader2 className="text-muted-foreground size-5 animate-spin" />
-                    </div>
-                )
+                <div
+                    aria-busy="true"
+                    className={cn('flex items-center justify-center rounded-md border', className)}
+                >
+                    <Loader2 className="text-muted-foreground size-5 animate-spin" />
+                </div>
             }
         >
             <MarkdownEditor
@@ -78,7 +105,7 @@ export function MarkdownEditorField({
                 onBlur={onBlur}
                 onChange={onChange}
                 placeholder={placeholder}
-                ref={ref}
+                ref={richRef}
                 value={value}
             />
         </Suspense>

@@ -42,7 +42,7 @@ import {
     EditorViewModeToggle,
     findVariableUseRanges,
     MarkdownEditorField,
-    type MarkdownEditorHandle,
+    type MarkdownEditorFieldHandle,
     VARIABLE_RE,
     variableProbe,
 } from '@/components/shared/markdown-editor';
@@ -83,6 +83,7 @@ import {
     ValidatePromptDocument,
 } from '@/graphql/types';
 import { useBreakpoint } from '@/hooks/use-breakpoint';
+import { composeRefs } from '@/lib/compose-refs';
 import { formatPromptId } from '@/lib/route-titles/format-prompt-id';
 
 const systemFormSchema = z.object({
@@ -96,7 +97,7 @@ const humanFormSchema = z.object({
 interface FormMarkdownItemProps<T extends FieldValues> {
     control: Control<T>;
     disabled?: boolean;
-    editorRef?: Ref<MarkdownEditorHandle>;
+    editorRef?: Ref<MarkdownEditorFieldHandle>;
     mode: EditorViewMode;
     name: FieldPathByValue<T, string>;
     placeholder?: string;
@@ -215,6 +216,9 @@ function FormMarkdownItem<T extends FieldValues>({
         disabled,
         name,
     });
+    // `field.ref` lets RHF focus this field on a failed submit; `editorRef` drives the variable panel. One
+    // element, two owners → compose so both are honored.
+    const composedRef = useMemo(() => composeRefs(field.ref, editorRef), [field.ref, editorRef]);
 
     return (
         <FormItem className="flex min-h-0 flex-1 flex-col">
@@ -222,16 +226,11 @@ function FormMarkdownItem<T extends FieldValues>({
                 <MarkdownEditorField
                     className="min-h-0 flex-1"
                     disabled={disabled}
-                    fallback={
-                        <div className="flex min-h-0 flex-1 items-center justify-center rounded-md border">
-                            <Loader2 className="text-muted-foreground size-5 animate-spin" />
-                        </div>
-                    }
                     mode={mode}
                     onBlur={field.onBlur}
                     onChange={field.onChange}
                     placeholder={placeholder}
-                    ref={editorRef}
+                    ref={composedRef}
                     value={field.value}
                 />
             </FormControl>
@@ -332,15 +331,15 @@ function SettingsPrompt() {
     // inactive tab (no forceMount here), so exactly one MarkdownEditor is ever mounted and the ref is
     // unambiguous. If a forceMount / exit-animation is ever added, both mount and cycleToVariable would race —
     // switch to one ref per tab.
-    const editorRef = useRef<MarkdownEditorHandle>(null);
+    const editorRef = useRef<MarkdownEditorFieldHandle>(null);
 
     const isLoading = isCreateLoading || isUpdateLoading || isDeleteLoading || isValidateLoading;
 
     const handleVariableClick = useCallback(
         (variable: string, field: { onChange: (value: string) => void; value: string }, formId: string) => {
             if (viewMode === 'rich') {
-                if (!editorRef.current?.cycleToVariable(variable)) {
-                    editorRef.current?.insertAtCursor(`{{.${variable}}}`);
+                if (!editorRef.current?.cycleToVariable?.(variable)) {
+                    editorRef.current?.insertAtCursor?.(`{{.${variable}}}`);
                 }
 
                 return;
