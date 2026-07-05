@@ -11,22 +11,25 @@ import { cn } from '@/lib/utils';
 import type { MarkdownEditorHandle } from './markdown-editor';
 import type { EditorViewMode } from './markdown-editor-view-mode';
 
-// Static-importing MarkdownEditor would merge the tiptap chunk into every route that pulls a util from the
-// barrel; the lazy() boundary is what lets the barrel re-export this component eagerly.
+import { MARKDOWN_EDITOR_WRAPPER_CLASS } from './markdown-editor-styles';
+import { cycleTextareaToVariable, insertTextareaText } from './markdown-editor-textarea';
+
+// Static-importing MarkdownEditor would merge the tiptap chunk into every route that pulls a util from the barrel.
 const MarkdownEditor = lazy(() => import('./markdown-editor').then((module) => ({ default: module.MarkdownEditor })));
 
-// The imperative handle a consumer gets via `ref`. `focus()` is honored in BOTH modes (so RHF's
-// focus-on-validation-error reaches the field whether it renders a textarea or the rich editor). The
-// variable-panel methods exist only in rich mode — raw has no ProseMirror doc to cycle — so they are optional.
+/**
+ * Imperative handle exposed via `ref`. Every method works in BOTH modes — the raw textarea and the rich editor
+ * each implement them — so a consumer drives the field the same way whether it renders raw source or rich.
+ */
 export interface MarkdownEditorFieldHandle {
-    cycleToVariable?: (variable: string) => boolean;
+    /** Select the next occurrence of `variable` and scroll it into view; `false` when it isn't used. */
+    cycleToVariable: (variable: string) => boolean;
     focus: () => void;
-    insertAtCursor?: (text: string) => void;
+    /** Insert `text` at the caret, replacing any selection. */
+    insertAtCursor: (text: string) => void;
 }
 
 interface MarkdownEditorFieldProps extends Pick<AriaAttributes, 'aria-describedby' | 'aria-invalid'> {
-    // Sizes the field's outer box in both modes — the rich editor wrapper and the raw <textarea> take the
-    // same flex/min-height layout. The byte-exact font-mono / no-resize raw config is baked in, not overridable.
     className?: string;
     disabled?: boolean;
     id?: string;
@@ -58,13 +61,22 @@ export function MarkdownEditorField({
         ref,
         () =>
             mode === 'raw'
-                ? { focus: () => rawRef.current?.focus() }
+                ? {
+                      cycleToVariable: (variable) =>
+                          rawRef.current ? cycleTextareaToVariable(rawRef.current.textarea, variable) : false,
+                      focus: () => rawRef.current?.focus(),
+                      insertAtCursor: (text) => {
+                          if (rawRef.current) {
+                              insertTextareaText(rawRef.current.textarea, text, onChange);
+                          }
+                      },
+                  }
                 : {
                       cycleToVariable: (variable) => richRef.current?.cycleToVariable(variable) ?? false,
                       focus: () => richRef.current?.focus(),
                       insertAtCursor: (text) => richRef.current?.insertAtCursor(text),
                   },
-        [mode],
+        [mode, onChange],
     );
 
     if (mode === 'raw') {
@@ -73,7 +85,8 @@ export function MarkdownEditorField({
                 aria-describedby={ariaDescribedby}
                 aria-invalid={ariaInvalid}
                 autoSize={false}
-                className={cn('resize-none font-mono text-sm', className)}
+                // Raw config is applied LAST so a consumer `className` can't override the byte-exact source styling.
+                className={cn(className, 'resize-none font-mono text-sm')}
                 disabled={disabled}
                 id={id}
                 onBlur={onBlur}
@@ -90,7 +103,15 @@ export function MarkdownEditorField({
             fallback={
                 <div
                     aria-busy="true"
-                    className={cn('flex items-center justify-center rounded-md border', className)}
+                    aria-describedby={ariaDescribedby}
+                    aria-invalid={ariaInvalid}
+                    className={cn(
+                        MARKDOWN_EDITOR_WRAPPER_CLASS,
+                        'items-center justify-center',
+                        disabled && 'pointer-events-none opacity-60',
+                        className,
+                    )}
+                    id={id}
                 >
                     <Loader2 className="text-muted-foreground size-5 animate-spin" />
                 </div>

@@ -40,7 +40,6 @@ import type {
 import {
     type EditorViewMode,
     EditorViewModeToggle,
-    findVariableUseRanges,
     MarkdownEditorField,
     type MarkdownEditorFieldHandle,
     VARIABLE_RE,
@@ -203,6 +202,39 @@ const diffStyles = {
     },
 } satisfies ComponentProps<typeof ReactDiffViewer>['styles'];
 
+interface DiffContentProps {
+    control: Control<HumanFormData> | Control<SystemFormData>;
+    oldValue: string;
+    styles: ComponentProps<typeof ReactDiffViewer>['styles'];
+}
+
+interface VariablesPanelContainerProps {
+    control: Control<HumanFormData> | Control<SystemFormData>;
+    onVariableClick: (variable: string) => void;
+    variables: string[];
+}
+
+interface VariablesProps {
+    currentTemplate: string;
+    onVariableClick: (variable: string) => void;
+    variables: string[];
+}
+
+// Don't hoist this useWatch to the parent — it would re-subscribe the whole page per keystroke.
+function DiffContent({ control, oldValue, styles }: DiffContentProps) {
+    const newValue = useWatch({ control, name: 'template' });
+
+    return (
+        <ReactDiffViewer
+            newValue={newValue}
+            oldValue={oldValue}
+            splitView
+            styles={styles}
+            useDarkTheme
+        />
+    );
+}
+
 function FormMarkdownItem<T extends FieldValues>({
     control,
     disabled,
@@ -239,77 +271,6 @@ function FormMarkdownItem<T extends FieldValues>({
     );
 }
 
-// Pixel offset of `position` from the textarea content top, measured via a hidden mirror so
-// soft-wrapped lines count — a logical-line count undershoots the scroll badly for wrapped templates.
-const caretOffsetTop = (textarea: HTMLTextAreaElement, position: number): number => {
-    const cs = getComputedStyle(textarea);
-    const mirror = document.createElement('div');
-
-    mirror.style.fontFamily = cs.fontFamily;
-    mirror.style.fontSize = cs.fontSize;
-    mirror.style.fontWeight = cs.fontWeight;
-    mirror.style.fontStyle = cs.fontStyle;
-    mirror.style.lineHeight = cs.lineHeight;
-    mirror.style.letterSpacing = cs.letterSpacing;
-    mirror.style.wordSpacing = cs.wordSpacing;
-    mirror.style.paddingTop = cs.paddingTop;
-    mirror.style.paddingRight = cs.paddingRight;
-    mirror.style.paddingBottom = cs.paddingBottom;
-    mirror.style.paddingLeft = cs.paddingLeft;
-    mirror.style.width = `${textarea.clientWidth}px`;
-    mirror.style.boxSizing = 'border-box';
-    mirror.style.whiteSpace = 'pre-wrap';
-    mirror.style.overflowWrap = 'break-word';
-    mirror.style.position = 'absolute';
-    mirror.style.visibility = 'hidden';
-    mirror.style.top = '-9999px';
-    mirror.style.left = '-9999px';
-
-    mirror.textContent = textarea.value.slice(0, position);
-    const marker = document.createElement('span');
-    marker.textContent = textarea.value.charAt(position) || '.';
-    mirror.appendChild(marker);
-
-    document.body.appendChild(mirror);
-    const offset = marker.offsetTop;
-    mirror.remove();
-
-    return offset;
-};
-
-interface DiffContentProps {
-    control: Control<HumanFormData> | Control<SystemFormData>;
-    oldValue: string;
-    styles: ComponentProps<typeof ReactDiffViewer>['styles'];
-}
-
-interface VariablesPanelContainerProps {
-    control: Control<HumanFormData> | Control<SystemFormData>;
-    onVariableClick: (variable: string) => void;
-    variables: string[];
-}
-
-interface VariablesProps {
-    currentTemplate: string;
-    onVariableClick: (variable: string) => void;
-    variables: string[];
-}
-
-// Don't hoist this useWatch to the parent — it would re-subscribe the whole page per keystroke.
-function DiffContent({ control, oldValue, styles }: DiffContentProps) {
-    const newValue = useWatch({ control, name: 'template' });
-
-    return (
-        <ReactDiffViewer
-            newValue={newValue}
-            oldValue={oldValue}
-            splitView
-            styles={styles}
-            useDarkTheme
-        />
-    );
-}
-
 function SettingsPrompt() {
     const { promptId } = useParams<{ promptId: string }>();
     const { isDesktop } = useBreakpoint();
@@ -335,60 +296,14 @@ function SettingsPrompt() {
 
     const isLoading = isCreateLoading || isUpdateLoading || isDeleteLoading || isValidateLoading;
 
-    const handleVariableClick = useCallback(
-        (variable: string, field: { onChange: (value: string) => void; value: string }, formId: string) => {
-            if (viewMode === 'rich') {
-                if (!editorRef.current?.cycleToVariable?.(variable)) {
-                    editorRef.current?.insertAtCursor?.(`{{.${variable}}}`);
-                }
-
-                return;
-            }
-
-            const textarea = document.querySelector(`#${formId} textarea`) as HTMLTextAreaElement;
-
-            if (textarea) {
-                const currentValue = field.value || '';
-                const variablePattern = `{{.${variable}}}`;
-                const matches = findVariableUseRanges(currentValue, variable);
-
-                if (matches.length > 0) {
-                    const { selectionEnd, selectionStart } = textarea;
-                    const currentIndex = matches.findIndex(
-                        (match) => match.index === selectionStart && match.index + match.length === selectionEnd,
-                    );
-                    const target =
-                        currentIndex >= 0
-                            ? matches[(currentIndex + 1) % matches.length]
-                            : (matches.find((match) => match.index >= selectionStart) ?? matches[0]);
-
-                    if (target) {
-                        const matchStart = target.index;
-                        textarea.focus();
-                        textarea.setSelectionRange(matchStart, matchStart + target.length);
-                        textarea.scrollTop = Math.max(
-                            0,
-                            caretOffsetTop(textarea, matchStart) - textarea.clientHeight / 2,
-                        );
-                    }
-                } else {
-                    const start = textarea.selectionStart;
-                    const end = textarea.selectionEnd;
-                    const newValue =
-                        currentValue.slice(0, Math.max(0, start)) +
-                        variablePattern +
-                        currentValue.slice(Math.max(0, end));
-                    field.onChange(newValue);
-
-                    setTimeout(() => {
-                        textarea.focus({ preventScroll: true });
-                        textarea.setSelectionRange(start + variablePattern.length, start + variablePattern.length);
-                    }, 0);
-                }
-            }
-        },
-        [viewMode],
-    );
+    // The field's handle cycles/inserts in both raw and rich modes, so clicking a variable is mode-agnostic:
+    // jump to its next use, or insert `{{.Name}}` at the caret if it isn't used yet. `editorRef` points at the
+    // active tab's field (Radix unmounts the inactive tab), so this drives whichever prompt is on screen.
+    const handleVariableClick = useCallback((variable: string) => {
+        if (!editorRef.current?.cycleToVariable(variable)) {
+            editorRef.current?.insertAtCursor(`{{.${variable}}}`);
+        }
+    }, []);
 
     const handleReset = () => {
         setResetDialogOpen(true);
@@ -553,42 +468,18 @@ function SettingsPrompt() {
         }
 
         let variables: string[] = [];
-        let formId = '';
 
         if (activeTab === 'system') {
             variables =
                 promptInfo.type === 'agent'
                     ? (promptInfo.data as AgentPrompt | AgentPrompts)?.system?.variables || []
                     : (promptInfo.data as DefaultPrompt)?.variables || [];
-            formId = 'system-prompt-form';
         } else if (activeTab === 'human' && promptInfo.type === 'agent' && promptInfo.hasHuman) {
             variables = (promptInfo.data as AgentPrompts)?.human?.variables || [];
-            formId = 'human-prompt-form';
         }
 
-        return { formId, variables };
+        return { variables };
     }, [promptInfo, activeTab]);
-
-    const handleVariableClickCallback = useCallback(
-        (variable: string) => {
-            if (!variablesData) {
-                return;
-            }
-
-            const field =
-                activeTab === 'system'
-                    ? {
-                          onChange: (value: string) => systemForm.setValue('template', value, { shouldDirty: true }),
-                          value: systemForm.getValues('template'),
-                      }
-                    : {
-                          onChange: (value: string) => humanForm.setValue('template', value, { shouldDirty: true }),
-                          value: humanForm.getValues('template'),
-                      };
-            handleVariableClick(variable, field, variablesData.formId);
-        },
-        [activeTab, variablesData, systemForm, humanForm, handleVariableClick],
-    );
 
     // Re-sync both tabs to the server prompt. A Save refetches settingsPrompts → promptInfo gets a new
     // identity → this fires; keepDirtyValues (on both form configs) preserves the OTHER tab's unsaved edits,
@@ -940,7 +831,7 @@ function SettingsPrompt() {
     const variablesPanel = variablesData ? (
         <VariablesPanelContainer
             control={activeControl}
-            onVariableClick={handleVariableClickCallback}
+            onVariableClick={handleVariableClick}
             variables={variablesData.variables}
         />
     ) : null;

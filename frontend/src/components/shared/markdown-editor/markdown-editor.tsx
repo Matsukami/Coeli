@@ -4,13 +4,16 @@ import type { AriaAttributes, Ref } from 'react';
 import { history } from '@tiptap/pm/history';
 import { EditorState, TextSelection } from '@tiptap/pm/state';
 import { EditorContent, useEditor } from '@tiptap/react';
+import { Loader2 } from 'lucide-react';
 import { useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 
 import { cn } from '@/lib/utils';
 
 import { createMarkdownExtensions } from './markdown-editor-extensions';
+import { MARKDOWN_EDITOR_WRAPPER_CLASS as WRAPPER_CLASS } from './markdown-editor-styles';
 import { MarkdownEditorToolbar } from './markdown-editor-toolbar';
 import { findVariableOccurrences } from './markdown-editor-variable-highlight';
+import { nextVariableRange } from './markdown-editor-variable-syntax';
 
 export interface MarkdownEditorHandle {
     cycleToVariable: (variable: string) => boolean;
@@ -65,9 +68,6 @@ export const resetUndoHistory = (editor: Editor): void => {
     // `before` doc no longer matches `view.state.doc` throws "Applying a mismatched transaction".
     view.dispatch(view.state.tr.setMeta('addToHistory', false));
 };
-
-const WRAPPER_CLASS =
-    'border-input dark:bg-input/30 group/markdown-editor flex w-full flex-col overflow-hidden rounded-md border shadow-2xs outline-hidden transition-[color,box-shadow]';
 
 function MarkdownEditor({
     'aria-describedby': ariaDescribedby,
@@ -140,18 +140,12 @@ function MarkdownEditor({
                 }
 
                 const { state, view } = editor;
-                const hits = findVariableOccurrences(state.doc, variable);
-
-                if (hits.length === 0) {
-                    return false;
-                }
-
+                const hits = findVariableOccurrences(state.doc, variable).map(({ from, to }) => ({
+                    end: to,
+                    start: from,
+                }));
                 const { from, to } = state.selection;
-                const currentIndex = hits.findIndex((hit) => hit.from === from && hit.to === to);
-                const target =
-                    currentIndex >= 0
-                        ? hits[(currentIndex + 1) % hits.length]
-                        : (hits.find((hit) => hit.from >= from) ?? hits[0]);
+                const target = nextVariableRange(hits, from, to);
 
                 if (!target) {
                     return false;
@@ -160,7 +154,7 @@ function MarkdownEditor({
                 // Focus first: ProseMirror won't scrollIntoView an unfocused editor (first post-load click would no-op).
                 view.focus();
                 view.dispatch(
-                    state.tr.setSelection(TextSelection.create(state.doc, target.from, target.to)).scrollIntoView(),
+                    state.tr.setSelection(TextSelection.create(state.doc, target.start, target.end)).scrollIntoView(),
                 );
 
                 return true;
@@ -258,9 +252,16 @@ function MarkdownEditor({
         return (
             <div
                 aria-busy="true"
-                className={cn(WRAPPER_CLASS, disabled && 'pointer-events-none opacity-60', className)}
+                className={cn(
+                    WRAPPER_CLASS,
+                    'items-center justify-center',
+                    disabled && 'pointer-events-none opacity-60',
+                    className,
+                )}
                 data-slot="markdown-editor"
-            />
+            >
+                <Loader2 className="text-muted-foreground size-5 animate-spin" />
+            </div>
         );
     }
 

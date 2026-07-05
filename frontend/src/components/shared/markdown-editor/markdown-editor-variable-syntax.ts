@@ -26,3 +26,23 @@ export const findVariableUseRanges = (value: string, variable: string): { index:
 
     return ranges;
 };
+
+export interface VariableRange {
+    end: number;
+    start: number;
+}
+
+// Shared by BOTH variable panels (rich ProseMirror + raw textarea) so their cycling can't drift: from the
+// currently-selected occurrence go to the next (wrapping); if the caret isn't on one, jump to the first
+// occurrence at/after it, else wrap to the first. `undefined` when there are none.
+export function nextVariableRange(
+    ranges: VariableRange[],
+    selectionStart: number,
+    selectionEnd: number,
+): undefined | VariableRange {
+    const current = ranges.findIndex((range) => range.start === selectionStart && range.end === selectionEnd);
+
+    return current >= 0
+        ? ranges[(current + 1) % ranges.length]
+        : (ranges.find((range) => range.start >= selectionStart) ?? ranges[0]);
+}
