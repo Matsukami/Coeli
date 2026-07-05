@@ -48,6 +48,20 @@ export const isSafeImageSrc = (url: string): boolean => {
     }
 };
 
+// Link-toolbar counterpart of isSafeImageSrc: only navigable protocols (relative/anchor URLs resolve to the
+// page's http/https). Keeps `javascript:` / `data:` out of the persisted document at authoring time so it
+// never depends on every future render path sanitizing them. Load/paste bypass this (tiptap Link's
+// isAllowedUri + the read-only viewer sanitize protocols on render).
+const SAFE_LINK_PROTOCOLS = new Set(['http:', 'https:', 'mailto:', 'tel:']);
+
+export const isSafeUrl = (url: string): boolean => {
+    try {
+        return SAFE_LINK_PROTOCOLS.has(new URL(url, window.location.href).protocol);
+    } catch {
+        return false;
+    }
+};
+
 // memo: every keystroke re-renders the RHF-controlled parent; without it all ~20 Toggle subtrees re-render
 // per keystroke for referentially-stable props.
 export const MarkdownEditorToolbar = memo(function MarkdownEditorToolbar({
@@ -65,6 +79,10 @@ export const MarkdownEditorToolbar = memo(function MarkdownEditorToolbar({
         if (url === '') {
             editor.chain().focus().extendMarkRange('link').unsetLink().run();
 
+            return;
+        }
+
+        if (!isSafeUrl(url)) {
             return;
         }
 

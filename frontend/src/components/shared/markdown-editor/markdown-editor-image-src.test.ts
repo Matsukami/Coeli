@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { isSafeImageSrc } from './markdown-editor-toolbar';
+import { isSafeImageSrc, isSafeUrl } from './markdown-editor-toolbar';
 
 // The Image extension stores whatever src it is handed; isSafeImageSrc is the allowlist that blocks dangerous
 // PROTOCOLS (javascript:, data:text/html, vbscript:, file:) before a src is saved. A bare relative string
@@ -28,5 +28,29 @@ describe('isSafeImageSrc — image-src protocol allowlist', () => {
         'http://', // malformed → URL constructor throws → rejected via the catch
     ])('rejects %s', (url) => {
         expect(isSafeImageSrc(url)).toBe(false);
+    });
+});
+
+describe('isSafeUrl — link-href protocol allowlist', () => {
+    it.each([
+        'https://example.com/path?a=1|2',
+        'http://example.com',
+        'mailto:a@b.com',
+        'tel:+123',
+        '/relative/path',
+        '#anchor',
+        './sibling',
+    ])('allows %s', (url) => {
+        expect(isSafeUrl(url)).toBe(true);
+    });
+
+    it.each([
+        'javascript:alert(1)',
+        'data:text/html,<script>alert(1)</script>',
+        'vbscript:msgbox(1)',
+        'file:///etc/passwd',
+        'http://', // malformed → rejected via the catch
+    ])('rejects %s', (url) => {
+        expect(isSafeUrl(url)).toBe(false);
     });
 });
