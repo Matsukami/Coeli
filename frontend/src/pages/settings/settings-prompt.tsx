@@ -290,7 +290,7 @@ function SettingsPrompt() {
     const [viewMode, setViewMode] = useState<EditorViewMode>('rich');
     // One ref shared by both tab editors (System + Human): safe only because Radix TabsContent unmounts the
     // inactive tab (no forceMount here), so exactly one MarkdownEditor is ever mounted and the ref is
-    // unambiguous. If a forceMount / exit-animation is ever added, both mount and cycleToVariable would race —
+    // unambiguous. If a forceMount / exit-animation is ever added, both mount and selectNextUse would race —
     // switch to one ref per tab.
     const editorRef = useRef<MarkdownEditorFieldHandle>(null);
 
@@ -300,7 +300,7 @@ function SettingsPrompt() {
     // jump to its next use, or insert `{{.Name}}` at the caret if it isn't used yet. `editorRef` points at the
     // active tab's field (Radix unmounts the inactive tab), so this drives whichever prompt is on screen.
     const handleVariableClick = useCallback((variable: string) => {
-        if (!editorRef.current?.cycleToVariable(variable)) {
+        if (!editorRef.current?.selectNextUse(variable)) {
             editorRef.current?.insertAtCursor(`{{.${variable}}}`);
         }
     }, []);

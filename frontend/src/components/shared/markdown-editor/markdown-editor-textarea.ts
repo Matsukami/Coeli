@@ -1,23 +1,5 @@
 import { findVariableUseRanges, nextVariableRange } from './markdown-editor-variable-syntax';
 
-export function cycleTextareaToVariable(textarea: HTMLTextAreaElement, variable: string): boolean {
-    const ranges = findVariableUseRanges(textarea.value, variable).map(({ index, length }) => ({
-        end: index + length,
-        start: index,
-    }));
-    const target = nextVariableRange(ranges, textarea.selectionStart, textarea.selectionEnd);
-
-    if (!target) {
-        return false;
-    }
-
-    textarea.focus();
-    textarea.setSelectionRange(target.start, target.end);
-    textarea.scrollTop = Math.max(0, caretOffsetTop(textarea, target.start) - textarea.clientHeight / 2);
-
-    return true;
-}
-
 export function insertTextareaText(
     textarea: HTMLTextAreaElement,
     text: string,
@@ -34,6 +16,24 @@ export function insertTextareaText(
         textarea.focus({ preventScroll: true });
         textarea.setSelectionRange(start + text.length, start + text.length);
     }, 0);
+}
+
+export function selectNextTextareaUse(textarea: HTMLTextAreaElement, variable: string): boolean {
+    const ranges = findVariableUseRanges(textarea.value, variable).map(({ index, length }) => ({
+        end: index + length,
+        start: index,
+    }));
+    const target = nextVariableRange(ranges, textarea.selectionStart, textarea.selectionEnd);
+
+    if (!target) {
+        return false;
+    }
+
+    textarea.focus();
+    textarea.setSelectionRange(target.start, target.end);
+    textarea.scrollTop = Math.max(0, caretOffsetTop(textarea, target.start) - textarea.clientHeight / 2);
+
+    return true;
 }
 
 // Pixel offset of `position` from the textarea content top, measured via a hidden mirror so soft-wrapped

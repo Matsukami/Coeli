@@ -46,8 +46,8 @@ describe('MarkdownEditorField raw-mode handle', () => {
         ref.current!.focus();
         expect(document.activeElement).toBe(textarea);
 
-        expect(ref.current!.cycleToVariable('Nope')).toBe(false);
-        expect(ref.current!.cycleToVariable('Foo')).toBe(true);
+        expect(ref.current!.selectNextUse('Nope')).toBe(false);
+        expect(ref.current!.selectNextUse('Foo')).toBe(true);
         expect(textarea.value.slice(textarea.selectionStart, textarea.selectionEnd)).toBe('{{.Foo}}');
 
         textarea.setSelectionRange(0, 0);
@@ -69,13 +69,13 @@ describe('MarkdownEditorField rich-mode handle', () => {
         );
         await waitFor(() => expect(container.querySelector('.ProseMirror')?.textContent).toContain('Foo'));
 
-        expect(ref.current?.cycleToVariable('Foo')).toBe(true);
-        expect(ref.current?.cycleToVariable('Nope')).toBe(false);
+        expect(ref.current?.selectNextUse('Foo')).toBe(true);
+        expect(ref.current?.selectNextUse('Nope')).toBe(false);
     });
 });
 
 describe('MarkdownEditorField handle contract', () => {
-    it('exposes focus, cycleToVariable, and insertAtCursor in both modes', async () => {
+    it('exposes focus, selectNextUse, and insertAtCursor in both modes', async () => {
         const rawRef = createRef<MarkdownEditorFieldHandle>();
         render(
             <MarkdownEditorField
@@ -99,7 +99,7 @@ describe('MarkdownEditorField handle contract', () => {
 
         for (const current of [rawRef.current, richRef.current]) {
             expect(typeof current?.focus).toBe('function');
-            expect(typeof current?.cycleToVariable).toBe('function');
+            expect(typeof current?.selectNextUse).toBe('function');
             expect(typeof current?.insertAtCursor).toBe('function');
         }
     });

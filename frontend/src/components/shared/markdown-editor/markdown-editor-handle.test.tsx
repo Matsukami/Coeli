@@ -10,7 +10,7 @@ beforeAll(setupEditorJsdom);
 const proseMirror = (c: HTMLElement) => c.querySelector('.ProseMirror');
 
 describe('MarkdownEditor imperative handle', () => {
-    it('cycleToVariable: rejects a missing variable, cycles an existing one (with wrap) without throwing', async () => {
+    it('selectNextUse: rejects a missing variable, cycles an existing one (with wrap) without throwing', async () => {
         const ref = createRef<MarkdownEditorHandle>();
         const { container } = render(
             <MarkdownEditor
@@ -21,15 +21,15 @@ describe('MarkdownEditor imperative handle', () => {
         );
         await waitFor(() => expect(proseMirror(container)?.textContent).toContain('Foo'));
 
-        expect(ref.current?.cycleToVariable('Nope')).toBe(false);
+        expect(ref.current?.selectNextUse('Nope')).toBe(false);
         // two occurrences → advance, advance (wrap), and a second distinct variable — always found, never throws
-        expect(ref.current?.cycleToVariable('Foo')).toBe(true);
-        expect(ref.current?.cycleToVariable('Foo')).toBe(true);
-        expect(ref.current?.cycleToVariable('Foo')).toBe(true);
-        expect(ref.current?.cycleToVariable('Bar')).toBe(true);
+        expect(ref.current?.selectNextUse('Foo')).toBe(true);
+        expect(ref.current?.selectNextUse('Foo')).toBe(true);
+        expect(ref.current?.selectNextUse('Foo')).toBe(true);
+        expect(ref.current?.selectNextUse('Bar')).toBe(true);
     });
 
-    it('cycleToVariable advances across occurrences (observed: insertAtCursor replaces the targeted one)', async () => {
+    it('selectNextUse advances across occurrences (observed: insertAtCursor replaces the targeted one)', async () => {
         const onChange = vi.fn();
         const ref = createRef<MarkdownEditorHandle>();
         const { container } = render(
@@ -44,8 +44,8 @@ describe('MarkdownEditor imperative handle', () => {
         // Two cycles advance the selection from the first {{.Foo}} to the second; jsdom has no layout so the
         // selection isn't readable directly — insertAtCursor replaces the SELECTED range, making the target
         // observable. A regression to "always select hits[0]" would replace the first occurrence instead.
-        ref.current?.cycleToVariable('Foo');
-        ref.current?.cycleToVariable('Foo');
+        ref.current?.selectNextUse('Foo');
+        ref.current?.selectNextUse('Foo');
         ref.current?.insertAtCursor('REPLACED');
         await waitFor(() => expect(onChange).toHaveBeenCalled());
 

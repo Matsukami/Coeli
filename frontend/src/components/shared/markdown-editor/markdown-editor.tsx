@@ -16,9 +16,9 @@ import { findVariableOccurrences } from './markdown-editor-variable-highlight';
 import { nextVariableRange } from './markdown-editor-variable-syntax';
 
 export interface MarkdownEditorHandle {
-    cycleToVariable: (variable: string) => boolean;
     focus: () => void;
     insertAtCursor: (text: string) => void;
+    selectNextUse: (variable: string) => boolean;
 }
 
 interface MarkdownEditorProps {
@@ -133,7 +133,23 @@ function MarkdownEditor({
     useImperativeHandle(
         ref,
         () => ({
-            cycleToVariable: (variable: string) => {
+            focus: () => {
+                editor?.commands.focus();
+            },
+            insertAtCursor: (text: string) => {
+                // A disabled field must not be mutated through the handle — `dispatch` bypasses the editable
+                // gate (which only blocks user input), so without this a variable click mid-save would edit
+                // the doc and dirty the form.
+                if (!editor || !editor.isEditable) {
+                    return;
+                }
+
+                const { state, view } = editor;
+
+                view.focus();
+                view.dispatch(state.tr.insertText(text).scrollIntoView());
+            },
+            selectNextUse: (variable: string) => {
                 if (!editor) {
                     return false;
                 }
@@ -157,22 +173,6 @@ function MarkdownEditor({
                 );
 
                 return true;
-            },
-            focus: () => {
-                editor?.commands.focus();
-            },
-            insertAtCursor: (text: string) => {
-                // A disabled field must not be mutated through the handle — `dispatch` bypasses the editable
-                // gate (which only blocks user input), so without this a variable click mid-save would edit
-                // the doc and dirty the form.
-                if (!editor || !editor.isEditable) {
-                    return;
-                }
-
-                const { state, view } = editor;
-
-                view.focus();
-                view.dispatch(state.tr.insertText(text).scrollIntoView());
             },
         }),
         [editor],

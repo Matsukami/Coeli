@@ -12,7 +12,7 @@ import type { MarkdownEditorHandle } from './markdown-editor';
 import type { EditorViewMode } from './markdown-editor-view-mode';
 
 import { MARKDOWN_EDITOR_WRAPPER_CLASS } from './markdown-editor-styles';
-import { cycleTextareaToVariable, insertTextareaText } from './markdown-editor-textarea';
+import { insertTextareaText, selectNextTextareaUse } from './markdown-editor-textarea';
 
 // Static-importing MarkdownEditor would merge the tiptap chunk into every route that pulls a util from the barrel.
 const MarkdownEditor = lazy(() => import('./markdown-editor').then((module) => ({ default: module.MarkdownEditor })));
@@ -22,9 +22,9 @@ const MarkdownEditor = lazy(() => import('./markdown-editor').then((module) => (
  * each implement them — so a consumer drives the field the same way whether it renders raw source or rich.
  */
 export interface MarkdownEditorFieldHandle {
-    cycleToVariable: (variable: string) => boolean;
     focus: () => void;
     insertAtCursor: (text: string) => void;
+    selectNextUse: (variable: string) => boolean;
 }
 
 interface MarkdownEditorFieldProps extends Pick<AriaAttributes, 'aria-describedby' | 'aria-invalid'> {
@@ -60,8 +60,6 @@ export function MarkdownEditorField({
         () =>
             mode === 'raw'
                 ? {
-                      cycleToVariable: (variable) =>
-                          rawRef.current ? cycleTextareaToVariable(rawRef.current.textarea, variable) : false,
                       focus: () => rawRef.current?.focus(),
                       // A disabled field must not be mutated through the handle (a variable click mid-save
                       // would splice the value and dirty the form); the rich branch guards on editor.isEditable.
@@ -70,11 +68,13 @@ export function MarkdownEditorField({
                               insertTextareaText(rawRef.current.textarea, text, onChange);
                           }
                       },
+                      selectNextUse: (variable) =>
+                          rawRef.current ? selectNextTextareaUse(rawRef.current.textarea, variable) : false,
                   }
                 : {
-                      cycleToVariable: (variable) => richRef.current?.cycleToVariable(variable) ?? false,
                       focus: () => richRef.current?.focus(),
                       insertAtCursor: (text) => richRef.current?.insertAtCursor(text),
+                      selectNextUse: (variable) => richRef.current?.selectNextUse(variable) ?? false,
                   },
         [mode, onChange, disabled],
     );
