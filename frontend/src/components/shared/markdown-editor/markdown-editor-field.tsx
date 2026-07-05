@@ -14,10 +14,9 @@ import type { EditorViewMode } from './markdown-editor-view-mode';
 const MarkdownEditor = lazy(() => import('./markdown-editor').then((module) => ({ default: module.MarkdownEditor })));
 
 interface MarkdownEditorFieldProps extends Pick<AriaAttributes, 'aria-describedby' | 'aria-invalid'> {
-    // `className` styles the rich wrapper, `rawClassName` the raw <textarea>. The byte-exact font-mono /
-    // no-resize config is baked in — raw mode is a source editor, so callers must not override it.
+    // Sizes the field's outer box in both modes — the rich editor wrapper and the raw <textarea> take the
+    // same flex/min-height layout. The byte-exact font-mono / no-resize raw config is baked in, not overridable.
     className?: string;
-    contentClassName?: string;
     disabled?: boolean;
     fallback?: ReactNode;
     id?: string;
@@ -25,7 +24,6 @@ interface MarkdownEditorFieldProps extends Pick<AriaAttributes, 'aria-describedb
     onBlur?: () => void;
     onChange: (value: string) => void;
     placeholder?: string;
-    rawClassName?: string;
     ref?: Ref<MarkdownEditorHandle>;
     value: string;
 }
@@ -34,7 +32,6 @@ export function MarkdownEditorField({
     'aria-describedby': ariaDescribedby,
     'aria-invalid': ariaInvalid,
     className,
-    contentClassName,
     disabled,
     fallback,
     id,
@@ -42,7 +39,6 @@ export function MarkdownEditorField({
     onBlur,
     onChange,
     placeholder,
-    rawClassName,
     ref,
     value,
 }: MarkdownEditorFieldProps) {
@@ -52,7 +48,7 @@ export function MarkdownEditorField({
                 aria-describedby={ariaDescribedby}
                 aria-invalid={ariaInvalid}
                 autoSize={false}
-                className={cn('resize-none font-mono text-sm', rawClassName)}
+                className={cn('resize-none font-mono text-sm', className)}
                 disabled={disabled}
                 id={id}
                 onBlur={onBlur}
@@ -77,7 +73,6 @@ export function MarkdownEditorField({
                 aria-describedby={ariaDescribedby}
                 aria-invalid={ariaInvalid}
                 className={className}
-                contentClassName={contentClassName}
                 disabled={disabled}
                 id={id}
                 onBlur={onBlur}

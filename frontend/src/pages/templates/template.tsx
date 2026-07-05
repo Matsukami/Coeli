@@ -685,7 +685,6 @@ function Template() {
                             onBlur={field.onBlur}
                             onChange={field.onChange}
                             placeholder="Content"
-                            rawClassName="min-h-[640px] flex-1"
                             value={field.value}
                         />
                     </FormControl>

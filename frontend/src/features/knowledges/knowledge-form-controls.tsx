@@ -99,14 +99,12 @@ export function KnowledgeContentField({
                     {hasLabel ? <FormLabel>Content</FormLabel> : null}
                     <FormControl>
                         <MarkdownEditorField
-                            className={fillParent ? 'min-h-0 flex-1' : 'min-h-[280px]'}
-                            contentClassName={fillParent ? undefined : 'min-h-[240px]'}
+                            className={fillParent ? 'min-h-0 flex-1' : 'min-h-[320px]'}
                             disabled={isSaving}
                             mode={viewMode}
                             onBlur={field.onBlur}
                             onChange={field.onChange}
                             placeholder="Knowledge content (will be embedded into the vector store)"
-                            rawClassName={fillParent ? 'min-h-0 flex-1' : 'min-h-[280px]'}
                             value={field.value}
                         />
                     </FormControl>

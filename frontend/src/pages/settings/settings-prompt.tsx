@@ -231,7 +231,6 @@ function FormMarkdownItem<T extends FieldValues>({
                     onBlur={field.onBlur}
                     onChange={field.onChange}
                     placeholder={placeholder}
-                    rawClassName="min-h-[640px] flex-1"
                     ref={editorRef}
                     value={field.value}
                 />

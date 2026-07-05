@@ -21,7 +21,6 @@ interface MarkdownEditorProps {
     'aria-describedby'?: string;
     'aria-invalid'?: AriaAttributes['aria-invalid'];
     className?: string;
-    contentClassName?: string;
     disabled?: boolean;
     id?: string;
     onBlur?: () => void;
@@ -73,7 +72,6 @@ function MarkdownEditor({
     'aria-describedby': ariaDescribedby,
     'aria-invalid': ariaInvalid,
     className,
-    contentClassName,
     disabled,
     id,
     onBlur,
@@ -280,7 +278,6 @@ function MarkdownEditor({
                 className={cn(
                     'prose prose-sm dark:prose-invert tiptap-content max-w-none min-w-0 flex-1 overflow-auto px-3 py-2',
                     '[&_.ProseMirror]:min-h-full [&_.ProseMirror]:outline-none',
-                    contentClassName,
                 )}
                 editor={editor}
             />
