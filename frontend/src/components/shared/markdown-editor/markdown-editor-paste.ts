@@ -20,7 +20,7 @@ const MARKDOWN_CUES = [
     /^>\s/m, // blockquote
 ];
 
-const looksLikeMarkdown = (text: string): boolean => MARKDOWN_CUES.some((cue) => cue.test(text));
+const isMarkdownLike = (text: string): boolean => MARKDOWN_CUES.some((cue) => cue.test(text));
 
 export const shouldParseMarkdownOnPaste = (text: string, html: string, isCodeContext: boolean): boolean => {
     if (!text.trim() || isCodeContext) {
@@ -36,7 +36,7 @@ export const shouldParseMarkdownOnPaste = (text: string, html: string, isCodeCon
     // through the schema, so bold/italic/links survive as marks. Markdown-looking text still wins the
     // markdown parse: a VS Code copy of markdown source arrives wrapped in syntax-color spans, and parsing
     // its text/plain (not the span noise) is the point of this plugin.
-    if (html && !looksLikeMarkdown(text)) {
+    if (html && !isMarkdownLike(text)) {
         return false;
     }
 

@@ -114,3 +114,44 @@ describe('pipe-less GFM tables (no outer pipe) — cells survive too', () => {
         expect(escapeTablePipes(src)).toBe(src);
     });
 });
+
+describe('table cell with a pipe inside a URL — content survives load and converges', () => {
+    it('escapes a pipe inside a link destination', () => {
+        expect(escapeTablePipes('| A | B |\n| --- | --- |\n| [x](https://h/?a=1|2) | end |')).toBe(
+            '| A | B |\n| --- | --- |\n| [x](https://h/?a=1\\|2) | end |',
+        );
+    });
+
+    it('escapes a pipe inside a bare autolink and an image src', () => {
+        expect(escapeTablePipes('| A | B |\n| --- | --- |\n| https://h/?a=1|2 | ![p](https://c/i.png?w=1|2) |')).toBe(
+            '| A | B |\n| --- | --- |\n| https://h/?a=1\\|2 | ![p](https://c/i.png?w=1\\|2) |',
+        );
+    });
+
+    it('leaves a real column delimiter (spaced pipe, no scheme run) untouched', () => {
+        const table = '| A | B |\n| --- | --- |\n| http://h/x | plain |';
+
+        expect(escapeTablePipes(table)).toBe(table);
+    });
+
+    it('keeps the URL and the trailing cell on round-trip, and converges', () => {
+        const out = roundTrip('| A | B |\n| --- | --- |\n| [go](https://h/?x=1|2) | TRAILING |');
+
+        expect(out).toContain('TRAILING');
+        expect(out).toContain('x=1\\|2');
+        expect(roundTrip(out)).toBe(out);
+    });
+});
+
+describe('TABLE_DELIMITER_LINE is linear (ReDoS guard)', () => {
+    it('scans a crafted delimiter-looking line with a long trailing space run in linear time', () => {
+        // A `|`-line followed by "dashes + many spaces + non-matching tail" was O(n²) on the old regex
+        // (~0.6s at 32k). The linear rewrite stays sub-millisecond; assert a generous budget.
+        const evil = `x|y\n${'-'.repeat(50)}${' '.repeat(60000)}z\n`;
+        const started = performance.now();
+
+        escapeTablePipes(evil);
+
+        expect(performance.now() - started).toBeLessThan(100);
+    });
+});

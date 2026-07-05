@@ -1,8 +1,8 @@
 // marked's GFM table tokenizer splits every row on raw `|` BEFORE inline tokenization, so a pipe inside a
-// code span (`` `x | y` ``) or a Go-template action (`{{.X | upper}}`) in a cell creates a phantom
-// column and the trailing cells are silently DROPPED on load. The splitter does honor `\|` — and unescapes
-// it in the cell text — so pre-escaping those pipes before marked lexes protects the load side the same way
-// TunedTable's renderChildren escape protects the save side.
+// code span (`` `x | y` ``), a Go-template action (`{{.X | upper}}`), or a URL (`[x](http://a|b)`, a bare
+// `http://a|b`, an image src) in a cell creates a phantom column and the trailing cells are silently DROPPED
+// on load. The splitter does honor `\|` — and unescapes it in the cell text — so pre-escaping those pipes
+// before marked lexes protects the load side the same way TunedTable's renderChildren escape protects save.
 //
 // Scope must match EXACTLY the rows marked itself treats as the table — no more, no less:
 //   • the header/delimiter pair must already parse as a table (matching cell counts, delimiter has |/:) —
@@ -18,8 +18,14 @@
 // content, and our html tokenizers render such lines as literal text anyway).
 
 const FENCE_LINE = /^ {0,3}(```|~~~)/;
-const TABLE_DELIMITER_LINE = /^ {0,3}\|? *:?-+:? *(?:\| *:?-+:? *)*\|? *$/;
+// Written to be linear: the trailing `(?: *\|)? *$` (not `\|? *$`) plus per-cell spacing keep any two space
+// runs from competing for the same characters, so a crafted delimiter-looking line can't force O(n²) backtracking.
+const TABLE_DELIMITER_LINE = /^ {0,3}\|? *:?-+:?(?: *\| *:?-+:?)*(?: *\|)? *$/;
 const TEMPLATE_ACTION = /\{\{[^{}]*\}\}/g;
+// A maximal non-space run containing a `scheme://` — a link/image destination or a bare autolink. It has no
+// spaces by construction, so any `|` in it is URL content (never a real cell separator, which needs spaces
+// around it or sits outside the run), and escaping it is always correct.
+const URL_RUN = /[^\s]*:\/\/[^\s]*/g;
 
 // A table's body ends at a blank line or the first line that starts a different block — the same interrupts
 // marked's gfmTable body-row negative lookahead lists (heading, blockquote, fences, list, hr, indented code).
@@ -33,7 +39,7 @@ const ENDS_TABLE_BODY = [
     /^(?: {4}| {0,3}\t)/,
 ];
 
-const endsTableBody = (line: string): boolean => ENDS_TABLE_BODY.some((rule) => rule.test(line));
+const isTableBodyEnd = (line: string): boolean => ENDS_TABLE_BODY.some((rule) => rule.test(line));
 
 const isEscapedAt = (text: string, offset: number): boolean => {
     let isEscaped = false;
@@ -121,7 +127,9 @@ const escapeRowPipes = (row: string): string => {
         index = closerStart + run.length;
     }
 
-    return result.replace(TEMPLATE_ACTION, (action) => escapeUnescapedPipes(action));
+    return result
+        .replace(TEMPLATE_ACTION, (action) => escapeUnescapedPipes(action))
+        .replace(URL_RUN, (url) => escapeUnescapedPipes(url));
 };
 
 export const escapeTablePipes = (markdown: string): string => {
@@ -170,7 +178,7 @@ export const escapeTablePipes = (markdown: string): string => {
         // content. escapeRowPipes leaves structural pipes alone, so escaping the header can't skew its cell count.
         escapeRow(index);
 
-        for (let row = index + 2; row < lines.length && !endsTableBody(lines[row]!); row++) {
+        for (let row = index + 2; row < lines.length && !isTableBodyEnd(lines[row]!); row++) {
             escapeRow(row);
         }
     }

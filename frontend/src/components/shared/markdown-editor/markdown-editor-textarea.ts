@@ -41,20 +41,20 @@ export function insertTextareaText(
 // Pixel offset of `position` from the textarea content top, measured via a hidden mirror so soft-wrapped
 // lines count — a logical-line count undershoots the scroll badly for wrapped templates.
 function caretOffsetTop(textarea: HTMLTextAreaElement, position: number): number {
-    const cs = getComputedStyle(textarea);
+    const computedStyle = getComputedStyle(textarea);
     const mirror = document.createElement('div');
 
-    mirror.style.fontFamily = cs.fontFamily;
-    mirror.style.fontSize = cs.fontSize;
-    mirror.style.fontWeight = cs.fontWeight;
-    mirror.style.fontStyle = cs.fontStyle;
-    mirror.style.lineHeight = cs.lineHeight;
-    mirror.style.letterSpacing = cs.letterSpacing;
-    mirror.style.wordSpacing = cs.wordSpacing;
-    mirror.style.paddingTop = cs.paddingTop;
-    mirror.style.paddingRight = cs.paddingRight;
-    mirror.style.paddingBottom = cs.paddingBottom;
-    mirror.style.paddingLeft = cs.paddingLeft;
+    mirror.style.fontFamily = computedStyle.fontFamily;
+    mirror.style.fontSize = computedStyle.fontSize;
+    mirror.style.fontWeight = computedStyle.fontWeight;
+    mirror.style.fontStyle = computedStyle.fontStyle;
+    mirror.style.lineHeight = computedStyle.lineHeight;
+    mirror.style.letterSpacing = computedStyle.letterSpacing;
+    mirror.style.wordSpacing = computedStyle.wordSpacing;
+    mirror.style.paddingTop = computedStyle.paddingTop;
+    mirror.style.paddingRight = computedStyle.paddingRight;
+    mirror.style.paddingBottom = computedStyle.paddingBottom;
+    mirror.style.paddingLeft = computedStyle.paddingLeft;
     mirror.style.width = `${textarea.clientWidth}px`;
     mirror.style.boxSizing = 'border-box';
     mirror.style.whiteSpace = 'pre-wrap';

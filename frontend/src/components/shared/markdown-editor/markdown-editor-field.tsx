@@ -65,8 +65,10 @@ export function MarkdownEditorField({
                       cycleToVariable: (variable) =>
                           rawRef.current ? cycleTextareaToVariable(rawRef.current.textarea, variable) : false,
                       focus: () => rawRef.current?.focus(),
+                      // A disabled field must not be mutated through the handle (a variable click mid-save
+                      // would splice the value and dirty the form); the rich branch guards on editor.isEditable.
                       insertAtCursor: (text) => {
-                          if (rawRef.current) {
+                          if (!disabled && rawRef.current) {
                               insertTextareaText(rawRef.current.textarea, text, onChange);
                           }
                       },
@@ -76,7 +78,7 @@ export function MarkdownEditorField({
                       focus: () => richRef.current?.focus(),
                       insertAtCursor: (text) => richRef.current?.insertAtCursor(text),
                   },
-        [mode, onChange],
+        [mode, onChange, disabled],
     );
 
     if (mode === 'raw') {

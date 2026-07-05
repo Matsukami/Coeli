@@ -163,7 +163,10 @@ function MarkdownEditor({
                 editor?.commands.focus();
             },
             insertAtCursor: (text: string) => {
-                if (!editor) {
+                // A disabled field must not be mutated through the handle — `dispatch` bypasses the editable
+                // gate (which only blocks user input), so without this a variable click mid-save would edit
+                // the doc and dirty the form.
+                if (!editor || !editor.isEditable) {
                     return;
                 }
 
