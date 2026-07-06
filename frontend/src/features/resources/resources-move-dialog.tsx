@@ -1,7 +1,5 @@
-import { zodResolver } from '@hookform/resolvers/zod';
 import { FolderInput } from 'lucide-react';
 import { useEffect, useMemo } from 'react';
-import { useForm } from 'react-hook-form';
 
 import type { FileNode } from '@/components/shared/file-manager';
 import type { OverwriteConflict } from '@/components/shared/overwrite';
@@ -11,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { useAppForm } from '@/hooks/use-app-form';
 import { useResources } from '@/providers/resources-provider';
 
 import { resourcesMoveFormSchema, type ResourcesMoveFormValues, useResourcesMove } from './use-resources-move';
@@ -139,10 +138,9 @@ function ResourcesMoveDialogForm({ files, onClose }: ResourcesMoveDialogFormProp
         return files[0].path;
     }, [files, isMulti]);
 
-    const form = useForm<ResourcesMoveFormValues>({
+    const form = useAppForm<ResourcesMoveFormValues>({
         defaultValues: { destination: defaultDestination },
-        mode: 'onChange',
-        resolver: zodResolver(resourcesMoveFormSchema),
+        schema: resourcesMoveFormSchema,
     });
 
     useEffect(() => {
@@ -180,7 +178,9 @@ function ResourcesMoveDialogForm({ files, onClose }: ResourcesMoveDialogFormProp
         await overwriteAction.forceExecute(buildMovePlan(files, values));
     });
 
-    const isSubmitDisabled = !form.formState.isValid;
+    // Convention: stay enabled until the first submit, then reflect validity (so an invalid submit surfaces
+    // errors instead of a silently-dead button). Mirrors FormSubmitButton's requireValid gate.
+    const isSubmitDisabled = form.formState.isSubmitted && !form.formState.isValid;
     const titleText = isMulti
         ? `Move ${files.length} items`
         : files[0].isDir

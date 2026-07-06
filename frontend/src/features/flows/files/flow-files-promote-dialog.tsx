@@ -1,7 +1,5 @@
-import { zodResolver } from '@hookform/resolvers/zod';
 import { BookmarkPlus } from 'lucide-react';
 import { useEffect, useMemo } from 'react';
-import { useForm } from 'react-hook-form';
 
 import type { FileNode } from '@/components/shared/file-manager';
 import type { OverwriteConflict } from '@/components/shared/overwrite';
@@ -11,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { useAppForm } from '@/hooks/use-app-form';
 import { useResources } from '@/providers/resources-provider';
 
 import { stripFlowRootPrefix } from './flow-files-utils';
@@ -147,10 +146,9 @@ function FlowFilesPromoteDialogForm({ files, flowId, onClose }: FlowFilesPromote
         return buildSingleDefaultDestination(files[0]);
     }, [files, isMulti]);
 
-    const form = useForm<FlowFilesPromoteFormValues>({
+    const form = useAppForm<FlowFilesPromoteFormValues>({
         defaultValues: { destination: defaultDestination },
-        mode: 'onChange',
-        resolver: zodResolver(flowFilesPromoteFormSchema),
+        schema: flowFilesPromoteFormSchema,
     });
 
     useEffect(() => {
@@ -183,7 +181,9 @@ function FlowFilesPromoteDialogForm({ files, flowId, onClose }: FlowFilesPromote
         await overwriteAction.forceExecute(buildPromotePlan(files, values));
     });
 
-    const isSubmitDisabled = !form.formState.isValid;
+    // Convention: stay enabled until the first submit, then reflect validity (so an invalid submit surfaces
+    // errors instead of a silently-dead button). Mirrors FormSubmitButton's requireValid gate.
+    const isSubmitDisabled = form.formState.isSubmitted && !form.formState.isValid;
     const titleText = isMulti ? `Save ${files.length} items as resources` : 'Save as resource';
     const overwriteCtaLabel = isMulti ? `Save ${files.length} with overwrite` : 'Save with overwrite';
 

@@ -1,10 +1,8 @@
 import type { ReactNode } from 'react';
 
 import { skipToken, useQuery } from '@apollo/client/react';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { ChevronDown, Ellipsis, FileSymlink, FileText, Loader2, Pencil, Save, Trash } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
-import { useForm } from 'react-hook-form';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { z } from 'zod';
@@ -32,13 +30,14 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Form, FormControl, FormField, FormItem } from '@/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { FormSubmitButton } from '@/components/ui/form-submit-button';
 import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useTemplateDetailNavigation } from '@/features/templates/use-template-detail-navigation';
 import { FlowTemplateDocument } from '@/graphql/types';
+import { useAppForm } from '@/hooks/use-app-form';
 import { useBreakpoint } from '@/hooks/use-breakpoint';
 import { routes } from '@/lib/routes';
 import { cn } from '@/lib/utils';
@@ -278,11 +277,10 @@ function Template() {
         [templateData?.flowTemplate],
     );
 
-    const form = useForm<FormValues>({
+    const form = useAppForm<FormValues>({
         defaultValues: initialValues,
-        mode: 'onTouched',
         resetOptions: { keepDirtyValues: true },
-        resolver: zodResolver(formSchema),
+        schema: formSchema,
         values: initialValues,
     });
 
@@ -465,7 +463,7 @@ function Template() {
                     )}
                     {(isNew || !!templateData?.flowTemplate) && (
                         <FormSubmitButton
-                            disabled={isSaving || !isValid || (!isNew && !hasUnsavedChanges)}
+                            disabled={isSaving || (!isNew && !hasUnsavedChanges)}
                             form="template-form"
                             icon={<Save className="size-4" />}
                             loading={isSaving}
@@ -684,6 +682,9 @@ function Template() {
                             value={field.value}
                         />
                     </FormControl>
+                    {/* Full-height field: the invalid state shows as the editor's red border (via aria-invalid),
+                        not text below it (no room in the flex layout). Kept sr-only for screen readers. */}
+                    <FormMessage className="sr-only" />
                 </FormItem>
             )}
         />

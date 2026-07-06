@@ -1,5 +1,4 @@
 import { useMutation, useQuery } from '@apollo/client/react';
-import { zodResolver } from '@hookform/resolvers/zod';
 import {
     AlertCircle,
     Check,
@@ -21,7 +20,6 @@ import {
     type FieldPath,
     type FieldValues,
     useController,
-    useForm,
     type UseFormSetValue,
     useFormState,
     useWatch,
@@ -73,6 +71,7 @@ import {
     TestProviderDocument,
     UpdateProviderDocument,
 } from '@/graphql/types';
+import { useAppForm } from '@/hooks/use-app-form';
 import { useBreakpoint } from '@/hooks/use-breakpoint';
 import { routes } from '@/lib/routes';
 import { cn } from '@/lib/utils';
@@ -1107,14 +1106,13 @@ function SettingsProvider() {
     const isLoading = isCreateLoading || isUpdateLoading || isDeleteLoading;
     const { isDesktop } = useBreakpoint();
 
-    const form = useForm<FormInput, unknown, FormData>({
+    const form = useAppForm<FormInput, unknown, FormData>({
         defaultValues: {
             agents: {},
             name: undefined,
             type: undefined,
         },
-        mode: 'onTouched',
-        resolver: zodResolver(formSchema),
+        schema: formSchema,
     });
 
     const { control, formState, handleSubmit: handleFormSubmit, reset, setValue, trigger, watch } = form;

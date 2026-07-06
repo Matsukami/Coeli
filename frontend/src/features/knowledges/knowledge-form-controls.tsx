@@ -99,7 +99,7 @@ export function KnowledgeContentField({
                     {hasLabel ? <FormLabel>Content</FormLabel> : null}
                     <FormControl>
                         <MarkdownEditorField
-                            className={fillParent ? 'min-h-0 flex-1' : 'min-h-[320px]'}
+                            className={fillParent ? 'min-h-0 flex-1' : 'min-h-[calc(100dvh-5rem)]'}
                             disabled={isSaving}
                             mode={viewMode}
                             onBlur={field.onBlur}
@@ -109,7 +109,10 @@ export function KnowledgeContentField({
                             value={field.value}
                         />
                     </FormControl>
-                    <FormMessage />
+                    {/* Full-height field: the invalid state shows as a red editor border (via aria-invalid), not
+                        text below it — a message here would eat a line the flex layout has no room for. Kept as
+                        sr-only so screen readers still announce it via aria-describedby. */}
+                    <FormMessage className="sr-only" />
                 </FormItem>
             )}
         />
@@ -129,7 +132,7 @@ export function KnowledgeMetaFields({ control, isNew, isSaving }: KnowledgeMetaF
 
     const handleDocTypeChange = (next: KnowledgeDocType, fieldOnChange: (value: KnowledgeDocType) => void) => {
         fieldOnChange(next);
-        const opts = { shouldDirty: true, shouldValidate: true };
+        const opts = { shouldDirty: true };
 
         if (next !== KnowledgeDocType.Answer) {
             setValue('answerType', undefined, opts);

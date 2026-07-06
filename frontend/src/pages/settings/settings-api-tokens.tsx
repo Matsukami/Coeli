@@ -1,7 +1,6 @@
 import type { ColumnDef } from '@tanstack/react-table';
 
 import { useMutation, useQuery, useSubscription } from '@apollo/client/react';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { format } from 'date-fns';
 import { enUS } from 'date-fns/locale';
 import {
@@ -19,7 +18,7 @@ import {
     X,
 } from 'lucide-react';
 import { useCallback, useId, useMemo, useState } from 'react';
-import { type Control, Controller, useForm, useFormState } from 'react-hook-form';
+import { type Control, Controller, useFormState } from 'react-hook-form';
 import { toast } from 'sonner';
 import * as z from 'zod';
 
@@ -55,6 +54,7 @@ import {
     TokenStatus as TokenStatusEnum,
     UpdateApiTokenDocument,
 } from '@/graphql/types';
+import { useAppForm } from '@/hooks/use-app-form';
 import { useTableState } from '@/hooks/use-table-state';
 import { cn } from '@/lib/utils';
 import { formatDate } from '@/lib/utils/format';
@@ -295,15 +295,13 @@ function SettingsAPITokens() {
     // Form state lives in the parent so that subscription-driven DataTable
     // re-renders and row remounts cannot drop user input. <Controller> in each
     // cell re-subscribes to this state on remount — no values are lost.
-    const createForm = useForm<CreateTokenFormInput, unknown, CreateTokenFormValues>({
+    const createForm = useAppForm<CreateTokenFormInput, unknown, CreateTokenFormValues>({
         defaultValues: CREATE_TOKEN_DEFAULTS,
-        mode: 'onChange',
-        resolver: zodResolver(createTokenFormSchema),
+        schema: createTokenFormSchema,
     });
-    const editForm = useForm<EditTokenFormInput, unknown, EditTokenFormValues>({
+    const editForm = useAppForm<EditTokenFormInput, unknown, EditTokenFormValues>({
         defaultValues: EDIT_TOKEN_DEFAULTS,
-        mode: 'onChange',
-        resolver: zodResolver(editTokenFormSchema),
+        schema: editTokenFormSchema,
     });
 
     const { filter, pageIndex: currentPage, setFilter, setPage: handlePageChange } = useTableState();

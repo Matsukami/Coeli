@@ -1,5 +1,4 @@
 import { useMutation, useQuery } from '@apollo/client/react';
-import { zodResolver } from '@hookform/resolvers/zod';
 import {
     AlertCircle,
     Bot,
@@ -23,7 +22,6 @@ import {
     type FieldPathByValue,
     type FieldValues,
     useController,
-    useForm,
     useFormState,
     useWatch,
 } from 'react-hook-form';
@@ -81,6 +79,7 @@ import {
     UpdatePromptDocument,
     ValidatePromptDocument,
 } from '@/graphql/types';
+import { useAppForm } from '@/hooks/use-app-form';
 import { useBreakpoint } from '@/hooks/use-breakpoint';
 import { composeRefs } from '@/lib/compose-refs';
 import { formatPromptId } from '@/lib/route-titles/format-prompt-id';
@@ -266,7 +265,9 @@ function FormMarkdownItem<T extends FieldValues>({
                     value={field.value}
                 />
             </FormControl>
-            {fieldState.error && <FormMessage>{fieldState.error.message}</FormMessage>}
+            {/* Full-height field: the invalid state shows as the editor's red border (via aria-invalid), not
+                text below it (no room in the flex layout). Kept sr-only so screen readers still announce it. */}
+            {fieldState.error && <FormMessage className="sr-only">{fieldState.error.message}</FormMessage>}
         </FormItem>
     );
 }
@@ -382,22 +383,20 @@ function SettingsPrompt() {
         }
     };
 
-    const systemForm = useForm<SystemFormData>({
+    const systemForm = useAppForm<SystemFormData>({
         defaultValues: {
             template: '',
         },
-        mode: 'onTouched',
         resetOptions: { keepDirtyValues: true },
-        resolver: zodResolver(systemFormSchema),
+        schema: systemFormSchema,
     });
 
-    const humanForm = useForm<HumanFormData>({
+    const humanForm = useAppForm<HumanFormData>({
         defaultValues: {
             template: '',
         },
-        mode: 'onTouched',
         resetOptions: { keepDirtyValues: true },
-        resolver: zodResolver(humanFormSchema),
+        schema: humanFormSchema,
     });
 
     const { isDirty: isSystemDirty, isValid: isSystemValid } = useFormState({ control: systemForm.control });

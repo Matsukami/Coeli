@@ -86,7 +86,7 @@ export function MarkdownEditorField({
                 aria-invalid={ariaInvalid}
                 autoSize={false}
                 // Raw config is applied LAST so a consumer `className` can't override the byte-exact source styling.
-                className={cn(className, 'resize-none font-mono text-sm')}
+                className={cn(className, 'aria-invalid:border-destructive resize-none font-mono text-sm')}
                 disabled={disabled}
                 id={id}
                 onBlur={onBlur}

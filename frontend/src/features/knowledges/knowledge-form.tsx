@@ -1,8 +1,7 @@
 import { useMutation } from '@apollo/client/react';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { Save } from 'lucide-react';
 import { type ComponentProps, useCallback, useState } from 'react';
-import { type Control, type FieldPath, type SubmitHandler, useForm, useWatch } from 'react-hook-form';
+import { type Control, type FieldPath, type SubmitHandler, useWatch } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { z } from 'zod';
@@ -19,6 +18,7 @@ import { UnsavedChangesDialog, useUnsavedChangesGuard } from '@/components/share
 import { Form } from '@/components/ui/form';
 import { Spinner } from '@/components/ui/spinner';
 import { AnonymizeTextDocument, KnowledgeAnswerType, KnowledgeDocType, KnowledgeGuideType } from '@/graphql/types';
+import { useAppForm } from '@/hooks/use-app-form';
 import { useBreakpoint } from '@/hooks/use-breakpoint';
 import { Log } from '@/lib/log';
 import { useUser } from '@/providers/user-provider';
@@ -199,11 +199,8 @@ export function KnowledgeForm({ initialValues, isNew, knowledge, onSubmit }: Kno
     const { authInfo } = useUser();
     const canAnonymize = authInfo?.privileges?.includes('anonymize.call') ?? false;
 
-    const form = useForm<FormValues>({
+    const form = useAppForm<FormValues>({
         defaultValues: initialValues,
-        // Not `onChange`: that would run the entire Zod schema on every keystroke, including every emit
-        // from the multi-kilobyte `content` markdown editor.
-        mode: 'onTouched',
         resetOptions: {
             // When `values` changes (e.g. a GraphQL subscription pushes an
             // updated document after an inline rename from the header),
@@ -212,7 +209,7 @@ export function KnowledgeForm({ initialValues, isNew, knowledge, onSubmit }: Kno
             // would silently wipe their in-flight changes.
             keepDirtyValues: true,
         },
-        resolver: zodResolver(formSchema),
+        schema: formSchema,
         // `values` reactively syncs the form with `initialValues`. The page
         // recomputes `initialValues` from `knowledge` whenever the cache
         // refreshes (rename, refetch, etc.), and RHF reapplies the new
@@ -314,7 +311,10 @@ export function KnowledgeForm({ initialValues, isNew, knowledge, onSubmit }: Kno
         [isSaving, navigate, performSave, skipNextBlock],
     );
 
-    const canSubmit = !isSaving && isValid && (isNew || isDirty);
+    // Not gated on `isValid`: the button must be clickable to trigger the first submit, which is what turns
+    // validation on (mode:'onSubmit'). Clicking an invalid form surfaces the errors instead of silently doing
+    // nothing. `isDirty` still gates edits so an unchanged existing doc can't be re-saved.
+    const canSubmit = !isSaving && (isNew || isDirty);
 
     const saveButton = (
         <AppHeaderAction
@@ -350,7 +350,7 @@ export function KnowledgeForm({ initialValues, isNew, knowledge, onSubmit }: Kno
                 return;
             }
 
-            form.setValue('content', anonymizedContent, { shouldDirty: true, shouldValidate: true });
+            form.setValue('content', anonymizedContent, { shouldDirty: true });
             toast.success('Content anonymized');
         } catch (error) {
             Log.error('Failed to anonymize content', error);
