@@ -306,6 +306,15 @@
         --sidebar-accent-foreground: oklch(0.32 0 0);
         --sidebar-border: oklch(0.93 0.01 240);
         --sidebar-ring: oklch(0.25 0.14 245);
+        /* Editor highlight TEXT, tuned for readable contrast on the editor surface (unlike --primary, a fill
+           color that fails WCAG AA as text on dark). Four distinct hues so adjacent tokens don't blur:
+           link = theme blue 245; variable = violet 300; tag = teal 155; inline code = red 25 on a visible chip.
+           --editor-code-bg is the opaque inline-code + code-block chip. Don't fold these back into --primary. */
+        --editor-accent: oklch(0.25 0.12 245);
+        --editor-variable: oklch(0.4 0.18 300);
+        --editor-tag: oklch(0.25 0.12 155);
+        --editor-code: oklch(0.5 0.16 25);
+        --editor-code-bg: oklch(0.94 0.006 245);
         --font-sans: Inter, 'Inter Fallback', sans-serif;
         --font-serif: Inter, 'Inter Fallback', serif;
         --font-mono: 'Roboto Mono', monospace;
@@ -361,6 +370,11 @@
         --sidebar-accent-foreground: oklch(0.92 0.02 245);
         --sidebar-border: oklch(0.3 0.04 245);
         --sidebar-ring: oklch(0.5 0.16 245);
+        --editor-accent: oklch(0.68 0.13 245);
+        --editor-variable: oklch(0.72 0.12 300);
+        --editor-tag: oklch(0.68 0.13 155);
+        --editor-code: oklch(0.7 0.15 25);
+        --editor-code-bg: oklch(0.27 0.03 245);
         --font-sans: Inter, 'Inter Fallback', sans-serif;
         --font-serif: Inter, 'Inter Fallback', serif;
         --font-mono: 'Roboto Mono', monospace;
@@ -417,6 +431,23 @@
     [role='button']:not(:disabled) {
         cursor: pointer;
     }
+}
+
+/* Tailwind Typography wraps inline <code> in literal `backticks` via ::before/::after — that is markdown SOURCE,
+   not how rendered inline code should look. Drop them so it reads as styled code, matching tiptap's demos. */
+.prose code::before,
+.prose code::after {
+    content: none;
+}
+
+/* Inline code in the read-only viewer mirrors the editor (red text on a visible chip) so a document reads
+   the same whether it is being edited or viewed. Code blocks keep hljs syntax highlighting (see below). */
+.prose code:not(pre code) {
+    color: var(--editor-code);
+    background-color: var(--editor-code-bg);
+    padding: 0.125rem 0.25rem;
+    border-radius: calc(var(--radius) - 4px);
+    font-weight: inherit;
 }
 
 .prose-xs {
@@ -595,14 +626,15 @@
 }
 
 .tiptap-content .ProseMirror code:not(pre code) {
-    background-color: var(--muted);
+    color: var(--editor-code);
+    background-color: var(--editor-code-bg);
     padding: 0.125rem 0.25rem;
     border-radius: calc(var(--radius) - 4px);
     font-size: 0.875em;
 }
 
 .tiptap-content .ProseMirror pre {
-    background-color: var(--muted);
+    background-color: var(--editor-code-bg);
     color: var(--foreground);
     padding: 0.75rem 1rem;
     border-radius: calc(var(--radius) - 2px);
@@ -622,7 +654,7 @@
 }
 
 .tiptap-content .ProseMirror a {
-    color: var(--primary);
+    color: var(--editor-accent);
     text-decoration: underline;
     text-underline-offset: 2px;
 }
@@ -721,18 +753,16 @@
 
 /* `{{ ... }}` Go-template actions, highlighted via view-only decorations (document bytes untouched). */
 .tiptap-content .ProseMirror .template-variable {
-    color: var(--primary);
-    background-color: color-mix(in oklab, var(--primary) 12%, transparent);
+    color: var(--editor-variable);
+    background-color: color-mix(in oklab, var(--editor-variable) 9%, transparent);
     border-radius: calc(var(--radius) - 4px);
     padding: 0 1px;
 }
 
-/* `<xml-tags>`, highlighted view-only. The theme palette is monochrome blue (hue 245), so rotate
-   the hue off primary to a teal/green that reads distinct from the blue variables, in both themes. */
+/* `<xml-tags>`, highlighted view-only (teal --editor-tag reads distinct from the violet variables). */
 .tiptap-content .ProseMirror .template-tag {
-    --tag-color: oklch(from var(--primary) l c calc(h - 90));
-    color: var(--tag-color);
-    background-color: color-mix(in oklab, var(--tag-color) 12%, transparent);
+    color: var(--editor-tag);
+    background-color: color-mix(in oklab, var(--editor-tag) 9%, transparent);
     border-radius: calc(var(--radius) - 4px);
     padding: 0 1px;
 }
