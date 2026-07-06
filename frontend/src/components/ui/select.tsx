@@ -81,7 +81,7 @@ function SelectScrollDownButton({
             className={cn('flex cursor-default items-center justify-center py-1', className)}
             {...props}
         >
-            <ChevronDown className="h-4 w-4" />
+            <ChevronDown className="size-4" />
         </SelectPrimitive.ScrollDownButton>
     );
 }
@@ -117,7 +117,7 @@ function SelectTrigger({ children, className, ...props }: React.ComponentProps<t
         >
             {children}
             <SelectPrimitive.Icon asChild>
-                <ChevronDown className="h-4 w-4 opacity-50" />
+                <ChevronDown className="size-4 opacity-50" />
             </SelectPrimitive.Icon>
         </SelectPrimitive.Trigger>
     );

@@ -1,20 +1,21 @@
 import { describe, expect, it } from 'vitest';
 
-import { isSafeImageSrc, isSafeUrl } from './markdown-editor-toolbar';
+import { normalizeImageSrc, normalizeLinkUrl } from './markdown-editor-toolbar-url';
 
-// The Image extension stores whatever src it is handed; isSafeImageSrc is the allowlist that blocks dangerous
-// PROTOCOLS (javascript:, data:text/html, vbscript:, file:) before a src is saved. A bare relative string
-// resolves against the page origin (http/https) and is intentionally allowed — the guard validates the
-// protocol, not that the URL is absolute. data: URLs are limited to base64 raster formats: svg+xml is the one
-// image type that can carry script.
-describe('isSafeImageSrc — image-src protocol allowlist', () => {
+// normalizeImageSrc makes a scheme-less src absolute (https://) and validates the protocol before it is saved:
+// http(s) and base64 raster data: URLs pass through; data:image/svg+xml is rejected (SVG can carry script), as
+// are data:text/html, application/*, javascript:, vbscript:, and malformed input.
+describe('normalizeImageSrc — prepend https to scheme-less src, validate protocol', () => {
     it.each([
-        'http://example.com/a.png',
-        'https://example.com/a.png',
-        'data:image/png;base64,AAAA',
-        'data:image/webp;base64,AAAA',
-    ])('allows %s', (url) => {
-        expect(isSafeImageSrc(url)).toBe(true);
+        ['example.com/a.png', 'https://example.com/a.png'],
+        ['//cdn.example.com/a.png', 'https://cdn.example.com/a.png'],
+        ['  example.com/a.png  ', 'https://example.com/a.png'],
+        ['http://example.com/a.png', 'http://example.com/a.png'],
+        ['https://example.com/a.png?w=1', 'https://example.com/a.png?w=1'],
+        ['data:image/png;base64,AAAA', 'data:image/png;base64,AAAA'],
+        ['data:image/webp;base64,AAAA', 'data:image/webp;base64,AAAA'],
+    ])('normalizes %s → %s', (input, expected) => {
+        expect(normalizeImageSrc(input)).toBe(expected);
     });
 
     it.each([
@@ -24,33 +25,42 @@ describe('isSafeImageSrc — image-src protocol allowlist', () => {
         'data:image/svg+xml;utf8,<svg onload=alert(1)/>',
         'data:image/svg+xml;base64,AAAA',
         'vbscript:msgbox(1)',
-        'file:///etc/passwd',
-        'http://', // malformed → URL constructor throws → rejected via the catch
-    ])('rejects %s', (url) => {
-        expect(isSafeImageSrc(url)).toBe(false);
+        'http://', // malformed → no host
+        '',
+    ])('rejects %s', (input) => {
+        expect(normalizeImageSrc(input)).toBeNull();
     });
 });
 
-describe('isSafeUrl — link-href protocol allowlist', () => {
+// A manually-typed link must be made absolute — a scheme-less input like "example.com" would otherwise persist as
+// a relative href the browser resolves against the current origin. normalizeLinkUrl prepends https:// unless the
+// input already carries an allowed scheme, validates the protocol with no base URL, and returns null for
+// unsafe/malformed input. Already-schemed values pass through verbatim (case + query chars preserved).
+describe('normalizeLinkUrl — prepend https to scheme-less input, validate protocol', () => {
     it.each([
-        'https://example.com/path?a=1|2',
-        'http://example.com',
-        'mailto:a@b.com',
-        'tel:+123',
-        '/relative/path',
-        '#anchor',
-        './sibling',
-    ])('allows %s', (url) => {
-        expect(isSafeUrl(url)).toBe(true);
+        ['example.com', 'https://example.com'],
+        ['www.example.com', 'https://www.example.com'],
+        ['example.com:8080', 'https://example.com:8080'],
+        ['localhost:3000', 'https://localhost:3000'],
+        ['//evil.com', 'https://evil.com'],
+        ['  example.com  ', 'https://example.com'],
+        ['http://example.com', 'http://example.com'],
+        ['https://example.com/path?a=1|2', 'https://example.com/path?a=1|2'],
+        ['mailto:a@b.com', 'mailto:a@b.com'],
+        ['tel:+123', 'tel:+123'],
+    ])('normalizes %s → %s', (input, expected) => {
+        expect(normalizeLinkUrl(input)).toBe(expected);
     });
 
     it.each([
         'javascript:alert(1)',
         'data:text/html,<script>alert(1)</script>',
         'vbscript:msgbox(1)',
-        'file:///etc/passwd',
-        'http://', // malformed → rejected via the catch
-    ])('rejects %s', (url) => {
-        expect(isSafeUrl(url)).toBe(false);
+        '#anchor', // no host once prepended → rejected
+        'https://', // malformed → no host
+        '',
+        '   ',
+    ])('rejects %s', (input) => {
+        expect(normalizeLinkUrl(input)).toBeNull();
     });
 });

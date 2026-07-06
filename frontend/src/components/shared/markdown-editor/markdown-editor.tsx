@@ -10,7 +10,10 @@ import { useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react
 import { cn } from '@/lib/utils';
 
 import { createMarkdownExtensions } from './markdown-editor-extensions';
+import { ImageHandle } from './markdown-editor-image-handle';
+import { LinkHandle } from './markdown-editor-link-handle';
 import { MARKDOWN_EDITOR_WRAPPER_CLASS as WRAPPER_CLASS } from './markdown-editor-styles';
+import { TableHandles } from './markdown-editor-table-handles';
 import { MarkdownEditorToolbar } from './markdown-editor-toolbar';
 import { findVariableOccurrences } from './markdown-editor-variable-highlight';
 import { nextVariableRange } from './markdown-editor-variable-syntax';
@@ -26,6 +29,16 @@ interface MarkdownEditorProps {
     'aria-invalid'?: AriaAttributes['aria-invalid'];
     className?: string;
     disabled?: boolean;
+    id?: string;
+    onBlur?: () => void;
+    onChange: (value: string) => void;
+    placeholder?: string;
+    value: string;
+}
+
+interface UseMarkdownEditorOptions extends Pick<AriaAttributes, 'aria-describedby' | 'aria-invalid'> {
+    disabled?: boolean;
+    handleRef?: Ref<MarkdownEditorHandle>;
     id?: string;
     onBlur?: () => void;
     onChange: (value: string) => void;
@@ -77,10 +90,81 @@ function MarkdownEditor({
     id,
     onBlur,
     onChange,
-    placeholder = 'Write something…',
+    placeholder,
     ref,
     value,
 }: MarkdownEditorProps & { ref?: Ref<MarkdownEditorHandle> }) {
+    const editor = useMarkdownEditor({
+        'aria-describedby': ariaDescribedby,
+        'aria-invalid': ariaInvalid,
+        disabled,
+        handleRef: ref,
+        id,
+        onBlur,
+        onChange,
+        placeholder,
+        value,
+    });
+
+    if (!editor) {
+        return (
+            <div
+                aria-busy="true"
+                className={cn(
+                    WRAPPER_CLASS,
+                    'items-center justify-center',
+                    disabled && 'pointer-events-none opacity-60',
+                    className,
+                )}
+                data-slot="markdown-editor"
+            >
+                <Loader2 className="text-muted-foreground size-5 animate-spin" />
+            </div>
+        );
+    }
+
+    return (
+        <div
+            className={cn(
+                WRAPPER_CLASS,
+                'focus-within:ring-ring focus-within:ring-1',
+                disabled && 'pointer-events-none opacity-60',
+                className,
+            )}
+            data-slot="markdown-editor"
+        >
+            <MarkdownEditorToolbar
+                disabled={disabled}
+                editor={editor}
+            />
+            <EditorContent
+                className={cn(
+                    'prose prose-sm dark:prose-invert tiptap-content max-w-none min-w-0 flex-1 overflow-auto px-3 py-2',
+                    '[&_.ProseMirror]:min-h-full [&_.ProseMirror]:outline-none',
+                )}
+                editor={editor}
+            />
+            {!disabled && <TableHandles editor={editor} />}
+            {!disabled && <LinkHandle editor={editor} />}
+            {!disabled && <ImageHandle editor={editor} />}
+        </div>
+    );
+}
+
+// Owns the whole tiptap lifecycle for a markdown-controlled editor: instance creation, the RHF value-sync loop
+// (echo suppression + undo reset), disabled toggling, a11y-attribute forwarding, and the imperative handle. The
+// view below just renders whatever editor this returns — the lifecycle can be reworked here without touching it.
+function useMarkdownEditor({
+    'aria-describedby': ariaDescribedby,
+    'aria-invalid': ariaInvalid,
+    disabled,
+    handleRef,
+    id,
+    onBlur,
+    onChange,
+    placeholder = 'Write something…',
+    value,
+}: UseMarkdownEditorOptions): Editor | null {
     // Suppress echoes of our own output: the markdown round-trip re-serializes slightly (whitespace/list
     // markers/blank lines), and those normalizations must not flip RHF's isDirty as if the user had edited.
     const lastEmittedRef = useRef<string>(value);
@@ -131,7 +215,7 @@ function MarkdownEditor({
     });
 
     useImperativeHandle(
-        ref,
+        handleRef,
         () => ({
             focus: () => {
                 editor?.commands.focus();
@@ -246,46 +330,7 @@ function MarkdownEditor({
         }
     }, [editor, ariaDescribedby, ariaInvalid, id]);
 
-    if (!editor) {
-        return (
-            <div
-                aria-busy="true"
-                className={cn(
-                    WRAPPER_CLASS,
-                    'items-center justify-center',
-                    disabled && 'pointer-events-none opacity-60',
-                    className,
-                )}
-                data-slot="markdown-editor"
-            >
-                <Loader2 className="text-muted-foreground size-5 animate-spin" />
-            </div>
-        );
-    }
-
-    return (
-        <div
-            className={cn(
-                WRAPPER_CLASS,
-                'focus-within:ring-ring focus-within:ring-1',
-                disabled && 'pointer-events-none opacity-60',
-                className,
-            )}
-            data-slot="markdown-editor"
-        >
-            <MarkdownEditorToolbar
-                disabled={disabled}
-                editor={editor}
-            />
-            <EditorContent
-                className={cn(
-                    'prose prose-sm dark:prose-invert tiptap-content max-w-none min-w-0 flex-1 overflow-auto px-3 py-2',
-                    '[&_.ProseMirror]:min-h-full [&_.ProseMirror]:outline-none',
-                )}
-                editor={editor}
-            />
-        </div>
-    );
+    return editor;
 }
 
 export { MarkdownEditor };
