@@ -26,6 +26,8 @@ describe('normalizeImageSrc — prepend https to scheme-less src, validate proto
         'data:image/svg+xml;base64,AAAA',
         'vbscript:msgbox(1)',
         'http://', // malformed → no host
+        '/uploads/logo.png', // root-relative path — must NOT become https://uploads/logo.png
+        '/a.png',
         '',
     ])('rejects %s', (input) => {
         expect(normalizeImageSrc(input)).toBeNull();
@@ -58,6 +60,9 @@ describe('normalizeLinkUrl — prepend https to scheme-less input, validate prot
         'vbscript:msgbox(1)',
         '#anchor', // no host once prepended → rejected
         'https://', // malformed → no host
+        '/settings/profile', // root-relative path — must NOT become https://settings/profile
+        '/path',
+        '//', // protocol-relative with no host
         '',
         '   ',
     ])('rejects %s', (input) => {

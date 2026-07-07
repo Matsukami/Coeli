@@ -7,12 +7,29 @@ const SAFE_LINK_PROTOCOLS = new Set(['http:', 'https:', 'mailto:', 'tel:']);
 
 const KNOWN_LINK_SCHEME = /^(?:https?:\/\/|mailto:|tel:)/i;
 
-// A scheme-less link ("example.com", "localhost:3000") must be made absolute, or the browser resolves it against
-// the current origin as a relative path. Prepend https:// unless the input already carries an allowed scheme, then
-// validate the protocol. Validate with NO base URL — passing window.location as base (as a plain protocol check
-// would) launders a relative value into https: and is exactly the bug this replaces. Returns the normalized href,
-// or null for unsafe/malformed input (javascript:/data:/file:, empty). Neither tiptap nor its UI normalize manual
-// entry — both persist the raw href verbatim — so we do it here.
+// Make a scheme-less value absolute so the URL constructor reads it as one, without laundering a root-relative
+// path into a bogus host. `//host/x` (protocol-relative) just needs a scheme; a single leading slash is a
+// root-relative path this field never supports (`/settings` must NOT become `https://settings`) → reject it.
+const toAbsoluteCandidate = (value: string, hasScheme: RegExp): null | string => {
+    if (hasScheme.test(value)) {
+        return value;
+    }
+
+    if (/^\/\/[^/]/.test(value)) {
+        return `https:${value}`;
+    }
+
+    if (value.startsWith('/')) {
+        return null;
+    }
+
+    return `https://${value}`;
+};
+
+// Returns the normalized href, or null for unsafe/malformed/relative input (javascript:/data:/file:, a
+// root-relative /path, empty). Validate with NO base URL — passing window.location as base would launder a
+// relative value into https:. Neither tiptap nor its UI normalize manual entry — both persist the raw href
+// verbatim — so we do it here.
 export const normalizeLinkUrl = (raw: string): null | string => {
     const url = raw.trim();
 
@@ -20,7 +37,11 @@ export const normalizeLinkUrl = (raw: string): null | string => {
         return null;
     }
 
-    const candidate = KNOWN_LINK_SCHEME.test(url) ? url : `https://${url.replace(/^\/+/, '')}`;
+    const candidate = toAbsoluteCandidate(url, KNOWN_LINK_SCHEME);
+
+    if (candidate === null) {
+        return null;
+    }
 
     try {
         return SAFE_LINK_PROTOCOLS.has(new URL(candidate).protocol) ? candidate : null;
@@ -31,9 +52,11 @@ export const normalizeLinkUrl = (raw: string): null | string => {
 
 const RASTER_IMAGE_DATA = /^data:image\/(?:png|jpe?g|gif|webp|bmp);base64,/i;
 
+const KNOWN_IMAGE_SCHEME = /^(?:https?:\/\/|data:)/i;
+
 // Image analog of normalizeLinkUrl: a scheme-less src ("example.com/a.png") is made absolute with https://; an
 // already-schemed http(s) URL and a base64 raster data: URL pass through. data:image/svg+xml is rejected — SVG
-// can carry script. Returns the normalized src, or null for unsafe/malformed input.
+// can carry script. Returns the normalized src, or null for unsafe/malformed/relative input.
 export const normalizeImageSrc = (raw: string): null | string => {
     const src = raw.trim();
 
@@ -41,7 +64,11 @@ export const normalizeImageSrc = (raw: string): null | string => {
         return null;
     }
 
-    const candidate = /^(?:https?:\/\/|data:)/i.test(src) ? src : `https://${src.replace(/^\/+/, '')}`;
+    const candidate = toAbsoluteCandidate(src, KNOWN_IMAGE_SCHEME);
+
+    if (candidate === null) {
+        return null;
+    }
 
     if (/^data:/i.test(candidate)) {
         return RASTER_IMAGE_DATA.test(candidate) ? candidate : null;
