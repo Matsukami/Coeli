@@ -97,7 +97,10 @@ function useLinkHandle(editor: Editor) {
             const rect = posToDOMRect(editor.view, range.from, range.to);
             const href = (editor.getAttributes('link').href as string | undefined) ?? '';
 
-            setTarget({ href, key: `${range.from}-${range.to}`, rect });
+            // Key on the link's START only. Typing inside the link grows range.to every keystroke, and
+            // <LinkEditForm key={key}> would then unmount/remount and re-seed its URL field from initialUrl,
+            // silently discarding an in-progress edit. from is stable while the caret stays in the same link.
+            setTarget({ href, key: `${range.from}`, rect });
         };
 
         const clear = () => setTarget(null);
