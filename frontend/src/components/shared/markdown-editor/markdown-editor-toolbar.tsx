@@ -56,7 +56,9 @@ function useHorizontalWheelScroll(ref: React.RefObject<HTMLDivElement | null>) {
             }
 
             const atStart = strip.scrollLeft <= 0 && event.deltaY < 0;
-            const atEnd = strip.scrollLeft + strip.clientWidth >= strip.scrollWidth && event.deltaY > 0;
+            // Sub-pixel tolerance: at fractional zoom scrollLeft never exactly reaches scrollWidth - clientWidth,
+            // so an exact `>=` would never see the end and would keep eating the wheel, locking page scroll.
+            const atEnd = strip.scrollLeft + strip.clientWidth >= strip.scrollWidth - 1 && event.deltaY > 0;
 
             if (atStart || atEnd) {
                 return;
