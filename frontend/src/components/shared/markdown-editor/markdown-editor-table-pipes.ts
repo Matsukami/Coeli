@@ -25,10 +25,6 @@ const FENCE_LINE = /^ {0,3}(`{3,}|~{3,})(.*)$/;
 // runs from competing for the same characters, so a crafted delimiter-looking line can't force O(n²) backtracking.
 const TABLE_DELIMITER_LINE = /^ {0,3}\|? *:?-+:?(?: *\| *:?-+:?)*(?: *\|)? *$/;
 const TEMPLATE_ACTION = /\{\{[^{}]*\}\}/g;
-// A maximal non-space run containing a `scheme://` — a link/image destination or a bare autolink. It has no
-// spaces by construction, so any `|` in it is URL content (never a real cell separator, which needs spaces
-// around it or sits outside the run), and escaping it is always correct.
-const URL_RUN = /[^\s]*:\/\/[^\s]*/g;
 
 // A table's body ends at a blank line or the first line that starts a different block — the same interrupts
 // marked's gfmTable body-row negative lookahead lists (heading, blockquote, fences, list, hr, indented code).
@@ -97,7 +93,7 @@ const findCodeSpanCloser = (row: string, from: number, runLength: number): numbe
     return -1;
 };
 
-const escapeRowPipes = (row: string): string => {
+const escapeRowPipes = (row: string, expectedCells: number): string => {
     let result = '';
     let index = 0;
 
@@ -130,9 +126,17 @@ const escapeRowPipes = (row: string): string => {
         index = closerStart + run.length;
     }
 
-    return result
-        .replace(TEMPLATE_ACTION, (action) => escapeUnescapedPipes(action))
-        .replace(URL_RUN, (url) => escapeUnescapedPipes(url));
+    result = result.replace(TEMPLATE_ACTION, (action) => escapeUnescapedPipes(action));
+
+    // A pipe inside a URL (bare or linked) is content, but a spaceless `|` between two cells is a separator —
+    // the two are indistinguishable in isolation. Only escape scheme-run pipes when the row otherwise splits
+    // into MORE cells than the header expects; a row already at the right count keeps its structural pipes.
+    // This guard also skips the scan on ordinary rows, so a long non-URL token can't drive it superlinearly.
+    if (countCells(result) <= expectedCells) {
+        return result;
+    }
+
+    return result.replace(/\S+/g, (token) => (token.includes('://') ? escapeUnescapedPipes(token) : token));
 };
 
 export const escapeTablePipes = (markdown: string): string => {
@@ -148,8 +152,8 @@ export const escapeTablePipes = (markdown: string): string => {
     let openFence: null | { char: string; length: number } = null;
     let isChanged = false;
 
-    const escapeRow = (row: number): void => {
-        const escaped = escapeRowPipes(lines[row]!);
+    const escapeRow = (row: number, expectedCells: number): void => {
+        const escaped = escapeRowPipes(lines[row]!, expectedCells);
 
         if (escaped !== lines[row]) {
             lines[row] = escaped;
@@ -179,21 +183,22 @@ export const escapeTablePipes = (markdown: string): string => {
 
         const delimiter = lines[index + 1];
 
-        if (
-            delimiter === undefined ||
-            !TABLE_DELIMITER_LINE.test(delimiter) ||
-            !/[|:]/.test(delimiter) ||
-            countCells(line) !== countCells(delimiter)
-        ) {
+        if (delimiter === undefined || !TABLE_DELIMITER_LINE.test(delimiter) || !/[|:]/.test(delimiter)) {
+            continue;
+        }
+
+        const expected = countCells(delimiter);
+
+        if (countCells(line) !== expected) {
             continue;
         }
 
         // Header + every body row up to the block boundary; the delimiter row (index + 1) holds no cell
         // content. escapeRowPipes leaves structural pipes alone, so escaping the header can't skew its cell count.
-        escapeRow(index);
+        escapeRow(index, expected);
 
         for (let row = index + 2; row < lines.length && !isTableBodyEnd(lines[row]!); row++) {
-            escapeRow(row);
+            escapeRow(row, expected);
         }
     }
 

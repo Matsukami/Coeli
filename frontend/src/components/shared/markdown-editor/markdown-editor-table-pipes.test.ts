@@ -134,6 +134,21 @@ describe('table cell with a pipe inside a URL — content survives load and conv
         expect(escapeTablePipes(table)).toBe(table);
     });
 
+    it('leaves structural pipes in a compact (spaceless) URL row untouched', () => {
+        const table = '| url | desc |\n| --- | --- |\n|http://a.com|b|';
+
+        expect(escapeTablePipes(table)).toBe(table);
+    });
+
+    it('scans a table row with a long non-URL token in linear time (URL escaping ReDoS guard)', () => {
+        const evil = `| a | b |\n| --- | --- |\n| ${'a'.repeat(120000)} | z |`;
+        const started = performance.now();
+
+        escapeTablePipes(evil);
+
+        expect(performance.now() - started).toBeLessThan(100);
+    });
+
     it('keeps the URL and the trailing cell on round-trip, and converges', () => {
         const out = roundTrip('| A | B |\n| --- | --- |\n| [go](https://h/?x=1|2) | TRAILING |');
 
