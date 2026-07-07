@@ -9,10 +9,13 @@ import { Plugin, PluginKey } from '@tiptap/pm/state';
 // code literal.
 const RICH_HTML_BLOCK = /<(?:h[1-6]|ul|ol|li|table|thead|tbody|tr|td|th|blockquote|pre|img|hr)\b/i;
 
+// Every cue must be linear-time: they run synchronously in handlePaste on every paste. The link cue bounds
+// its two spans with `[^\]]+`/`[^)]+` (not `.+`) — a double-`.+` catastrophically backtracks (ReDoS) on a
+// large bracket-heavy non-link paste and freezes the tab. Keep any new cue single-quantifier / negated-class.
 const MARKDOWN_CUES = [
     /^#{1,6}\s/m, // heading
     /\*\*[^*]+\*\*/, // bold
-    /\[.+\]\(.+\)/, // link
+    /\[[^\]]+\]\([^)]+\)/, // link
     /^[-*+]\s/m, // bullet item
     /^\d+\.\s/m, // ordered item
     /^ {0,3}(?:```|~~~)/m, // fence

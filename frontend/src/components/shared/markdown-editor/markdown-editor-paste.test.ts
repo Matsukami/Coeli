@@ -58,6 +58,15 @@ describe('shouldParseMarkdownOnPaste — markdown-parse plain text, defer rich s
     it('keeps a paste inside a code context literal', () => {
         expect(shouldParseMarkdownOnPaste('# x', '', true)).toBe(false);
     });
+
+    it('scans the markdown cues in linear time on a large bracket-heavy paste (ReDoS guard)', () => {
+        const evil = '[x]'.repeat(50_000);
+        const started = performance.now();
+
+        shouldParseMarkdownOnPaste(evil, '<span>x</span>', false);
+
+        expect(performance.now() - started).toBeLessThan(150);
+    });
 });
 
 describe('MarkdownPaste — the parsed payload matches load (same tuned markdown layer)', () => {
