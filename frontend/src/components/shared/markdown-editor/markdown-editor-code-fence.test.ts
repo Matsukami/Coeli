@@ -33,8 +33,9 @@ describe('code-block fence lengthening — a block documenting a ``` fence stays
 // delimiter by rendering it around a fixed placeholder (getMarkOpening/getMarkClosing), so the `code` mark's
 // real content is never seen at delimiter time and it always emits a SINGLE backtick. A code span whose
 // content contains a backtick therefore collapses on save and never converges. A NODE (codeBlock, above) DOES
-// receive its real content and is content-aware — hence the fence widening is fixable but this is not. Pinned so the gap stays
-// visible and this test flips green if a future @tiptap/markdown makes mark delimiters content-aware.
+// receive its real content and is content-aware — hence the fence widening is fixable but this is not. Pinned so
+// the gap stays visible: this test turns RED (the canary to revisit it) if a future @tiptap/markdown makes mark
+// delimiters content-aware and the span starts round-tripping.
 describe('inline code containing a backtick — known lossy on save (upstream mark-delimiter limitation)', () => {
     it('collapses a backtick-containing code span (does not round-trip)', () => {
         const out = roundTrip('x ``a `b` c`` y');

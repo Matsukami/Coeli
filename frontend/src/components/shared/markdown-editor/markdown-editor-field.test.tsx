@@ -54,6 +54,25 @@ describe('MarkdownEditorField raw-mode handle', () => {
         ref.current!.insertAtCursor('{{.Bar}}');
         expect(onChange).toHaveBeenCalledWith(expect.stringContaining('{{.Bar}}'));
     });
+
+    it('insertAtCursor is a no-op when the field is disabled (a mid-save variable click cannot dirty it)', () => {
+        const onChange = vi.fn();
+        const ref = createRef<MarkdownEditorFieldHandle>();
+        const { container } = render(
+            <MarkdownEditorField
+                disabled
+                mode="raw"
+                onChange={onChange}
+                ref={ref}
+                value="seed"
+            />,
+        );
+
+        container.querySelector('textarea')!.setSelectionRange(0, 0);
+        ref.current!.insertAtCursor('{{.Bar}}');
+
+        expect(onChange).not.toHaveBeenCalled();
+    });
 });
 
 describe('MarkdownEditorField rich-mode handle', () => {

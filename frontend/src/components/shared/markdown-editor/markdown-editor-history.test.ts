@@ -64,3 +64,17 @@ it('resetUndoHistory survives view.state advancing during updateState', () => {
 
     editor.destroy();
 });
+
+it('resetUndoHistory actually clears the undo stack', () => {
+    const editor = new Editor({ content: 'seed', contentType: 'markdown', extensions: createMarkdownExtensions() });
+
+    editor.commands.insertContent(' more');
+
+    expect(editor.can().undo()).toBe(true);
+
+    resetUndoHistory(editor);
+
+    expect(editor.can().undo()).toBe(false);
+
+    editor.destroy();
+});

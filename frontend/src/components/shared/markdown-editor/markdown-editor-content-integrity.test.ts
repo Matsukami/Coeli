@@ -151,12 +151,14 @@ describe('generative content-integrity — atoms survive load↔serialize across
             const wrap = (cells: string) => (outerPipe ? `| ${cells} |` : cells);
             const rows: string[] = [];
             const sentinels: string[] = [];
+            const atoms: string[] = [];
 
             for (let row = 0; row < rowCount; row++) {
                 const atom = pipeAtoms[Math.floor(rng() * pipeAtoms.length)] as string;
                 const sentinel = `${WORDS[Math.floor(rng() * WORDS.length)]}${row}`;
 
                 sentinels.push(sentinel);
+                atoms.push(atom);
                 rows.push(wrap(`\`${atom}\` | ${sentinel}`));
             }
 
@@ -167,6 +169,14 @@ describe('generative content-integrity — atoms survive load↔serialize across
 
             for (const sentinel of sentinels) {
                 expect(out.includes(sentinel), `cell "${sentinel}" dropped (i=${i}):\n${doc}\n-->\n${out}`).toBe(true);
+            }
+
+            // The atom itself must survive as a code span with its structural pipes escaped for the table — the
+            // sentinel guards the row's cell count, this guards the pipe-bearing content from silent corruption.
+            for (const atom of atoms) {
+                const span = `\`${atom.replace(/\|/g, '\\|')}\``;
+
+                expect(out.includes(span), `atom ${span} corrupted (i=${i}):\n${doc}\n-->\n${out}`).toBe(true);
             }
         }
     });
