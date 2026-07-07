@@ -2,7 +2,7 @@ import type { Control } from 'react-hook-form';
 
 import type { KnowledgeDocumentFragmentFragment } from '@/graphql/types';
 
-import { DetailTwoPanelLayout } from '@/components/shared/detail-two-panel-layout';
+import { DetailSplitLayout } from '@/components/shared/detail-split-layout';
 import { type EditorViewMode } from '@/components/shared/markdown-editor';
 import { Badge } from '@/components/ui/badge';
 
@@ -31,8 +31,17 @@ export function KnowledgeFormLayoutDesktop({
     viewMode,
 }: KnowledgeFormLayoutProps) {
     return (
-        <DetailTwoPanelLayout
-            left={
+        <DetailSplitLayout
+            content={
+                <KnowledgeContentField
+                    control={control}
+                    fillParent
+                    isSaving={isSaving}
+                    viewMode={viewMode}
+                />
+            }
+            contentClassName="flex h-full min-h-0 flex-col overflow-hidden p-4"
+            panel={
                 <>
                     <KnowledgeIntroBlock
                         isNew={isNew}
@@ -45,15 +54,6 @@ export function KnowledgeFormLayoutDesktop({
                     />
                 </>
             }
-            right={
-                <KnowledgeContentField
-                    control={control}
-                    fillParent
-                    isSaving={isSaving}
-                    viewMode={viewMode}
-                />
-            }
-            rightClassName="flex h-full min-h-0 flex-col overflow-hidden p-4"
         />
     );
 }

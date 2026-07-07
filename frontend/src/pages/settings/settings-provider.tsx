@@ -38,7 +38,7 @@ import {
     AppHeaderTitle,
 } from '@/components/layouts/app/app-header';
 import ConfirmationDialog from '@/components/shared/confirmation-dialog';
-import { DetailTwoPanelLayout } from '@/components/shared/detail-two-panel-layout';
+import { DetailSplitLayout } from '@/components/shared/detail-split-layout';
 import { UnsavedChangesDialog, useUnsavedChangesGuard } from '@/components/shared/unsaved-changes';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Badge } from '@/components/ui/badge';
@@ -1877,10 +1877,10 @@ function SettingsProvider() {
                     onSubmit={handleFormSubmit(handleSubmit)}
                 >
                     {isDesktop ? (
-                        <DetailTwoPanelLayout
-                            left={metaFields}
-                            right={agentConfigs}
-                            rightClassName="h-full min-h-0 overflow-y-auto p-4"
+                        <DetailSplitLayout
+                            content={agentConfigs}
+                            contentClassName="h-full min-h-0 overflow-y-auto p-4"
+                            panel={metaFields}
                         />
                     ) : (
                         <div className="flex min-h-0 flex-1 flex-col gap-4 p-4">

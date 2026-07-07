@@ -14,7 +14,7 @@ import {
     DetailNavigationSheet,
     DetailNavigationToolbar,
 } from '@/components/shared/detail-navigation';
-import { DetailTwoPanelLayout } from '@/components/shared/detail-two-panel-layout';
+import { DetailSplitLayout } from '@/components/shared/detail-split-layout';
 import { InlineEditInput, useInlineEdit } from '@/components/shared/inline-edit';
 import { type EditorViewMode, EditorViewModeToggle, MarkdownEditorField } from '@/components/shared/markdown-editor';
 import { UnsavedChangesDialog, useUnsavedChangesGuard } from '@/components/shared/unsaved-changes';
@@ -729,15 +729,15 @@ function Template() {
                     onSubmit={handleFormSubmit(handleSubmit)}
                 >
                     {isDesktop ? (
-                        <DetailTwoPanelLayout
-                            left={
+                        <DetailSplitLayout
+                            content={textEditor}
+                            panel={
                                 <>
                                     {introBlock}
                                     {titleField}
                                     {presetsPanel}
                                 </>
                             }
-                            right={textEditor}
                         />
                     ) : (
                         <div className="flex min-h-0 flex-1 flex-col gap-4 p-4">

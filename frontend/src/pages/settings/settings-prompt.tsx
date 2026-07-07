@@ -55,7 +55,7 @@ import {
     AppHeaderTitle,
 } from '@/components/layouts/app/app-header';
 import ConfirmationDialog from '@/components/shared/confirmation-dialog';
-import { DetailTwoPanelLayout } from '@/components/shared/detail-two-panel-layout';
+import { DetailSplitLayout } from '@/components/shared/detail-split-layout';
 import { UnsavedChangesDialog, useUnsavedChangesGuard } from '@/components/shared/unsaved-changes';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -899,14 +899,14 @@ function SettingsPrompt() {
                 value={activeTab}
             >
                 {isDesktop ? (
-                    <DetailTwoPanelLayout
-                        left={
+                    <DetailSplitLayout
+                        content={promptEditor}
+                        panel={
                             <>
                                 {promptMeta}
                                 {variablesPanel}
                             </>
                         }
-                        right={promptEditor}
                     />
                 ) : (
                     <div className="flex min-h-0 flex-1 flex-col gap-4 p-4">
