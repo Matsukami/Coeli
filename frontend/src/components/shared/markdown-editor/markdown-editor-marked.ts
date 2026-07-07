@@ -23,7 +23,9 @@ const createTunedMarked = () => {
             //   • del      — keep GFM `~~strike~~`, drop a lone `~…~` (else `~5~` / ranges become <del>)
             //   • emStrong — keep `*`/`**`, drop `_`-delimited emphasis (else `__init__`/`_word_` become em/strong)
             //   • escape   — keep `\`+punct literal (`\.` `\*` `\|` `\\`); marked's default DROPS the backslash
-            //                (CommonMark unescape), silently corrupting regex/paths on the first load
+            //                (CommonMark unescape), silently corrupting regex/paths on the first load. EXCEPT
+            //                `\#`/`\>`: unescape those, symmetric with the paragraph serializer escaping a
+            //                line-leading `# `/`> ` so body text doesn't re-parse as a heading/quote
             //   • html/tag — keep `<xml-like>` tags literal (marked swallows real-HTML-element names)
             // NB: autolink/url are intentionally NOT neutralised — a bare `https://…`, `<url>` or email is
             // meant to become a link (see markdown-editor-extensions.ts link config, kept symmetric with typing).
@@ -34,7 +36,11 @@ const createTunedMarked = () => {
             // `&lt;` — that re-freezes the artifacts.
             del: (src: string) => (/^~~(?!~)/.test(src) ? false : undefined),
             emStrong: (src: string) => (/^_/.test(src) ? undefined : false),
-            escape: () => undefined,
+            escape: (src: string) => {
+                const marker = /^\\([#>])/.exec(src);
+
+                return marker ? { raw: marker[0], text: marker[1]!, type: 'escape' as const } : undefined;
+            },
             html: () => undefined,
             tag: () => undefined,
         },

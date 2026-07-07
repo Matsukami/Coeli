@@ -2,7 +2,7 @@ import { Editor } from '@tiptap/core';
 import { beforeAll, describe, expect, it } from 'vitest';
 
 import { createMarkdownExtensions } from './markdown-editor-extensions';
-import { roundTrip, setupEditorJsdom } from './markdown-editor-test-setup';
+import { roundTrip, setupEditorJsdom, structuralCounts } from './markdown-editor-test-setup';
 import { findVariableOccurrences } from './markdown-editor-variable-highlight';
 
 beforeAll(setupEditorJsdom);
@@ -356,6 +356,53 @@ describe('typing matches load — underscore emphasis literal, bare URL autolink
         expect(typeString('a **bold** b').html).toContain('<strong>');
         expect(typeString('a *ital* b').html).toContain('<em>');
         expect(typeString('a ~~del~~ b').html).toContain('<s>');
+    });
+});
+
+describe('line-leading # / > in a paragraph stay body text on round-trip (ENCODER-LEADING)', () => {
+    const paraDoc = (...content: unknown[]) => ({ content: [{ content, type: 'paragraph' }], type: 'doc' });
+
+    const save = (doc: unknown) => {
+        const editor = new Editor({ content: doc as string, extensions: createMarkdownExtensions() });
+        const md = editor.getMarkdown();
+
+        editor.destroy();
+
+        return md;
+    };
+
+    it('a Shift+Enter line starting with "# " is escaped and does not become a heading', () => {
+        const md = save(paraDoc({ text: 'foo', type: 'text' }, { type: 'hardBreak' }, { text: '# bar', type: 'text' }));
+
+        expect(md).toContain('\\# bar');
+        expect(structuralCounts(md).heading ?? 0).toBe(0);
+        expect(roundTrip(md)).toBe(md);
+    });
+
+    it('a Shift+Enter line starting with "> " does not become a blockquote', () => {
+        const md = save(
+            paraDoc({ text: 'foo', type: 'text' }, { type: 'hardBreak' }, { text: '> quote', type: 'text' }),
+        );
+
+        expect(md).toContain('\\> quote');
+        expect(structuralCounts(md).blockquote ?? 0).toBe(0);
+        expect(roundTrip(md)).toBe(md);
+    });
+
+    it('an escaped \\# at line start loads as clean body text and converges', () => {
+        expect(structuralCounts(roundTrip('\\# not a heading')).heading ?? 0).toBe(0);
+        expect(roundTrip(roundTrip('\\# x'))).toBe(roundTrip('\\# x'));
+    });
+
+    it('a REAL heading / blockquote is untouched', () => {
+        expect(structuralCounts(roundTrip('# foo')).heading).toBe(1);
+        expect(structuralCounts(roundTrip('> foo')).blockquote).toBe(1);
+    });
+
+    it('only # and > are escaped — regex/glob literals and a mid-line # survive byte-identical', () => {
+        for (const s of ['glob \\* and \\? here', 'regex \\d+ and \\.php', 'see #123 issue', 'a # b mid line']) {
+            expect(roundTrip(s)).toBe(s);
+        }
     });
 });
 

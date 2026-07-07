@@ -59,6 +59,17 @@ const parseTunedCodeBlock = (token: MarkdownToken, helpers: MarkdownParseHelpers
     );
 };
 
+// A paragraph line that literally starts with `# ` or `> ` re-parses as a heading / blockquote on the next load
+// (an ATX heading interrupts a paragraph; `>` opens a quote), silently changing the block TYPE of body text —
+// reachable by Shift+Enter then a `# ` line. Escape those markers at line start; createTunedMarked's escape
+// tokenizer unescapes `\#`/`\>` on load, so the round-trip stays faithful. Only `#`/`>` are handled: `-`/`*`/`+`/
+// `1.`/fences overlap with literal regex/glob/backref escapes (`\*`, `\1`, `\|`) the editor must preserve.
+const escapeLineLeadingBlockMarkers = (markdown: string): string =>
+    markdown.replace(
+        /(^|\n)( {0,3})(#{1,6} |> )/g,
+        (_match, lineStart: string, indent: string, marker: string) => `${lineStart}${indent}\\${marker}`,
+    );
+
 // StarterKit's Bold/Italic register BOTH `**`/`*` and `__`/`_` input+paste rules. The marked layer keeps
 // `_`-emphasis literal on load/paste, so leaving the underscore TYPING rules on would diverge — typed
 // `__init__`/`_word_` would emphasize (→ `**init**`/`*word*`) while the same text loaded stays literal,
@@ -82,6 +93,14 @@ const TunedStarterKit = StarterKit.extend({
                 return extension.extend({
                     parseMarkdown: parseTunedCodeBlock,
                     renderMarkdown: renderTunedCodeBlock,
+                });
+            }
+
+            if (extension.name === 'paragraph') {
+                return extension.extend({
+                    renderMarkdown(node: JSONContent, helpers: MarkdownRendererHelpers) {
+                        return escapeLineLeadingBlockMarkers(helpers.renderChildren(node.content ?? []));
+                    },
                 });
             }
 
