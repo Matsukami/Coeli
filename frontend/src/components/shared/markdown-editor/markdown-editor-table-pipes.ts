@@ -25,6 +25,10 @@ const FENCE_LINE = /^ {0,3}(`{3,}|~{3,})(.*)$/;
 // runs from competing for the same characters, so a crafted delimiter-looking line can't force O(n²) backtracking.
 const TABLE_DELIMITER_LINE = /^ {0,3}\|? *:?-+:?(?: *\| *:?-+:?)*(?: *\|)? *$/;
 const TEMPLATE_ACTION = /\{\{[^{}]*\}\}/g;
+// One blockquote marker (`>` + an optional space). The line scanner only recognizes top-level tables, but marked
+// strips this prefix and re-lexes the inner content, so a table inside a blockquote needs the prefix removed
+// before detection — see the recursive handling in escapeTablePipes.
+const BLOCKQUOTE_PREFIX = /^ {0,3}> ?/;
 
 // A table's body ends at a blank line or the first line that starts a different block — the same interrupts
 // marked's gfmTable body-row negative lookahead lists (heading, blockquote, fences, list, hr, indented code).
@@ -177,7 +181,39 @@ export const escapeTablePipes = (markdown: string): string => {
             continue;
         }
 
-        if (openFence !== null || !line.includes('|')) {
+        if (openFence !== null) {
+            continue;
+        }
+
+        // A blockquote (or nested `> >`) hides its table from the top-level scan. Strip the prefix off the whole
+        // run, recurse on the inner content (which reuses every rule here, incl. nested blockquotes and fences),
+        // then re-apply each line's original prefix — escaping never touches the prefix, so this stays byte-exact.
+        if (BLOCKQUOTE_PREFIX.test(line)) {
+            let end = index + 1;
+
+            while (end < lines.length && BLOCKQUOTE_PREFIX.test(lines[end]!)) {
+                end++;
+            }
+
+            const prefixes = lines.slice(index, end).map((row) => BLOCKQUOTE_PREFIX.exec(row)![0]);
+            const inner = lines.slice(index, end).map((row, offset) => row.slice(prefixes[offset]!.length));
+            const escaped = escapeTablePipes(inner.join('\n')).split('\n');
+
+            for (let row = index; row < end; row++) {
+                const rebuilt = prefixes[row - index]! + escaped[row - index]!;
+
+                if (rebuilt !== lines[row]) {
+                    lines[row] = rebuilt;
+                    isChanged = true;
+                }
+            }
+
+            index = end - 1;
+
+            continue;
+        }
+
+        if (!line.includes('|')) {
             continue;
         }
 

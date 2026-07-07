@@ -158,6 +158,33 @@ describe('table cell with a pipe inside a URL — content survives load and conv
     });
 });
 
+describe('tables inside a blockquote — prefix-stripped and protected', () => {
+    it('escapes a code-span pipe in a blockquoted table row', () => {
+        expect(escapeTablePipes('> | a | b |\n> | --- | --- |\n> | `x | y` | z |')).toBe(
+            '> | a | b |\n> | --- | --- |\n> | `x \\| y` | z |',
+        );
+    });
+
+    it('handles a nested blockquote table', () => {
+        expect(escapeTablePipes('> > | a | b |\n> > | --- | --- |\n> > | `x | y` | z |')).toBe(
+            '> > | a | b |\n> > | --- | --- |\n> > | `x \\| y` | z |',
+        );
+    });
+
+    it('keeps the trailing cell of a blockquoted table on round-trip', () => {
+        const out = roundTrip('> | a | b |\n> | --- | --- |\n> | `x | y` | z |');
+
+        expect(out).toContain('z');
+        expect(out).toContain('`x \\| y`');
+    });
+
+    it('leaves blockquote prose (no table) untouched', () => {
+        const doc = '> a quote with `a | b` inline code\n> and more text';
+
+        expect(escapeTablePipes(doc)).toBe(doc);
+    });
+});
+
 describe('fence length tracking — a longer fence is not closed by a shorter inner run', () => {
     it('keeps protecting a table after a 4-backtick block that contains a ``` line', () => {
         const src = '````\n```\ninner\n````\n\n| a | b |\n| --- | --- |\n| `x | y` | z |';
