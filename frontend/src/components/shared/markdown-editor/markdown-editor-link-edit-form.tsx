@@ -1,9 +1,10 @@
 import type { Editor } from '@tiptap/react';
 
 import { ArrowUpRight, Check, Trash2 } from 'lucide-react';
-import { useState } from 'react';
+import { useId, useState } from 'react';
 
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '@/components/ui/input-group';
+import { Label } from '@/components/ui/label';
 
 import { normalizeLinkUrl } from './markdown-editor-toolbar-url';
 
@@ -22,8 +23,9 @@ interface LinkEditFormProps {
 // mount, so consumers give it a fresh `key` per editing session.
 export function LinkEditForm({ autoFocus = true, editor, initialUrl, isActive, onDone }: LinkEditFormProps) {
     const [url, setUrl] = useState(initialUrl);
+    const urlId = useId();
+    const errorId = useId();
 
-    // Normalized absolute href (scheme prepended, protocol validated) or null when the input is unsafe/empty.
     const href = normalizeLinkUrl(url);
     const isInvalid = url !== '' && href === null;
 
@@ -35,8 +37,8 @@ export function LinkEditForm({ autoFocus = true, editor, initialUrl, isActive, o
         const { empty } = editor.state.selection;
 
         if (empty && !isActive) {
-            // No selection to wrap → insert the URL as its own linked text (matches Docs/Notion). Shows what the
-            // user typed but links to the normalized href.
+            // No selection to wrap → insert the URL as its own linked text: the visible text is what the user
+            // typed, but the href is the normalized value.
             editor
                 .chain()
                 .focus()
@@ -62,11 +64,13 @@ export function LinkEditForm({ autoFocus = true, editor, initialUrl, isActive, o
 
     return (
         <div className="flex flex-col gap-2">
+            <Label htmlFor={urlId}>Link URL</Label>
             <InputGroup>
                 <InputGroupInput
+                    aria-describedby={isInvalid ? errorId : undefined}
                     aria-invalid={isInvalid}
-                    aria-label="Link URL"
                     autoFocus={autoFocus}
+                    id={urlId}
                     onChange={(event) => setUrl(event.target.value)}
                     onKeyDown={(event) => {
                         if (event.key === 'Enter') {
@@ -112,6 +116,7 @@ export function LinkEditForm({ autoFocus = true, editor, initialUrl, isActive, o
             {isInvalid ? (
                 <p
                     className="text-destructive text-xs"
+                    id={errorId}
                     role="alert"
                 >
                     Only http, https, mailto and tel links are allowed.
