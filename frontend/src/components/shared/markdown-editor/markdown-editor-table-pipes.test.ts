@@ -143,6 +143,27 @@ describe('table cell with a pipe inside a URL — content survives load and conv
     });
 });
 
+describe('CRLF line endings — tables still protected', () => {
+    it('escapes a code-span pipe in a CRLF table row', () => {
+        expect(escapeTablePipes('| a | b |\r\n| --- | --- |\r\n| `x | y` | z |\r\n')).toBe(
+            '| a | b |\n| --- | --- |\n| `x \\| y` | z |\n',
+        );
+    });
+
+    it('keeps the trailing cell of a CRLF table on round-trip', () => {
+        const out = roundTrip('| a | b |\r\n| --- | --- |\r\n| `x | y` | z |\r\n');
+
+        expect(out).toContain('z');
+        expect(out).toContain('`x \\| y`');
+    });
+
+    it('leaves CRLF bytes untouched when there is no table to escape', () => {
+        const doc = 'line one\r\nline `a | b` two\r\n';
+
+        expect(escapeTablePipes(doc)).toBe(doc);
+    });
+});
+
 describe('TABLE_DELIMITER_LINE is linear (ReDoS guard)', () => {
     it('scans a crafted delimiter-looking line with a long trailing space run in linear time', () => {
         // A `|`-line followed by "dashes + many spaces + non-matching tail" was O(n²) on the old regex

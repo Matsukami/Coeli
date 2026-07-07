@@ -137,7 +137,11 @@ export const escapeTablePipes = (markdown: string): string => {
         return markdown;
     }
 
-    const lines = markdown.split('\n');
+    // marked normalizes CRLF itself, but this pre-pass runs BEFORE it: a trailing `\r` left by split('\n')
+    // defeats the `$`-anchored TABLE_DELIMITER_LINE, so a CRLF document's tables would go unprotected here and
+    // lose cells. Normalize first; the return below keeps the original bytes when nothing was escaped.
+    const source = markdown.includes('\r') ? markdown.replace(/\r\n?/g, '\n') : markdown;
+    const lines = source.split('\n');
     let openFence: null | string = null;
     let isChanged = false;
 
