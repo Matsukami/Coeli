@@ -997,7 +997,7 @@ function SettingsPrompt() {
                 onOpenChange={setIsDiffDialogOpen}
                 open={isDiffDialogOpen}
             >
-                <DialogContent className="max-w-7xl">
+                <DialogContent className="sm:max-w-7xl">
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
                             <FileDiff className="size-5" />
