@@ -249,10 +249,6 @@ function useTableHandles(editor: Editor): TableHandlesController {
     const cellPosRef = useRef<null | number>(null);
 
     useEffect(() => {
-        openRef.current = open;
-    }, [open]);
-
-    useEffect(() => {
         const dom = editor.view.dom;
 
         const cancelClear = () => {
@@ -367,7 +363,13 @@ function useTableHandles(editor: Editor): TableHandlesController {
     }, [editor]);
 
     const onMenuChange = (menu: 'column' | 'row') => (isOpen: boolean) => {
-        setOpen(isOpen ? menu : null);
+        const next = isOpen ? menu : null;
+
+        // Write the ref synchronously, before setOpen. handleMove/dropStaleTarget are continuous-event handlers
+        // reading openRef.current; mirroring `open` through a passive effect flushes a tick late, so a mousemove
+        // in that window would retarget the grip to a neighbouring cell just as a menu opens on this one.
+        openRef.current = next;
+        setOpen(next);
 
         if (!isOpen) {
             cellPosRef.current = null;
