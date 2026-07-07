@@ -71,8 +71,11 @@ export function EmailChangeForm({ onCancel, onSuccess }: EmailChangeFormProps) {
 
     return (
         <Form {...form}>
+            {/* noValidate: the type="email" field would otherwise fire the browser's native (locale-styled)
+                validation popup on submit, pre-empting our zod message. Validation runs through zod instead. */}
             <form
                 className="flex flex-col gap-4"
+                noValidate
                 onSubmit={form.handleSubmit(handleSubmit)}
             >
                 <FormField
