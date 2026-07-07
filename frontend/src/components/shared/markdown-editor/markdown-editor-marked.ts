@@ -94,7 +94,10 @@ export const TunedTable = Table.extend({
             renderChildren: (nodes, separator) => helpers.renderChildren(nodes, separator).replace(/\|/g, '\\|'),
         };
 
-        return renderTableToMarkdown(node, pipeEscaping);
+        // renderTableToMarkdown joins a multi-block cell's children (e.g. two paragraphs from Enter-in-cell) with
+        // a U+001F separator, outside renderChildren. A GFM cell is single-line, so collapse it to a space rather
+        // than persist a raw control byte that survives into the saved .tmpl/knowledge and round-trips unchanged.
+        return renderTableToMarkdown(node, pipeEscaping).replaceAll(String.fromCharCode(0x1f), ' ');
     },
 });
 

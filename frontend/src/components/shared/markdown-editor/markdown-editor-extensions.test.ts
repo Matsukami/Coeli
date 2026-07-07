@@ -358,3 +358,37 @@ describe('typing matches load — underscore emphasis literal, bare URL autolink
         expect(typeString('a ~~del~~ b').html).toContain('<s>');
     });
 });
+
+describe('multi-paragraph table cell does not persist a raw control byte on save', () => {
+    const header = (text: string) => ({
+        content: [{ content: [{ text, type: 'text' }], type: 'paragraph' }],
+        type: 'tableHeader',
+    });
+    const cell = (...paragraphs: string[]) => ({
+        content: paragraphs.map((text) => ({ content: [{ text, type: 'text' }], type: 'paragraph' })),
+        type: 'tableCell',
+    });
+
+    it('collapses two cell paragraphs to a space instead of joining with U+001F', () => {
+        const doc = {
+            content: [
+                {
+                    content: [
+                        { content: [header('h'), header('i')], type: 'tableRow' },
+                        { content: [cell('one', 'two'), cell('z')], type: 'tableRow' },
+                    ],
+                    type: 'table',
+                },
+            ],
+            type: 'doc',
+        };
+        const editor = new Editor({ content: doc, extensions: createMarkdownExtensions() });
+        const md = editor.getMarkdown();
+
+        editor.destroy();
+
+        expect(md).not.toContain('\u001f');
+        expect(md).toContain('one two');
+        expect(md).toContain('z');
+    });
+});
