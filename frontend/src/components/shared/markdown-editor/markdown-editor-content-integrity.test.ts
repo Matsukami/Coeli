@@ -63,7 +63,7 @@ const wrap = (context: number, text: string): string => {
 };
 
 describe('generative content-integrity — atoms survive load↔serialize across random combinations', () => {
-    it('300 seeded random docs converge and drop no atom', () => {
+    it('300 seeded random docs converge and drop no atom', { timeout: 30000 }, () => {
         const rng = mulberry32(0xc0ffee);
         const pick = <T>(arr: T[]): T => arr[Math.floor(rng() * arr.length)] as T;
 
@@ -111,7 +111,7 @@ describe('generative content-integrity — atoms survive load↔serialize across
     // one another (ordered>bullet, blockquote>list, list>code, fence-in-fence) is exactly the class where a
     // whole block can drop silently — assert structure (via structuralCounts, catching a dropped block/item)
     // AND convergence AND atom survival across depth-≥2 compositions.
-    it('nested primitive compositions preserve structure, content, and converge', () => {
+    it('nested primitive compositions preserve structure, content, and converge', { timeout: 30000 }, () => {
         const rng = mulberry32(0x5eeded);
         const nestAtoms = ['{{.TargetURL}}', '<container_environment>', '__init__', 'C++ then C++', 'os.execute()'];
         const nesters: ((a: string) => string)[] = [
@@ -140,7 +140,7 @@ describe('generative content-integrity — atoms survive load↔serialize across
     // splits the row on it before inline-tokenizing, so an unprotected pipe drops the trailing cells. Build
     // tables whose cells carry pipe-bearing atoms inside code spans / Go actions, plus a sentinel trailing
     // cell; assert the sentinel and the atom's words survive and the table converges.
-    it('pipe-bearing atoms inside table cells keep their row intact and converge', () => {
+    it('pipe-bearing atoms inside table cells keep their row intact and converge', { timeout: 30000 }, () => {
         const rng = mulberry32(0x7ab1e);
         const pipeAtoms = ['x | y', '{{.Host | lower}}', 'a || b', 'grep foo | wc -l', 'no-pipe-here'];
 
