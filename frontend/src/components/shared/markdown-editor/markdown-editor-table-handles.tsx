@@ -339,10 +339,11 @@ function useTableHandles(editor: Editor): TableHandlesController {
 
         document.addEventListener('mousemove', handleMove);
 
-        // A grip captured before a scroll or an edit points at a now-shifted position. Scroll moves it off the
-        // table visually; a doc edit shifts every position after it, so a menu action would resolve the stale
-        // cellPos against the current doc (wrong row/column, or an out-of-bounds RangeError in the header
-        // selector). Drop the target in both cases — it reappears on the next hover.
+        // A grip captured before a scroll, resize, or edit points at a now-shifted position: scroll/resize move it
+        // off the table visually, and a doc edit shifts every position after it, so a menu action would resolve
+        // the stale cellPos against the current doc (wrong row/column, or an out-of-bounds RangeError in the
+        // header selector). Drop the target in every case — it reappears on the next hover. (link/image handles
+        // already dismiss on resize; TableHandles missed it and its grips detached from the table on window resize.)
         const scrollParent = getEditorScrollParent(dom);
 
         const dropStaleTarget = () => {
@@ -353,12 +354,14 @@ function useTableHandles(editor: Editor): TableHandlesController {
         };
 
         scrollParent.addEventListener('scroll', dropStaleTarget, { passive: true });
+        window.addEventListener('resize', dropStaleTarget);
         editor.on('update', dropStaleTarget);
 
         return () => {
             cancelClear();
             document.removeEventListener('mousemove', handleMove);
             scrollParent.removeEventListener('scroll', dropStaleTarget);
+            window.removeEventListener('resize', dropStaleTarget);
             editor.off('update', dropStaleTarget);
         };
     }, [editor]);
