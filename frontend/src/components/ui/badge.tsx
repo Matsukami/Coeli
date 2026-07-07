@@ -35,6 +35,7 @@ function Badge({ className, variant, ...props }: BadgeProps) {
     return (
         <div
             className={cn(badgeVariants({ variant }), className)}
+            data-slot="badge"
             {...props}
         />
     );

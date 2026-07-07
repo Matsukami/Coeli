@@ -4,11 +4,14 @@ import * as React from 'react';
 
 import { cn } from '@/lib/utils';
 
-const Select = SelectPrimitive.Root;
-
-const SelectGroup = SelectPrimitive.Group;
-
-const SelectValue = SelectPrimitive.Value;
+function Select(props: React.ComponentProps<typeof SelectPrimitive.Root>) {
+    return (
+        <SelectPrimitive.Root
+            data-slot="select"
+            {...props}
+        />
+    );
+}
 
 function SelectContent({
     children,
@@ -25,6 +28,7 @@ function SelectContent({
                         'data-[side=bottom]:translate-y-1 data-[side=left]:-translate-x-1 data-[side=right]:translate-x-1 data-[side=top]:-translate-y-1',
                     className,
                 )}
+                data-slot="select-content"
                 position={position}
                 {...props}
             >
@@ -44,6 +48,15 @@ function SelectContent({
     );
 }
 
+function SelectGroup(props: React.ComponentProps<typeof SelectPrimitive.Group>) {
+    return (
+        <SelectPrimitive.Group
+            data-slot="select-group"
+            {...props}
+        />
+    );
+}
+
 function SelectItem({ children, className, ...props }: React.ComponentProps<typeof SelectPrimitive.Item>) {
     return (
         <SelectPrimitive.Item
@@ -51,6 +64,7 @@ function SelectItem({ children, className, ...props }: React.ComponentProps<type
                 'focus:bg-accent focus:text-accent-foreground relative flex w-full cursor-default items-center rounded-sm py-1.5 pr-8 pl-2 text-sm outline-hidden select-none data-disabled:pointer-events-none data-disabled:opacity-50',
                 className,
             )}
+            data-slot="select-item"
             {...props}
         >
             <span className="absolute right-2 flex h-3.5 w-3.5 items-center justify-center">
@@ -67,6 +81,7 @@ function SelectLabel({ className, ...props }: React.ComponentProps<typeof Select
     return (
         <SelectPrimitive.Label
             className={cn('px-2 py-1.5 text-sm font-semibold', className)}
+            data-slot="select-label"
             {...props}
         />
     );
@@ -79,6 +94,7 @@ function SelectScrollDownButton({
     return (
         <SelectPrimitive.ScrollDownButton
             className={cn('flex cursor-default items-center justify-center py-1', className)}
+            data-slot="select-scroll-down-button"
             {...props}
         >
             <ChevronDown className="size-4" />
@@ -90,6 +106,7 @@ function SelectScrollUpButton({ className, ...props }: React.ComponentProps<type
     return (
         <SelectPrimitive.ScrollUpButton
             className={cn('flex cursor-default items-center justify-center py-1', className)}
+            data-slot="select-scroll-up-button"
             {...props}
         >
             <ChevronUp className="h-4 w-4" />
@@ -101,6 +118,7 @@ function SelectSeparator({ className, ...props }: React.ComponentProps<typeof Se
     return (
         <SelectPrimitive.Separator
             className={cn('bg-muted -mx-1 my-1 h-px', className)}
+            data-slot="select-separator"
             {...props}
         />
     );
@@ -113,6 +131,7 @@ function SelectTrigger({ children, className, ...props }: React.ComponentProps<t
                 'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border-input ring-offset-background focus:ring-ring data-placeholder:text-muted-foreground flex h-9 w-full items-center justify-between rounded-md border bg-transparent px-3 py-2 text-sm whitespace-nowrap shadow-xs focus:ring-1 focus:outline-hidden disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1',
                 className,
             )}
+            data-slot="select-trigger"
             {...props}
         >
             {children}
@@ -120,6 +139,15 @@ function SelectTrigger({ children, className, ...props }: React.ComponentProps<t
                 <ChevronDown className="size-4 opacity-50" />
             </SelectPrimitive.Icon>
         </SelectPrimitive.Trigger>
+    );
+}
+
+function SelectValue(props: React.ComponentProps<typeof SelectPrimitive.Value>) {
+    return (
+        <SelectPrimitive.Value
+            data-slot="select-value"
+            {...props}
+        />
     );
 }
 

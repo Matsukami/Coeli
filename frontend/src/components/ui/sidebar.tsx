@@ -109,8 +109,8 @@ function Sidebar({
                         } as React.CSSProperties
                     }
                 >
-                    <SheetTitle className="sr-only"></SheetTitle>
-                    <SheetDescription className="sr-only"></SheetDescription>
+                    <SheetTitle className="sr-only">Sidebar</SheetTitle>
+                    <SheetDescription className="sr-only">Displays the mobile sidebar.</SheetDescription>
                     <div className="flex h-full w-full flex-col">{children}</div>
                 </SheetContent>
             </Sheet>

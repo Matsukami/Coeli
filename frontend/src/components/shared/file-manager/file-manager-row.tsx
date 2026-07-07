@@ -275,16 +275,14 @@ function FileManagerRowImpl({
         action: FileManagerAction,
     ) => {
         const ActionIcon = action.icon;
-        const itemClassName = cn(
-            action.variant === 'destructive' && 'text-destructive focus:bg-destructive/10 focus:text-destructive',
-        );
+        const variant = action.variant === 'destructive' ? 'destructive' : 'default';
 
         if (action.getHref) {
             return (
                 <Component
                     asChild
-                    className={itemClassName}
                     key={action.id}
+                    variant={variant}
                 >
                     <a
                         download={action.getHrefDownloadAttr?.(file) ?? true}
@@ -299,9 +297,9 @@ function FileManagerRowImpl({
 
         return (
             <Component
-                className={itemClassName}
                 key={action.id}
                 onSelect={() => action.onSelect(file)}
+                variant={variant}
             >
                 {ActionIcon ? <ActionIcon className="size-4" /> : null}
                 {action.label}
