@@ -1873,6 +1873,7 @@ function SettingsProvider() {
                 <form
                     className="flex min-h-0 flex-1 flex-col"
                     id="provider-form"
+                    noValidate
                     onSubmit={handleFormSubmit(handleSubmit)}
                 >
                     {isDesktop ? (

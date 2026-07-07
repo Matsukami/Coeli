@@ -213,6 +213,7 @@ function FlowFilesPromoteDialogForm({ files, flowId, onClose }: FlowFilesPromote
                 <Form {...form}>
                     <form
                         className="flex flex-col gap-4"
+                        noValidate
                         onSubmit={handleSave}
                     >
                         <FormField

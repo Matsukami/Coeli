@@ -36,6 +36,15 @@ const eslintConfig = [
             ],
             curly: ['error', 'all'],
             'no-fallthrough': 'off',
+            'no-restricted-syntax': [
+                'error',
+                {
+                    message:
+                        'Do not set mode/reValidateMode on useForm — use useAppForm, which owns the silent-until-submit form timing.',
+                    selector:
+                        'CallExpression[callee.name="useForm"] > ObjectExpression > Property[key.name="mode"], CallExpression[callee.name="useForm"] > ObjectExpression > Property[key.name="reValidateMode"]',
+                },
+            ],
             'padding-line-between-statements': [
                 'error',
                 {
@@ -75,6 +84,12 @@ const eslintConfig = [
             'react/no-unescaped-entities': 'off', // Allow quotes in JSX
             'react/prop-types': 'off', // TypeScript provides type checking
         },
+    },
+    {
+        // useAppForm is the single owner of the form timing — the one place
+        // allowed to set mode/reValidateMode on useForm.
+        files: ['src/hooks/use-app-form.ts'],
+        rules: { 'no-restricted-syntax': 'off' },
     },
     perfectionist.configs['recommended-natural'],
     {

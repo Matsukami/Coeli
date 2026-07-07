@@ -62,6 +62,7 @@ export function NameChangeForm({ onCancel, onSuccess }: NameChangeFormProps) {
         <Form {...form}>
             <form
                 className="flex flex-col gap-4"
+                noValidate
                 onSubmit={form.handleSubmit(handleSubmit)}
             >
                 <FormField

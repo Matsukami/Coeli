@@ -363,12 +363,12 @@ export function KnowledgeForm({ initialValues, isNew, knowledge, onSubmit }: Kno
     return (
         <>
             <Form {...form}>
-                <form
-                    // Desktop: lock to the viewport so the resizable panels
+                <form // Desktop: lock to the viewport so the resizable panels
                     // inside the body can fill the remaining space below the
                     // sticky header. Mobile: allow the page to grow with its
                     // content (single column, vertical scroll).
                     className={isDesktop ? 'flex h-[100dvh] min-h-0 w-full flex-col' : 'flex min-h-[100dvh] flex-col'}
+                    noValidate
                     onSubmit={handleSubmit(onSubmitWithGuard)}
                 >
                     <KnowledgeFormHeader

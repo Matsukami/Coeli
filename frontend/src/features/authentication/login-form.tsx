@@ -173,6 +173,7 @@ function LoginForm({ providers, returnUrl = routes.newFlow }: LoginFormProps) {
         <Form {...form}>
             <form
                 className="mx-auto grid w-[350px] gap-8"
+                noValidate
                 onSubmit={form.handleSubmit(handleSubmit)}
             >
                 <h1 className="text-center text-3xl font-bold">PentAGI</h1>

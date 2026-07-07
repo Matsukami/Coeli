@@ -157,6 +157,7 @@ export function FlowForm({
             resourceIds: defaultValues?.resourceIds ?? [],
             useAgents: defaultValues?.useAgents ?? false,
         },
+        // eslint-disable-next-line no-restricted-syntax -- flow-form keeps live validation; useAppForm migration deferred
         mode: 'onChange',
         resolver: zodResolver(formSchema),
     });
@@ -483,7 +484,10 @@ export function FlowForm({
 
     return (
         <Form {...form}>
-            <form onSubmit={handleFormSubmit(handleSubmit)}>
+            <form
+                noValidate
+                onSubmit={handleFormSubmit(handleSubmit)}
+            >
                 <FormField
                     control={control}
                     name="message"

@@ -83,6 +83,7 @@ function ResourcesMkdirDialogForm({ defaultParentPath, onClose }: ResourcesMkdir
             <Form {...form}>
                 <form
                     className="flex flex-col gap-4"
+                    noValidate
                     onSubmit={handleSubmit}
                 >
                     <FormField

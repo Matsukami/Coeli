@@ -210,6 +210,7 @@ function ResourcesMoveDialogForm({ files, onClose }: ResourcesMoveDialogFormProp
                 <Form {...form}>
                     <form
                         className="flex flex-col gap-4"
+                        noValidate
                         onSubmit={handleSave}
                     >
                         <FormField

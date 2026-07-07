@@ -848,6 +848,7 @@ function SettingsPrompt() {
                     <form
                         className="flex min-h-0 flex-1 flex-col"
                         id="system-prompt-form"
+                        noValidate
                         onSubmit={systemForm.handleSubmit(handleSystemSubmit)}
                     >
                         <FormMarkdownItem
@@ -871,6 +872,7 @@ function SettingsPrompt() {
                         <form
                             className="flex min-h-0 flex-1 flex-col"
                             id="human-prompt-form"
+                            noValidate
                             onSubmit={humanForm.handleSubmit(handleHumanSubmit)}
                         >
                             <FormMarkdownItem
