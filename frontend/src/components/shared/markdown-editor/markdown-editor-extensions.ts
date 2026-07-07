@@ -12,6 +12,7 @@ import { TableCell, TableHeader, TableRow } from '@tiptap/extension-table';
 import { Placeholder } from '@tiptap/extensions';
 import StarterKit from '@tiptap/starter-kit';
 
+import { HeadingAutoformat } from './markdown-editor-heading-autoformat';
 import { createMarkdownLayer, TunedTable } from './markdown-editor-marked';
 import { MarkdownPaste } from './markdown-editor-paste';
 import { TagHighlight } from './markdown-editor-tag-highlight';
@@ -125,6 +126,7 @@ export const createMarkdownExtensions = (placeholder?: string) => [
         link: { autolink: true, linkOnPaste: true, openOnClick: false },
         underline: false,
     }),
+    HeadingAutoformat,
     TunedTable.configure({ resizable: true }),
     TableRow,
     TableHeader,

@@ -1,3 +1,5 @@
+import type { Transaction } from '@tiptap/pm/state';
+
 import { Editor } from '@tiptap/core';
 import { beforeAll, describe, expect, it } from 'vitest';
 
@@ -403,6 +405,64 @@ describe('line-leading # / > in a paragraph stay body text on round-trip (ENCODE
         for (const s of ['glob \\* and \\? here', 'regex \\d+ and \\.php', 'see #123 issue', 'a # b mid line']) {
             expect(roundTrip(s)).toBe(s);
         }
+    });
+});
+
+describe('a block that comes to start with # becomes a heading (content-driven, HeadingAutoformat)', () => {
+    const paragraph = (...content: unknown[]) => ({ content: [{ content, type: 'paragraph' }], type: 'doc' });
+
+    const afterEdit = (doc: unknown, edit: (tr: Transaction) => void) => {
+        const editor = new Editor({ content: doc as string, extensions: createMarkdownExtensions() });
+
+        editor.commands.command(({ dispatch, tr }) => {
+            edit(tr);
+            dispatch?.(tr);
+
+            return true;
+        });
+
+        const md = editor.getMarkdown();
+
+        editor.destroy();
+
+        return md;
+    };
+
+    const text = (value: string) => ({ text: value, type: 'text' });
+    const hardBreak = { type: 'hardBreak' };
+
+    it('deleting the text before a mid-line # promotes the paragraph to a heading', () => {
+        const md = afterEdit(paragraph(text('x# Big')), (tr) => tr.delete(1, 2));
+
+        // trimEnd: StarterKit's TrailingNode appends an empty paragraph after a doc-final heading (so the caret
+        // has somewhere to go), same as typing `# ` on the last line — it collapses back to `# Big` on reload.
+        expect(md.trimEnd()).toBe('# Big');
+        expect(structuralCounts(md).heading).toBe(1);
+    });
+
+    it('the heading level matches the number of hashes', () => {
+        const md = afterEdit(paragraph(text('x### Big')), (tr) => tr.delete(1, 2));
+
+        expect(md.trimEnd()).toBe('### Big');
+    });
+
+    it('pressing Enter in front of a mid-line # promotes the new block to a heading', () => {
+        const md = afterEdit(paragraph(text('123 # Big')), (tr) => tr.split(5));
+
+        expect(structuralCounts(md).heading).toBe(1);
+        expect(md).toContain('# Big');
+    });
+
+    it('a # after a hardBreak stays body text even after an edit (Shift+Enter is not a block start)', () => {
+        const md = afterEdit(paragraph(text('foo'), hardBreak, text('# bar')), (tr) => tr.insertText('!', 1));
+
+        expect(structuralCounts(md).heading ?? 0).toBe(0);
+    });
+
+    it('deleting the pre-break text, leaving a hardBreak in front of the #, stays body text', () => {
+        const md = afterEdit(paragraph(text('foo'), hardBreak, text('# bar')), (tr) => tr.delete(1, 4));
+
+        expect(structuralCounts(md).heading ?? 0).toBe(0);
     });
 });
 
