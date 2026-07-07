@@ -1,6 +1,4 @@
-import { zodResolver } from '@hookform/resolvers/zod';
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { z } from 'zod';
 
@@ -13,6 +11,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { FormSubmitButton } from '@/components/ui/form-submit-button';
 import { Input } from '@/components/ui/input';
 import { InputPassword } from '@/components/ui/input-password';
+import { useAppForm } from '@/hooks/use-app-form';
 import { routes } from '@/lib/routes';
 import { useUser } from '@/providers/user-provider';
 
@@ -63,12 +62,12 @@ interface LoginFormProps {
 }
 
 function LoginForm({ providers, returnUrl = routes.newFlow }: LoginFormProps) {
-    const form = useForm<z.infer<typeof formSchema>>({
+    const form = useAppForm<z.infer<typeof formSchema>>({
         defaultValues: {
             mail: '',
             password: '',
         },
-        resolver: zodResolver(formSchema),
+        schema: formSchema,
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<null | string>(null);

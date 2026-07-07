@@ -1,6 +1,4 @@
-import { zodResolver } from '@hookform/resolvers/zod';
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import * as z from 'zod';
 
@@ -8,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { FormSubmitButton } from '@/components/ui/form-submit-button';
 import { Input } from '@/components/ui/input';
+import { useAppForm } from '@/hooks/use-app-form';
 import { api, resolveApiErrorMessage } from '@/lib/axios';
 import { useUser } from '@/providers/user-provider';
 
@@ -35,11 +34,11 @@ export function NameChangeForm({ onCancel, onSuccess }: NameChangeFormProps) {
     const [error, setError] = useState<null | string>(null);
     const { authInfo, patchUser, refreshAuthInfo } = useUser();
 
-    const form = useForm<NameChangeFormValues>({
+    const form = useAppForm<NameChangeFormValues>({
         defaultValues: {
             name: authInfo?.user?.name ?? '',
         },
-        resolver: zodResolver(nameChangeSchema),
+        schema: nameChangeSchema,
     });
 
     const handleSubmit = async (values: NameChangeFormValues) => {

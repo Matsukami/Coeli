@@ -1,6 +1,4 @@
-import { zodResolver } from '@hookform/resolvers/zod';
 import { type ComponentProps, useState } from 'react';
-import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import * as z from 'zod';
 
@@ -8,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { FormSubmitButton } from '@/components/ui/form-submit-button';
 import { InputPassword } from '@/components/ui/input-password';
+import { useAppForm } from '@/hooks/use-app-form';
 import { api, resolveApiErrorMessage } from '@/lib/axios';
 import { cn } from '@/lib/utils';
 
@@ -74,13 +73,13 @@ export function PasswordChangeForm({
 }: PasswordChangeFormProps) {
     const [error, setError] = useState<null | string>(null);
 
-    const form = useForm<PasswordChangeFormValues>({
+    const form = useAppForm<PasswordChangeFormValues>({
         defaultValues: {
             confirmPassword: '',
             currentPassword: '',
             newPassword: '',
         },
-        resolver: zodResolver(passwordChangeSchema),
+        schema: passwordChangeSchema,
     });
 
     const handleSubmit = async (values: PasswordChangeFormValues) => {

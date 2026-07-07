@@ -1,6 +1,4 @@
-import { zodResolver } from '@hookform/resolvers/zod';
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import * as z from 'zod';
 
@@ -9,6 +7,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { FormSubmitButton } from '@/components/ui/form-submit-button';
 import { Input } from '@/components/ui/input';
 import { InputPassword } from '@/components/ui/input-password';
+import { useAppForm } from '@/hooks/use-app-form';
 import { api, resolveApiErrorMessage } from '@/lib/axios';
 import { useUser } from '@/providers/user-provider';
 
@@ -41,12 +40,12 @@ export function EmailChangeForm({ onCancel, onSuccess }: EmailChangeFormProps) {
     const [error, setError] = useState<null | string>(null);
     const { patchUser, refreshAuthInfo } = useUser();
 
-    const form = useForm<EmailChangeFormValues>({
+    const form = useAppForm<EmailChangeFormValues>({
         defaultValues: {
             currentPassword: '',
             newEmail: '',
         },
-        resolver: zodResolver(emailChangeSchema),
+        schema: emailChangeSchema,
     });
 
     const handleSubmit = async (values: EmailChangeFormValues) => {
