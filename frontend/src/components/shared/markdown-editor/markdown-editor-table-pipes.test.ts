@@ -143,6 +143,27 @@ describe('table cell with a pipe inside a URL — content survives load and conv
     });
 });
 
+describe('fence length tracking — a longer fence is not closed by a shorter inner run', () => {
+    it('keeps protecting a table after a 4-backtick block that contains a ``` line', () => {
+        const src = '````\n```\ninner\n````\n\n| a | b |\n| --- | --- |\n| `x | y` | z |';
+
+        expect(escapeTablePipes(src)).toBe('````\n```\ninner\n````\n\n| a | b |\n| --- | --- |\n| `x \\| y` | z |');
+    });
+
+    it('does not escape a table sitting inside a 4-backtick block that also holds a ``` line', () => {
+        const src = '````\n```\n| a | b |\n| --- | --- |\n| `x | y` | z |\n````';
+
+        expect(escapeTablePipes(src)).toBe(src);
+    });
+
+    it('round-trips a table after a fence-demonstrating code block without losing the cell', () => {
+        const out = roundTrip('````\n```\ninner\n````\n\n| a | b |\n| --- | --- |\n| `x | y` | z |');
+
+        expect(out).toContain('z');
+        expect(out).toContain('`x \\| y`');
+    });
+});
+
 describe('CRLF line endings — tables still protected', () => {
     it('escapes a code-span pipe in a CRLF table row', () => {
         expect(escapeTablePipes('| a | b |\r\n| --- | --- |\r\n| `x | y` | z |\r\n')).toBe(

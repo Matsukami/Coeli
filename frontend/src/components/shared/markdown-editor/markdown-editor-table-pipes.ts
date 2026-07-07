@@ -17,7 +17,10 @@
 // marked would end the table there; we do not replicate its HTML-block interrupt (vanishingly rare in this
 // content, and our html tokenizers render such lines as literal text anyway).
 
-const FENCE_LINE = /^ {0,3}(```|~~~)/;
+// Capture the full fence run (not a fixed 3) plus the trailing text: renderTunedCodeBlock widens a fence to
+// 4+ backticks when its content holds a ``` line, and CommonMark closes a fence only with a run of the same
+// char, length >= the opener, and no info string — so length- and char-aware tracking is load-bearing.
+const FENCE_LINE = /^ {0,3}(`{3,}|~{3,})(.*)$/;
 // Written to be linear: the trailing `(?: *\|)? *$` (not `\|? *$`) plus per-cell spacing keep any two space
 // runs from competing for the same characters, so a crafted delimiter-looking line can't force O(n²) backtracking.
 const TABLE_DELIMITER_LINE = /^ {0,3}\|? *:?-+:?(?: *\| *:?-+:?)*(?: *\|)? *$/;
@@ -142,7 +145,7 @@ export const escapeTablePipes = (markdown: string): string => {
     // lose cells. Normalize first; the return below keeps the original bytes when nothing was escaped.
     const source = markdown.includes('\r') ? markdown.replace(/\r\n?/g, '\n') : markdown;
     const lines = source.split('\n');
-    let openFence: null | string = null;
+    let openFence: null | { char: string; length: number } = null;
     let isChanged = false;
 
     const escapeRow = (row: number): void => {
@@ -159,7 +162,14 @@ export const escapeTablePipes = (markdown: string): string => {
         const fence = FENCE_LINE.exec(line);
 
         if (fence) {
-            openFence = openFence === fence[1] ? null : (openFence ?? fence[1]!);
+            const marker = fence[1]!;
+
+            if (openFence === null) {
+                openFence = { char: marker[0]!, length: marker.length };
+            } else if (marker[0] === openFence.char && marker.length >= openFence.length && !fence[2]!.trim()) {
+                openFence = null;
+            }
+
             continue;
         }
 
