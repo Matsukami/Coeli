@@ -45,6 +45,7 @@ export const deleteAction = (onDelete: (file: FileNode) => void): FileManagerAct
     label: 'Delete',
     onSelect: onDelete,
     separatorBefore: true,
+    variant: 'destructive',
 });
 
 interface BulkDeleteOptions {
