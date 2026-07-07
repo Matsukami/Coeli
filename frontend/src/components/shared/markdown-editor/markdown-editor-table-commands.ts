@@ -11,7 +11,7 @@ export const ALIGN_OPTIONS: { icon: LucideIcon; label: string; value: ColumnAlig
     { icon: AlignRight, label: 'Right', value: 'right' },
 ];
 
-// Empties every cell in the caret's row or column (Notion's "Clear contents"), leaving the structure intact.
+// Empties every cell in the caret's row or column, leaving the row/column structure intact (not a delete).
 export function clearLineContents(editor: Editor, axis: 'column' | 'row'): void {
     editor
         .chain()

@@ -32,9 +32,7 @@ export interface VariableRange {
     start: number;
 }
 
-// Shared by BOTH variable panels (rich ProseMirror + raw textarea) so their cycling can't drift: from the
-// currently-selected occurrence go to the next (wrapping); if the caret isn't on one, jump to the first
-// occurrence at/after it, else wrap to the first. `undefined` when there are none.
+// Shared by BOTH variable panels (rich ProseMirror + raw textarea), so their cycling can't drift.
 export function nextVariableRange(
     ranges: VariableRange[],
     selectionStart: number,

@@ -238,9 +238,6 @@ function RowHeaderToggleItem({ cellPos, editor }: { cellPos: number; editor: Edi
     );
 }
 
-// Headless controller: owns every imperative DOM touch — hover tracking over ProseMirror's (non-React) cells,
-// layout measurement, and the scroll/menu-freeze bookkeeping — and hands the view a plain declarative state.
-// Swapping the hover strategy (e.g. to a ProseMirror decoration plugin) means rewriting only this hook.
 function useTableHandles(editor: Editor): TableHandlesController {
     const [target, setTarget] = useState<HoverTarget | null>(null);
     const [open, setOpen] = useState<OpenMenu>(null);

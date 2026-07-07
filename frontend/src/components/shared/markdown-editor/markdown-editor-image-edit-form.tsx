@@ -16,7 +16,6 @@ interface ImageEditFormProps {
     editor: Editor;
     initialAlt: string;
     initialSrc: string;
-    // true = editing the selected image (updateAttributes + Remove); false = inserting a new one (setImage).
     isEditing: boolean;
     onDone: () => void;
 }

@@ -151,9 +151,6 @@ function MarkdownEditor({
     );
 }
 
-// Owns the whole tiptap lifecycle for a markdown-controlled editor: instance creation, the RHF value-sync loop
-// (echo suppression + undo reset), disabled toggling, a11y-attribute forwarding, and the imperative handle. The
-// view below just renders whatever editor this returns — the lifecycle can be reworked here without touching it.
 function useMarkdownEditor({
     'aria-describedby': ariaDescribedby,
     'aria-invalid': ariaInvalid,

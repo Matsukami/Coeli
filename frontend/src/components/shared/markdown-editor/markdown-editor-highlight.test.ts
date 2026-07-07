@@ -37,11 +37,11 @@ describe('TAG_RE — <xml-like tags>', () => {
     it.each([
         'count a < b here', // less-than, space after <
         'loop x<5 times', // digit after <
-        'rating <3', // not a tag
+        'rating <3',
         'empty <>',
         'spaced < tag>',
         '<https://example.com>', // markdown autolink — must NOT be a tag
-        '<!-- a comment -->', // html comment
+        '<!-- a comment -->',
     ])('does NOT match %s', (input) => {
         expect(matches(TAG_RE, input)).toEqual([]);
     });

@@ -229,8 +229,8 @@ describe('CRLF line endings — tables still protected', () => {
 
 describe('TABLE_DELIMITER_LINE is linear (ReDoS guard)', () => {
     it('scans a crafted delimiter-looking line with a long trailing space run in linear time', () => {
-        // A `|`-line followed by "dashes + many spaces + non-matching tail" was O(n²) on the old regex
-        // (~0.6s at 32k). The linear rewrite stays sub-millisecond; assert a generous budget.
+        // A crafted delimiter-looking line (dashes + a long trailing space run + non-matching tail) must scan in
+        // linear time, not O(n²).
         const evil = `x|y\n${'-'.repeat(50)}${' '.repeat(60000)}z\n`;
         const started = performance.now();
 

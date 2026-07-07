@@ -54,9 +54,8 @@ const RASTER_IMAGE_DATA = /^data:image\/(?:png|jpe?g|gif|webp|bmp);base64,/i;
 
 const KNOWN_IMAGE_SCHEME = /^(?:https?:\/\/|data:)/i;
 
-// Image analog of normalizeLinkUrl: a scheme-less src ("example.com/a.png") is made absolute with https://; an
-// already-schemed http(s) URL and a base64 raster data: URL pass through. data:image/svg+xml is rejected — SVG
-// can carry script. Returns the normalized src, or null for unsafe/malformed/relative input.
+// Image analog of normalizeLinkUrl. Only http(s) and base64 raster data: URLs survive — data:image/svg+xml is
+// rejected because SVG can carry script.
 export const normalizeImageSrc = (raw: string): null | string => {
     const src = raw.trim();
 
