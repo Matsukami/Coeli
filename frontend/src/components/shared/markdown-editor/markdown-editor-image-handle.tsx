@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react';
 import { Popover, PopoverAnchor, PopoverContent } from '@/components/ui/popover';
 
 import { ImageEditForm } from './markdown-editor-image-edit-form';
+import { getEditorScrollParent } from './markdown-editor-styles';
 
 interface ImageTarget {
     alt: string;
@@ -97,7 +98,7 @@ function useImageHandle(editor: Editor) {
         editor.on('selectionUpdate', update);
 
         // Fixed-positioned anchor goes stale on scroll/resize — drop it (it reappears on the next selection).
-        const scrollParent = editor.view.dom.closest('.tiptap-content') ?? window;
+        const scrollParent = getEditorScrollParent(editor.view.dom);
 
         scrollParent.addEventListener('scroll', clear, { passive: true });
         window.addEventListener('resize', clear);

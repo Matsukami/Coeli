@@ -12,7 +12,7 @@ import { cn } from '@/lib/utils';
 import { createMarkdownExtensions } from './markdown-editor-extensions';
 import { ImageHandle } from './markdown-editor-image-handle';
 import { LinkHandle } from './markdown-editor-link-handle';
-import { MARKDOWN_EDITOR_WRAPPER_CLASS as WRAPPER_CLASS } from './markdown-editor-styles';
+import { EDITOR_CONTENT_CLASS, MARKDOWN_EDITOR_WRAPPER_CLASS as WRAPPER_CLASS } from './markdown-editor-styles';
 import { TableHandles } from './markdown-editor-table-handles';
 import { MarkdownEditorToolbar } from './markdown-editor-toolbar';
 import { findVariableOccurrences } from './markdown-editor-variable-highlight';
@@ -139,7 +139,7 @@ function MarkdownEditor({
             />
             <EditorContent
                 className={cn(
-                    'prose prose-sm dark:prose-invert tiptap-content max-w-none min-w-0 flex-1 overflow-auto px-3 py-2',
+                    `prose prose-sm dark:prose-invert ${EDITOR_CONTENT_CLASS} max-w-none min-w-0 flex-1 overflow-auto px-3 py-2`,
                     '[&_.ProseMirror]:min-h-full [&_.ProseMirror]:outline-none',
                 )}
                 editor={editor}

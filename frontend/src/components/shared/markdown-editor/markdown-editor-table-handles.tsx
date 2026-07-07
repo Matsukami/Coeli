@@ -28,6 +28,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Switch } from '@/components/ui/switch';
 
+import { getEditorScrollParent } from './markdown-editor-styles';
 import { ALIGN_OPTIONS, clearLineContents, hasHeaderRow, setColumnAlign } from './markdown-editor-table-commands';
 
 interface HoverTarget {
@@ -342,7 +343,7 @@ function useTableHandles(editor: Editor): TableHandlesController {
         // table visually; a doc edit shifts every position after it, so a menu action would resolve the stale
         // cellPos against the current doc (wrong row/column, or an out-of-bounds RangeError in the header
         // selector). Drop the target in both cases — it reappears on the next hover.
-        const scrollParent = dom.closest('.tiptap-content') ?? window;
+        const scrollParent = getEditorScrollParent(dom);
 
         const dropStaleTarget = () => {
             if (!openRef.current) {
