@@ -75,10 +75,11 @@ function useHorizontalWheelScroll(ref: React.RefObject<HTMLDivElement | null>) {
 }
 
 // WAI-ARIA toolbar pattern: one Tab stop for the whole bar, Arrow/Home/End move between controls. Managed
-// imperatively on `[data-toolbar-item]` so each control stays a dumb button; the set changes (the table
-// control swaps button↔menu, controls disable) so a MutationObserver re-seeds the single tab stop. When a
-// popover/dropdown is open its focus lives in a body portal outside the bar, so activeElement isn't an item
-// and Arrow keys fall through to that menu instead of being hijacked here.
+// imperatively on `[data-toolbar-item]` so each control stays a dumb button. The item set is static, but a
+// control's `disabled` toggling changes which items are in the roving set, so a MutationObserver on the
+// `disabled` attribute re-seeds the single tab stop (menus swap their content in a body portal, not here, so
+// no childList watch is needed). When a popover/dropdown is open its focus lives in that portal outside the
+// bar, so activeElement isn't an item and Arrow keys fall through to the menu instead of being hijacked here.
 function useToolbarRovingFocus(ref: React.RefObject<HTMLDivElement | null>) {
     useEffect(() => {
         const toolbar = ref.current;
@@ -104,7 +105,7 @@ function useToolbarRovingFocus(ref: React.RefObject<HTMLDivElement | null>) {
         seedTabStop();
 
         const observer = new MutationObserver(seedTabStop);
-        observer.observe(toolbar, { attributeFilter: ['disabled'], childList: true, subtree: true });
+        observer.observe(toolbar, { attributeFilter: ['disabled'], subtree: true });
 
         const handleKeyDown = (event: KeyboardEvent) => {
             if (!['ArrowLeft', 'ArrowRight', 'End', 'Home'].includes(event.key)) {
