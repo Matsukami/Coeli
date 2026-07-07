@@ -926,7 +926,7 @@ function TestResultsDialog({ handleOpenChange, isOpen, results }: TestResultsDia
             onOpenChange={handleOpenChange}
             open={isOpen}
         >
-            <DialogContent className="flex max-h-[80vh] max-w-3xl flex-col">
+            <DialogContent className="flex max-h-[80vh] flex-col sm:max-w-3xl">
                 <DialogHeader className="shrink-0">
                     <DialogTitle>Provider Test Results</DialogTitle>
                 </DialogHeader>

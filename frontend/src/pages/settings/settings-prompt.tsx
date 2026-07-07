@@ -946,7 +946,7 @@ function SettingsPrompt() {
                 onOpenChange={setValidationDialogOpen}
                 open={validationDialogOpen}
             >
-                <DialogContent className="max-w-2xl">
+                <DialogContent className="sm:max-w-2xl">
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
                             <AlertCircle className="size-5" />
