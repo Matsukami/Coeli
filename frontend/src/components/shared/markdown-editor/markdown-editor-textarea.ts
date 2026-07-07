@@ -5,9 +5,7 @@ export function insertAtTextareaCaret(
     text: string,
     onChange: (value: string) => void,
 ): void {
-    const start = Math.max(0, textarea.selectionStart);
-    const end = Math.max(0, textarea.selectionEnd);
-    const { value } = textarea;
+    const { selectionEnd: end, selectionStart: start, value } = textarea;
 
     onChange(value.slice(0, start) + text + value.slice(end));
 

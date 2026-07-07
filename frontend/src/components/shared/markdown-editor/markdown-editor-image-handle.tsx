@@ -30,8 +30,8 @@ export function ImageHandle({ editor }: { editor: Editor }) {
 
     return (
         <Popover
-            onOpenChange={(next) => {
-                if (!next) {
+            onOpenChange={(isOpen) => {
+                if (!isOpen) {
                     close();
                 }
             }}

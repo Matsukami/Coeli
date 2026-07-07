@@ -5,6 +5,6 @@
 // route, so wrap it in lazy(() => import('./markdown-editor')) yourself if you need the chunk deferred.
 export { MarkdownEditorField } from './markdown-editor-field';
 export type { MarkdownEditorFieldHandle } from './markdown-editor-field';
-export { findVariableUseRanges, VARIABLE_RE, variableUseRegex } from './markdown-editor-variable-syntax';
+export { VARIABLE_RE, variableUseRegex } from './markdown-editor-variable-syntax';
 export { EditorViewModeToggle } from './markdown-editor-view-mode';
 export type { EditorViewMode } from './markdown-editor-view-mode';

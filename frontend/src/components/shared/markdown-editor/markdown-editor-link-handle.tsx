@@ -29,8 +29,8 @@ export function LinkHandle({ editor }: { editor: Editor }) {
 
     return (
         <Popover
-            onOpenChange={(next) => {
-                if (!next) {
+            onOpenChange={(isOpen) => {
+                if (!isOpen) {
                     close();
                 }
             }}
