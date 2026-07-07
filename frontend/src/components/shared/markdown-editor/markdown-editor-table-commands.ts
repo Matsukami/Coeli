@@ -39,7 +39,16 @@ export function clearLineContents(editor: Editor, axis: 'column' | 'row'): void 
 // caret; pass `pos` to read a specific cell's table instead — the hover grips open without moving the selection,
 // so they must resolve the hovered table by position rather than the caret's last table.
 export function hasHeaderRow(editor: Editor, pos?: number): boolean {
-    const $pos = pos == null ? editor.state.selection.$from : editor.state.doc.resolve(pos);
+    const { doc, selection } = editor.state;
+
+    // A hover grip can outlive the edit that shrank the doc below its captured cellPos. doc.resolve throws a
+    // RangeError on an out-of-bounds position, and this runs inside a useEditorState selector, so an unguarded
+    // throw takes down the whole editor render tree. A stale position has no header row to report.
+    if (pos != null && pos > doc.content.size) {
+        return false;
+    }
+
+    const $pos = pos == null ? selection.$from : doc.resolve(pos);
 
     for (let depth = $pos.depth; depth > 0; depth--) {
         if ($pos.node(depth).type.name === 'table') {

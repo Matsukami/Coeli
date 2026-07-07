@@ -338,22 +338,27 @@ function useTableHandles(editor: Editor): TableHandlesController {
 
         document.addEventListener('mousemove', handleMove);
 
-        // Fixed-positioned grips go stale on scroll — drop them (they reappear on the next hover).
+        // A grip captured before a scroll or an edit points at a now-shifted position. Scroll moves it off the
+        // table visually; a doc edit shifts every position after it, so a menu action would resolve the stale
+        // cellPos against the current doc (wrong row/column, or an out-of-bounds RangeError in the header
+        // selector). Drop the target in both cases — it reappears on the next hover.
         const scrollParent = dom.closest('.tiptap-content') ?? window;
 
-        const handleScroll = () => {
+        const dropStaleTarget = () => {
             if (!openRef.current) {
                 cellPosRef.current = null;
                 setTarget(null);
             }
         };
 
-        scrollParent.addEventListener('scroll', handleScroll, { passive: true });
+        scrollParent.addEventListener('scroll', dropStaleTarget, { passive: true });
+        editor.on('update', dropStaleTarget);
 
         return () => {
             cancelClear();
             document.removeEventListener('mousemove', handleMove);
-            scrollParent.removeEventListener('scroll', handleScroll);
+            scrollParent.removeEventListener('scroll', dropStaleTarget);
+            editor.off('update', dropStaleTarget);
         };
     }, [editor]);
 
