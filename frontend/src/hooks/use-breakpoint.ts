@@ -6,10 +6,12 @@ export enum BreakpointName {
     tablet = 'tablet',
 }
 
+// px thresholds mirror Tailwind's `md` (768) and `xl` (1280) so JS layout switches line up with CSS `md:`/`xl:`
+// variants — keep them equal (a component may pick either for the same responsive decision, e.g. the editor split).
 export const breakpoints = {
     [BreakpointName.desktop]: Infinity,
     [BreakpointName.mobile]: 768,
-    [BreakpointName.tablet]: 1200,
+    [BreakpointName.tablet]: 1280,
 } as const;
 
 const breakpointRules: { maxWidth: number; name: BreakpointName }[] = [

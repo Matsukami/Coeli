@@ -6,7 +6,6 @@ import { lazy, Suspense, useImperativeHandle, useRef } from 'react';
 import type { TextareaRef } from '@/components/ui/textarea';
 
 import { Textarea } from '@/components/ui/textarea';
-import { useBreakpoint } from '@/hooks/use-breakpoint';
 import { cn } from '@/lib/utils';
 
 import type { MarkdownEditorHandle } from './markdown-editor';
@@ -80,8 +79,7 @@ export function MarkdownEditorField({
         [mode, onChange, disabled],
     );
 
-    const { isDesktop } = useBreakpoint();
-    const boxClassName = cn(isDesktop ? 'min-h-0 flex-1' : 'h-[calc(100dvh-5rem)]', className);
+    const boxClassName = cn('h-[calc(100dvh-5rem)] xl:h-auto xl:min-h-0 xl:flex-1', className);
 
     if (mode === 'raw') {
         return (
