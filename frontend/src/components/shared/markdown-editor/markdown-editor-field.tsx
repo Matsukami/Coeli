@@ -80,9 +80,6 @@ export function MarkdownEditorField({
         [mode, onChange, disabled],
     );
 
-    // `h-`, not `min-h`: the mobile/tablet stack has no flex parent to cap the box, so `min-h` would let a long
-    // doc stretch the editor (and the page) to full content height instead of scrolling inside it. Height tracks
-    // useBreakpoint, not a CSS variant, because the layouts split at 1200px — which is no Tailwind breakpoint.
     const { isDesktop } = useBreakpoint();
     const boxClassName = cn(isDesktop ? 'min-h-0 flex-1' : 'h-[calc(100dvh-5rem)]', className);
 
