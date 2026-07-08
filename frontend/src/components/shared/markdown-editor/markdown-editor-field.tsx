@@ -81,12 +81,13 @@ export function MarkdownEditorField({
     );
 
     // The field owns its height so no consumer repeats it: it fills its flex parent on desktop (the split-view
-    // panes) and takes a near-viewport fixed height on mobile/tablet (the stacked forms, where it isn't inside a
-    // flex box). Keyed off the SAME breakpoint hook the surrounding layouts switch on so the two never disagree —
-    // a plain CSS media-query variant would drift from that JS breakpoint. `className` is last, so a consumer can
-    // still override the height.
+    // panes) and takes a FIXED near-viewport height on mobile/tablet (the stacked forms). Fixed, not `min-h`, so a
+    // long doc scrolls inside the editor instead of stretching the page to its full content height — the mobile
+    // stack has no flex parent to cap it. Keyed off the SAME breakpoint hook the surrounding layouts switch on so
+    // the two never disagree; a plain CSS media-query variant would drift from that JS breakpoint. `className` is
+    // last, so a consumer can still override the height.
     const { isDesktop } = useBreakpoint();
-    const boxClassName = cn('flex-1', isDesktop ? 'min-h-0' : 'min-h-[calc(100dvh-5rem)]', className);
+    const boxClassName = cn(isDesktop ? 'min-h-0 flex-1' : 'h-[calc(100dvh-5rem)]', className);
 
     if (mode === 'raw') {
         return (
