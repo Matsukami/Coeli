@@ -79,6 +79,10 @@ export function MarkdownEditorField({
         [mode, onChange, disabled],
     );
 
+    // The editor fills its flex parent by default (every form embeds it in a `flex min-h-0 flex-col` column);
+    // applied FIRST so a consumer can override the height — e.g. a fixed `min-h-[…]` when it isn't in a flex box.
+    const boxClassName = cn('min-h-0 flex-1', className);
+
     if (mode === 'raw') {
         return (
             <Textarea
@@ -86,7 +90,7 @@ export function MarkdownEditorField({
                 aria-invalid={ariaInvalid}
                 autoSize={false}
                 // Raw config is applied LAST so a consumer `className` can't override the byte-exact source styling.
-                className={cn(className, 'aria-invalid:border-destructive resize-none font-mono text-sm')}
+                className={cn(boxClassName, 'aria-invalid:border-destructive resize-none font-mono text-sm')}
                 disabled={disabled}
                 id={id}
                 onBlur={onBlur}
@@ -109,7 +113,7 @@ export function MarkdownEditorField({
                         MARKDOWN_EDITOR_WRAPPER_CLASS,
                         'items-center justify-center',
                         disabled && 'pointer-events-none opacity-60',
-                        className,
+                        boxClassName,
                     )}
                     id={id}
                 >
@@ -120,7 +124,7 @@ export function MarkdownEditorField({
             <MarkdownEditor
                 aria-describedby={ariaDescribedby}
                 aria-invalid={ariaInvalid}
-                className={className}
+                className={boxClassName}
                 disabled={disabled}
                 id={id}
                 onBlur={onBlur}

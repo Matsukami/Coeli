@@ -672,7 +672,6 @@ function Template() {
                 <FormItem className="flex min-h-0 flex-1 flex-col">
                     <FormControl>
                         <MarkdownEditorField
-                            className="min-h-0 flex-1"
                             disabled={isSaving}
                             mode={viewMode}
                             onBlur={field.onBlur}
