@@ -99,7 +99,6 @@ export function KnowledgeContentField({
                     {hasLabel ? <FormLabel>Content</FormLabel> : null}
                     <FormControl>
                         <MarkdownEditorField
-                            className={fillParent ? undefined : 'min-h-[calc(100dvh-5rem)]'}
                             disabled={isSaving}
                             mode={viewMode}
                             onBlur={field.onBlur}

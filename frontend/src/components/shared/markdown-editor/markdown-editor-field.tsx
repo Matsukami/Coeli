@@ -6,6 +6,7 @@ import { lazy, Suspense, useImperativeHandle, useRef } from 'react';
 import type { TextareaRef } from '@/components/ui/textarea';
 
 import { Textarea } from '@/components/ui/textarea';
+import { useBreakpoint } from '@/hooks/use-breakpoint';
 import { cn } from '@/lib/utils';
 
 import type { MarkdownEditorHandle } from './markdown-editor';
@@ -79,9 +80,13 @@ export function MarkdownEditorField({
         [mode, onChange, disabled],
     );
 
-    // The editor fills its flex parent by default (every form embeds it in a `flex min-h-0 flex-col` column);
-    // applied FIRST so a consumer can override the height — e.g. a fixed `min-h-[…]` when it isn't in a flex box.
-    const boxClassName = cn('min-h-0 flex-1', className);
+    // The field owns its height so no consumer repeats it: it fills its flex parent on desktop (the split-view
+    // panes) and takes a near-viewport fixed height on mobile/tablet (the stacked forms, where it isn't inside a
+    // flex box). Keyed off the SAME breakpoint hook the surrounding layouts switch on so the two never disagree —
+    // a plain CSS media-query variant would drift from that JS breakpoint. `className` is last, so a consumer can
+    // still override the height.
+    const { isDesktop } = useBreakpoint();
+    const boxClassName = cn('flex-1', isDesktop ? 'min-h-0' : 'min-h-[calc(100dvh-5rem)]', className);
 
     if (mode === 'raw') {
         return (
