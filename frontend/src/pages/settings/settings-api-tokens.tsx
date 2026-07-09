@@ -371,7 +371,10 @@ function SettingsAPITokens() {
     const handleCreateNew = useCallback(() => {
         setCreatingToken(true);
         createForm.reset(CREATE_TOKEN_DEFAULTS);
-    }, [createForm]);
+        // The create row is prepended at data index 0, so an active filter or a non-first
+        // page would hide it. Clearing the filter also resets pageIndex to 0.
+        setFilter('');
+    }, [createForm, setFilter]);
 
     const handleCancelCreate = useCallback(() => {
         setCreatingToken(false);
