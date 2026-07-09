@@ -385,7 +385,7 @@ function Flow() {
                     >
                         <ResizablePanel
                             defaultSize="50%"
-                            minSize="30%"
+                            minSize={390}
                         >
                             <div className="flex h-[calc(100dvh-3rem)] max-w-full flex-col rounded-none border-0">
                                 <div className="flex-1 overflow-auto py-4 pr-0 pl-4">
@@ -398,7 +398,7 @@ function Flow() {
                         </ResizableHandle>
                         <ResizablePanel
                             defaultSize="50%"
-                            minSize="30%"
+                            minSize={390}
                         >
                             {tabsCard}
                         </ResizablePanel>
