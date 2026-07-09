@@ -21,8 +21,8 @@ export function DetailSplitLayout({
                 orientation="horizontal"
             >
                 <ResizablePanel
-                    defaultSize={45}
-                    minSize={30}
+                    defaultSize="45%"
+                    minSize="30%"
                 >
                     <div className="bg-card h-full min-h-0 overflow-y-auto">
                         <Card className="mx-auto min-h-full w-full max-w-2xl rounded-none border-0">
@@ -32,8 +32,8 @@ export function DetailSplitLayout({
                 </ResizablePanel>
                 <ResizableHandle withHandle />
                 <ResizablePanel
-                    defaultSize={55}
-                    minSize={30}
+                    defaultSize="55%"
+                    minSize="30%"
                 >
                     <div className={contentClassName}>{content}</div>
                 </ResizablePanel>
