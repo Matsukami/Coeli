@@ -335,8 +335,7 @@ function useTableHandles(editor: Editor): TableHandlesController {
         // A grip captured before a scroll, resize, or edit points at a now-shifted position: scroll/resize move it
         // off the table visually, and a doc edit shifts every position after it, so a menu action would resolve
         // the stale cellPos against the current doc (wrong row/column, or an out-of-bounds RangeError in the
-        // header selector). Drop the target in every case — it reappears on the next hover. (link/image handles
-        // already dismiss on resize; TableHandles missed it and its grips detached from the table on window resize.)
+        // header selector). Drop the target in every case — it reappears on the next hover.
         const scrollParent = getEditorScrollParent(dom);
 
         const dropStaleTarget = () => {

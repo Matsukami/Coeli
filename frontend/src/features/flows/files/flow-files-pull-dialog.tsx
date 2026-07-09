@@ -185,12 +185,6 @@ function FlowFilesPullDialogForm({ cachedFiles, flowId, onClose, onSuccess }: Fl
         },
     });
 
-    /**
-     * Drive the canonical "Pull / Pull with overwrite / Replace all" workflow
-     * from the shared hook. The hook owns conflict-state, race-fallback and
-     * close-on-success — this dialog just provides the plan (paths) and the
-     * three pure helpers (find / execute / synthesize).
-     */
     const overwriteAction = useOverwrite<readonly string[]>({
         execute: (paths, force) => pull(paths, force),
         findConflicts: (paths) => findPullConflicts(paths, cachedFiles),
@@ -285,8 +279,7 @@ function FlowFilesPullDialogForm({ cachedFiles, flowId, onClose, onSuccess }: Fl
     // the user is currently browsing. Non-empty selection wins and is mapped
     // back from the FileManager's name-keyed selection to absolute container
     // paths, then deduped so a folder + one of its descendants don't
-    // double-process. (Dedup is mostly defensive in this dialog because the
-    // listing is single-level, so descendants aren't visible.)
+    // double-process.
     const pullTargets = useMemo<readonly string[]>(() => {
         if (selectedPaths.size === 0) {
             return [currentPath];

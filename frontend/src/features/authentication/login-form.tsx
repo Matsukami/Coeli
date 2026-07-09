@@ -57,7 +57,7 @@ const providerActions: AuthProviderAction[] = [
 ];
 
 interface LoginFormProps {
-    providers: string[]; // OAuth providers: ['google', 'github']
+    providers: string[];
     returnUrl?: string;
 }
 
@@ -139,8 +139,6 @@ function LoginForm({ providers, returnUrl = routes.newFlow }: LoginFormProps) {
         }
     };
 
-    // If password change is required, show password change form.
-    // Also check isAuthenticated() to ensure the user has a valid session.
     // If the session expired and user refreshed the page, the old authInfo may still
     // be in memory (race condition between clearAuth() and navigate()), but we must
     // NOT show the password change form because:

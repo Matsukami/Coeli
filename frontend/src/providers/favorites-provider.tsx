@@ -60,9 +60,7 @@ export function FavoritesProvider({ children }: FavoritesProviderProps) {
         return ids.map((id) => +id);
     }, [userPreferencesData?.settingsUser?.favoriteFlows]);
 
-    // Surface the optimistic set so star-clicks flip in the UI before the
-    // mutation + subscription round-trip lands. React rolls back to
-    // `actualFavoriteFlowIds` automatically if the transition's action throws.
+    // React rolls back to `actualFavoriteFlowIds` automatically if the transition's action throws.
     const [favoriteFlowIds, applyOptimisticFavorite] = useOptimistic(
         actualFavoriteFlowIds,
         (current: number[], action: { id: number; type: 'add' | 'remove' }) => {

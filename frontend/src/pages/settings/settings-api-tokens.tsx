@@ -995,7 +995,4 @@ function SettingsAPITokens() {
     );
 }
 
-// Helper subcomponents so we can use useFormState/useWatch without subscribing
-// the whole table to every keystroke. Each watches its own form's validity.
-
 export default SettingsAPITokens;

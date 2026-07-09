@@ -56,7 +56,6 @@ describe('DataTable — controlled filter projection', () => {
             { wrapper: Wrapper },
         );
 
-        // The body shows only "Bravo" — Alpha and Charlie are filtered out.
         expect(screen.getByText('Bravo')).toBeInTheDocument();
         expect(screen.queryByText('Alpha')).not.toBeInTheDocument();
         expect(screen.queryByText('Charlie')).not.toBeInTheDocument();

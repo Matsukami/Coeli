@@ -45,8 +45,7 @@ const registerCJKFonts = (): void => {
     }
 
     // NotoSansSC covers Han, kana and Bopomofo but NOT Hangul, so Korean text
-    // still renders as missing-glyph boxes. Register NotoSansKR and route Hangul
-    // segments to it to support Korean.
+    // renders as missing-glyph boxes. TODO: register NotoSansKR and route Hangul segments to it.
     Font.register({
         family: 'NotoSansSC',
         fonts: [

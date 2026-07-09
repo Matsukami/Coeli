@@ -270,8 +270,7 @@ const ALWAYS = (): true => true;
 
 /**
  * Single DFS walker that powers all `collect*` helpers. Pure: returns a freshly
- * allocated array. Internally uses a private accumulator to avoid `concat`
- * allocations on deep trees, but the buffer is never exposed to callers.
+ * allocated array.
  */
 export const walkTree = (
     nodes: FileManagerInternalNode[],
@@ -361,7 +360,6 @@ export const collectDirectoryPaths = (nodes: FileManagerInternalNode[]): string[
         include: (node) => node.isDir,
     });
 
-/** Locale-aware case-insensitive name comparator. */
 const compareNames = (a: FileManagerInternalNode, b: FileManagerInternalNode): number =>
     a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' });
 
@@ -518,7 +516,6 @@ export const buildFileManagerGridTemplate = (showSize: boolean, showModified: bo
     return cols.join(' ');
 };
 
-/** Recursively locate a node by its absolute path. Returns `undefined` when missing. */
 export const findNodeByPath = (
     nodes: readonly FileManagerInternalNode[],
     path: string,
@@ -561,10 +558,8 @@ export const dedupeOverlappingPaths = (paths: Iterable<string>): string[] => {
     return result;
 };
 
-/** Clamp `value` into the inclusive `[min, max]` range. */
 export const clamp = (min: number, value: number, max: number): number => Math.max(min, Math.min(value, max));
 
-/** Translate `(isAllSelected, isSomeSelected)` into the tri-state value the Checkbox understands. */
 export const getCheckboxState = (isAllSelected: boolean, isSomeSelected: boolean): 'indeterminate' | boolean => {
     if (isAllSelected) {
         return true;

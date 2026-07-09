@@ -472,7 +472,6 @@ function SettingsProviders() {
             <div className="flex flex-1 flex-col gap-4 p-4">
                 <SettingsProvidersHeader />
 
-                {/* Delete Error Alert */}
                 {(deleteError || deleteErrorMessage) && (
                     <Alert variant="destructive">
                         <AlertCircle className="size-4" />

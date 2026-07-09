@@ -101,11 +101,9 @@ function PublicLoginLayout() {
     );
 }
 
-// Root layout for the data router. Everything that previously sat between
-// `<BrowserRouter>` and `<Routes>` (providers, Suspense) lives here so it has
-// access to router hooks (`useNavigate`, `useLocation`, ...) while still being
-// rendered under the data router. This is what enables `useBlocker` and other
-// data-router-only features inside our pages.
+// Providers + Suspense live inside the data router (not wrapping `RouterProvider`) so
+// they can use router hooks (`useNavigate`, `useLocation`) and enable `useBlocker` and
+// other data-router-only features inside our pages.
 function RootLayout() {
     return (
         <UserProvider>
@@ -133,9 +131,7 @@ const router = createBrowserRouter(
             element={<RootLayout />}
             errorElement={<RouteErrorBoundary />}
         >
-            {/* private routes */}
             <Route element={<ProtectedAppLayout />}>
-                {/* Main layout for chat pages */}
                 <Route element={<MainLayout />}>
                     <Route
                         element={<Dashboard />}
@@ -143,7 +139,6 @@ const router = createBrowserRouter(
                         path="dashboard"
                     />
 
-                    {/* Flows section with FlowsProvider */}
                     <Route element={<FlowsLayout />}>
                         <Route
                             element={<Flows />}
@@ -193,7 +188,6 @@ const router = createBrowserRouter(
                     />
                 </Route>
 
-                {/* Settings with nested routes */}
                 <Route
                     element={<SettingsLayout />}
                     path="settings"
@@ -250,14 +244,12 @@ const router = createBrowserRouter(
                 </Route>
             </Route>
 
-            {/* report routes */}
             <Route
                 element={<ProtectedReportLayout />}
                 handle={routeTitles.flowReport}
                 path="flows/:flowId/report"
             />
 
-            {/* public routes */}
             <Route
                 element={<PublicLoginLayout />}
                 handle={routeTitles.login}
@@ -270,7 +262,6 @@ const router = createBrowserRouter(
                 path="oauth/result"
             />
 
-            {/* other routes */}
             <Route
                 element={<Navigate to={routes.dashboard} />}
                 path="/"

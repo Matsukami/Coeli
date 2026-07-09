@@ -36,10 +36,7 @@ import { type Knowledge, useKnowledges } from '@/providers/knowledges-provider';
 import { useKnowledgeDetailNavigation } from './use-knowledge-detail-navigation';
 
 interface KnowledgeHeaderProps {
-    // Anonymize action — visible only to users with the `anonymize.call`
-    // privilege. The header itself renders both desktop button and mobile
-    // dropdown item from these primitives so the icon/loading state stay in
-    // sync between layouts.
+    // Anonymize action — visible only to users with the `anonymize.call` privilege.
     canAnonymize?: boolean;
     isAnonymizeDisabled?: boolean;
     isAnonymizing?: boolean;
@@ -91,8 +88,6 @@ export function KnowledgeHeader({
 
     const knowledgeId = knowledge?.id ?? null;
 
-    // Single controller drives both the desktop toolbar and the mobile
-    // dropdown row + sheet — no separate state mirroring required.
     const knowledgeNav = useKnowledgeDetailNavigation(knowledgeId);
 
     // Title source-of-truth is the server-side `question`. We intentionally do

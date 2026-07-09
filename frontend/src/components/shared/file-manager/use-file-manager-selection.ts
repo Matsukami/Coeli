@@ -78,8 +78,7 @@ export function useFileManagerSelection({
     // expand/collapse and tree-shape changes. Without this, `onRowClick` would
     // be re-created on every expansion (its deps include `flatVisible`) and
     // invalidate the `onClick` prop on every memoized row — kicking the entire
-    // tree into a re-render on the most common user gesture. Same pattern is
-    // already used in `use-file-manager-dnd` for `selectionRef`.
+    // tree into a re-render on the most common user gesture.
     const flatVisibleRef = useRef(flatVisible);
     const allSelectablePathsRef = useRef(allSelectablePaths);
     const dirSubtreePathsRef = useRef(dirSubtreePaths);

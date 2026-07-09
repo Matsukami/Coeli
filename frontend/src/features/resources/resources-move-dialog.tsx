@@ -147,8 +147,6 @@ function ResourcesMoveDialogForm({ files, onClose }: ResourcesMoveDialogFormProp
         form.reset({ destination: defaultDestination });
     }, [defaultDestination, form]);
 
-    // Lazy snapshot of every existing resource path. Recomputed only when the
-    // library changes; reused by `findConflicts` for the local preflight.
     const resourcePaths = useMemo(() => new Set(resources.map((resource) => resource.path)), [resources]);
     const sourcePaths = useMemo(() => new Set(files.map((file) => file.path)), [files]);
 

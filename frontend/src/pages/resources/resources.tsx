@@ -183,8 +183,6 @@ function Resources() {
 
     const fileNodes = useMemo<FileNode[]>(() => resources.map(toFileNode), [resources]);
 
-    // Snapshot of every existing path in the library — drives the local
-    // preflight for the drag-and-drop move workflow.
     const resourcePaths = useMemo(() => new Set(resources.map((resource) => resource.path)), [resources]);
 
     /**
@@ -243,12 +241,8 @@ function Resources() {
         toast.error('Failed to copy path');
     }, []);
 
-    /**
-     * Bulk "copy paths" handler: join every selected file's path with `\n` so the
-     * user can paste a clean newline-separated list straight into the agent chat,
-     * a shell command, or notes. Reports the count for clarity — silent failures
-     * confuse users when the clipboard happens to already contain the same text.
-     */
+    // Join the selected paths with `\n` so the result pastes as a clean
+    // newline-separated list into the agent chat, a shell command, or notes.
     const handleBulkCopyPaths = useCallback(async (paths: string[]) => {
         if (paths.length === 0) {
             return;

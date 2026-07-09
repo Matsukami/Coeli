@@ -44,9 +44,7 @@ const posOf = (editor: Editor, needle: string): number => {
 
 type EditResult = { heading: number; json: JSONContent; md: string; reloadHeading: number };
 
-// Fire ONE real transaction (appendTransaction runs only on transactions, never on construction) and snapshot
-// the outcome: the live heading count + doc JSON, the serialized markdown, and how many headings that markdown
-// reloads to (the round-trip check).
+// appendTransaction runs only on transactions, never on construction — so fire ONE real transaction.
 const run = (content: JSONContent | string, edit: (editor: Editor) => void): EditResult => {
     const editor = newEditor(content);
 

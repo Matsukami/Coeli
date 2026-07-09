@@ -491,7 +491,6 @@ function FlowAssistantMessages({ className }: FlowAssistantMessagesProps) {
         <div className={cn('flex h-full flex-col', className)}>
             <div className="bg-background sticky top-0 z-10 pb-4">
                 <div className="flex gap-2 p-px">
-                    {/* Assistant Dropdown */}
                     {flowId && (
                         <AssistantsDropdown
                             assistants={assistants}
@@ -504,7 +503,6 @@ function FlowAssistantMessages({ className }: FlowAssistantMessagesProps) {
                             selectedAssistantId={selectedAssistantId}
                         />
                     )}
-                    {/* Search Input */}
                     <div className="flex-1">
                         <Form {...form}>
                             <FormField

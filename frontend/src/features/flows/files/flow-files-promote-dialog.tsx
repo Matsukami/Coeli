@@ -164,8 +164,6 @@ function FlowFilesPromoteDialogForm({ files, flowId, onClose }: FlowFilesPromote
      */
     const overwriteAction = useOverwrite<PromotePlan>({
         execute: (plan, force) => promote(plan.sources, plan.destination, force),
-        // Local preflight against the resource library snapshot — flags the
-        // exact destinations already taken so the dialog can name them.
         findConflicts: (plan) => plan.targets.filter((t) => resourcePaths.has(t.destination)),
         onSuccess: onClose,
         // Race-fallback: backend doesn't return per-path conflict descriptors

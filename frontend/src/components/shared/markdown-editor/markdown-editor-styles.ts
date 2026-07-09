@@ -8,6 +8,5 @@ export const MARKDOWN_EDITOR_WRAPPER_CLASS =
 // stamps it on the contenteditable (markdown-editor.tsx) and with getEditorScrollParent below.
 export const EDITOR_CONTENT_CLASS = 'tiptap-content';
 
-// The scroll parent an editor overlay anchors to; falls back to window when the editor isn't inside a scroll box.
 export const getEditorScrollParent = (editorDom: Element): Element | Window =>
     editorDom.closest(`.${EDITOR_CONTENT_CLASS}`) ?? window;

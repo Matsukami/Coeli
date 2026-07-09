@@ -42,9 +42,6 @@ const ATOMS = [
 
 const WORDS = ['firewall', 'payload', 'exploit', 'nmap', 'recon', 'shell', 'token', 'vector'];
 
-// Block contexts that keep inline content literal: paragraph, heading, bullet item, ordered item,
-// blockquote, inline code. (Nested compositions — ordered>bullet>code, fence-in-fence — are exercised
-// separately below.)
 const wrap = (context: number, text: string): string => {
     switch (context) {
         case 1:

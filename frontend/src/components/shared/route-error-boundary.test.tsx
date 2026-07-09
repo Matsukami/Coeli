@@ -5,9 +5,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import RouteErrorBoundary from './route-error-boundary';
 
-// A loader that throws routes react-router to our `errorElement`, so
-// `useRouteError` inside the boundary receives exactly this value — the same
-// path a real chunk-load or render failure takes.
 const renderWithRouteError = (error: unknown) => {
     const router = createMemoryRouter(
         [

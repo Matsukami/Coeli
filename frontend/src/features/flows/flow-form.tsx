@@ -90,19 +90,14 @@ export function FlowForm({
     const [providerSearch, setProviderSearch] = useState('');
     const [templateSearch, setTemplateSearch] = useState('');
     const [resourceSearch, setResourceSearch] = useState('');
-    // Tracks which picker the combined dropdown is showing. Lifted to form
-    // state (instead of internal to the menu) so the tab choice survives
-    // re-renders triggered by `setTemplateSearch` / `setResourceSearch`
-    // inside the inner pickers.
+    // Lifted to form state so the tab choice survives re-renders triggered by
+    // `setTemplateSearch` / `setResourceSearch` inside the inner pickers.
     const [pickerTab, setPickerTab] = useState<'resources' | 'templates'>('templates');
 
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    // Resources are rendered as a hierarchy: alphabetical sort by full path
-    // produces the right ordering for siblings at every depth (parents before
-    // their descendants, peers in alphabetical order). Each row's nesting level
-    // is then derived from the slash count and rendered as a left indent so the
-    // user can visually trace files into their parent directories.
+    // Alphabetical sort by full path yields hierarchical order: parents before
+    // their descendants, peers alphabetically at every depth.
     const sortedResources = useMemo(
         () => [...resources].sort((a, b) => a.path.localeCompare(b.path, undefined, { sensitivity: 'base' })),
         [resources],
@@ -216,7 +211,6 @@ export function FlowForm({
 
         const currentValues = getValues();
 
-        // Update only fields that user hasn't manually changed and that differ from current values.
         // Arrays are compared shallowly so a new-but-identical `resourceIds` reference doesn't
         // trigger an unnecessary setValue (and the re-render it causes).
         Object.entries(defaultValues)
@@ -328,10 +322,6 @@ export function FlowForm({
         }
     }, [pendingTemplate, setValue]);
 
-    // Templates and resources share the same dropdown via tabs — both picker
-    // bodies are kept as render functions so each can be mounted directly
-    // inside its `<TabsContent>` without duplicating the search-input +
-    // scrolled-list layout.
     const renderTemplatePickerInner = () => (
         <>
             <DropdownMenuGroup className="-m-1 rounded-none p-0">
@@ -425,9 +415,8 @@ export function FlowForm({
                         const resourceId = String(resource.id);
                         const isSelected = resourceIds.includes(resourceId);
                         const Icon = resource.isDir ? Folder : FileText;
-                        // Depth derived from the path's slash count; ignored while a
-                        // search query is active so matches don't appear orphaned
-                        // beneath hidden ancestors.
+                        // Zeroed while a search query is active so matches don't appear
+                        // orphaned beneath hidden ancestors.
                         const depth = isResourceSearchActive ? 0 : resource.path.split('/').length - 1;
 
                         return (
@@ -699,11 +688,9 @@ export function FlowForm({
                                                 <Ellipsis className="shrink-0" />
                                             </InputGroupButton>
                                         </DropdownMenuTrigger>
-                                        {/* Single upward-opening dropdown for both Templates and Resources
-                                            on every viewport. Sub-menus would get clipped on the narrowest
-                                            screens (~390px), and a unified UI keeps the form simpler than
-                                            branching on `isMobile`. The tab strip is rendered last so it
-                                            lands closest to the trigger button. */}
+                                        {/* Sub-menus would get clipped on the narrowest screens (~390px), so
+                                            Templates and Resources share one upward-opening dropdown. The tab
+                                            strip is rendered last so it lands closest to the trigger button. */}
                                         <DropdownMenuContent
                                             align="end"
                                             className="w-72"

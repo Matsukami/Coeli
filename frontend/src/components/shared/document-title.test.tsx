@@ -18,7 +18,6 @@ describe('DocumentTitle', () => {
     it('renders APP_NAME when no matched route exposes a title handle', async () => {
         renderAt('/anywhere', [
             {
-                // No child route handle — DocumentTitle should fall back to APP_NAME only.
                 children: [{ element: <span>page</span>, path: 'anywhere' }],
                 element: (
                     <>
@@ -145,8 +144,6 @@ describe('DocumentTitle', () => {
     });
 
     it('treats an unmarked function as a plain resolver, not a component', async () => {
-        // Without the marker, DocumentTitle calls the function with params and
-        // wraps the returned string with the standard "X — PentAGI" template.
         const resolveTitle = (params: Record<string, string | undefined>) => `Item ${params.id}`;
 
         renderAt('/items/7', [
@@ -179,9 +176,8 @@ describe('DocumentTitle', () => {
             },
         ]);
 
-        // An empty string from the resolver is treated as "no title" — fall back
-        // to APP_NAME alone. This guards the route-level convention: pages that
-        // do not want a prefix can return '' instead of omitting the handle.
+        // Route-level convention: pages that don't want a title prefix return ''
+        // intentionally, rather than omitting the handle.
         await waitFor(() => expect(document.title).toBe('PentAGI'));
     });
 });

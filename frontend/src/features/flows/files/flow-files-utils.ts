@@ -21,8 +21,7 @@ export type FlowFile = FlowFileFragmentFragment;
 /**
  * Wire shape of `models.FlowFile` (REST JSON, snake_case). The internal
  * `FlowFile` alias mirrors the GraphQL camelCase fragment for use in the
- * FileManager UI. Current consumers of `FlowFilesResponse` only read
- * `files.length` and `files[0].name`, so no conversion helper is needed yet.
+ * FileManager UI.
  */
 export interface FlowFilesResponse {
     files: RestFlowFile[];

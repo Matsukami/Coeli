@@ -59,7 +59,7 @@ export function useBreakpoint() {
         };
 
         window.addEventListener('resize', handleResize);
-        handleResize(); // Check on mount
+        handleResize();
 
         return () => window.removeEventListener('resize', handleResize);
     }, [updateBreakpointState]);

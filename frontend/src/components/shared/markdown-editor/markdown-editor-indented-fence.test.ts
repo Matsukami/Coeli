@@ -17,8 +17,7 @@ const load = (md: string) => {
 
 // CommonMark allows a fenced code block's opening fence to be indented up to 3 spaces. Upstream
 // @tiptap/extension-code-block gated its parseMarkdown on `token.raw.startsWith('```')`, so an indented
-// fence (whose raw begins with that whitespace) was dropped on load — and when a document mixed fence
-// indents the mis-detection cascaded, silently deleting everything after the first dropped fence.
+// fence (whose raw begins with that whitespace) was dropped on load.
 describe('indented fenced code blocks survive load', () => {
     it('keeps a 3-space-indented fence and its content', () => {
         const { json, out } = load('intro paragraph\n\n   ```\ntail content KEEP\n```');

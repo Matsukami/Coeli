@@ -38,10 +38,6 @@ const deleteResourcesRequest = (paths: readonly string[]) =>
     api.delete<void>(`${RESOURCES_API_PATH}?${buildPathsQuery(paths)}`);
 
 /**
- * Owns both the single-resource and bulk-delete flows. The component drives the
- * confirmation dialog state through the returned `fileToDelete`/`requestDelete`/
- * `clearFileToDelete` triple, while the hook hides every API call and toast.
- *
  * No imperative refetch is performed: the GraphQL `resourceDeleted` subscription
  * is wired into the Apollo cache and removes the deleted entries automatically.
  */

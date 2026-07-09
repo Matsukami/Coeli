@@ -309,12 +309,6 @@ function DataTable<TData, TValue = unknown>({
     const isRowInteractive = !!onRowClick || !!renderSubComponent;
 
     const { pathname } = useLocation();
-    // Reuse the pathname we just read instead of letting the hook subscribe
-    // independently — react-router caches `useLocation` so the cost is
-    // negligible, but the explicit pass keeps the data flow obvious and
-    // makes it easy to migrate the table to a different storage scope (e.g.
-    // a workspace-prefixed path) without grepping for every subscription.
-    //
     // When `storageKey` is passed by the parent it wins — multi-table routes
     // (e.g. /settings/prompts) need distinct slots per instance, otherwise
     // their sorting / visibility / search-column narrowing alias and

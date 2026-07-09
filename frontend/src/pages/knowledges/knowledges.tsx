@@ -382,10 +382,7 @@ function Knowledges() {
             <AppHeaderActions>
                 <InputSearch
                     ariaLabel="Search knowledge documents"
-                    // Use Mod+K — Mod+F is reserved as the page-wide default
-                    // because we don't want to conflict with the browser's
-                    // own find-in-page on every screen, but this list is one
-                    // of the few that benefits from a dedicated shortcut.
+                    // Mod+K, not Mod+F — Mod+F collides with the browser's native find-in-page.
                     hotkey="k"
                     maxWidth={220}
                     onSearchChange={handleSemanticQueryChange}

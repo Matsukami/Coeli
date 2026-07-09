@@ -1608,7 +1608,6 @@ function SettingsProvider() {
                     </AccordionTrigger>
                     <AccordionContent className="flex flex-col gap-4 pt-4">
                         <div className="grid grid-cols-1 gap-4 p-px md:grid-cols-2">
-                            {/* Model field */}
                             <FormModelComboboxItem
                                 control={control}
                                 disabled={isLoading}
@@ -1637,7 +1636,6 @@ function SettingsProvider() {
                                 placeholder="Select or enter model name"
                             />
 
-                            {/* Temperature field */}
                             <FormInputNumberItem
                                 control={control}
                                 disabled={isLoading}
@@ -1649,7 +1647,6 @@ function SettingsProvider() {
                                 step="0.1"
                             />
 
-                            {/* Max Tokens field */}
                             <FormInputNumberItem
                                 control={control}
                                 disabled={isLoading}
@@ -1660,7 +1657,6 @@ function SettingsProvider() {
                                 valueType="integer"
                             />
 
-                            {/* Top P field */}
                             <FormInputNumberItem
                                 control={control}
                                 disabled={isLoading}
@@ -1672,7 +1668,6 @@ function SettingsProvider() {
                                 step="0.01"
                             />
 
-                            {/* Top K field */}
                             <FormInputNumberItem
                                 control={control}
                                 disabled={isLoading}
@@ -1683,7 +1678,6 @@ function SettingsProvider() {
                                 valueType="integer"
                             />
 
-                            {/* Min Length field */}
                             <FormInputNumberItem
                                 control={control}
                                 disabled={isLoading}
@@ -1694,7 +1688,6 @@ function SettingsProvider() {
                                 valueType="integer"
                             />
 
-                            {/* Max Length field */}
                             <FormInputNumberItem
                                 control={control}
                                 disabled={isLoading}
@@ -1705,7 +1698,6 @@ function SettingsProvider() {
                                 valueType="integer"
                             />
 
-                            {/* Repetition Penalty field */}
                             <FormInputNumberItem
                                 control={control}
                                 disabled={isLoading}
@@ -1717,7 +1709,6 @@ function SettingsProvider() {
                                 step="0.01"
                             />
 
-                            {/* Frequency Penalty field */}
                             <FormInputNumberItem
                                 control={control}
                                 disabled={isLoading}
@@ -1729,7 +1720,6 @@ function SettingsProvider() {
                                 step="0.01"
                             />
 
-                            {/* Presence Penalty field */}
                             <FormInputNumberItem
                                 control={control}
                                 disabled={isLoading}
@@ -1750,12 +1740,10 @@ function SettingsProvider() {
                             setValue={setValue}
                         />
 
-                        {/* Price Configuration */}
                         <div className="col-span-full p-px">
                             <div className="mt-6 flex flex-col gap-4">
                                 <h4 className="text-sm font-medium">Price Configuration</h4>
                                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                    {/* Price Input field */}
                                     <FormInputNumberItem
                                         control={control}
                                         description="Price per 1M input tokens"
@@ -1767,7 +1755,6 @@ function SettingsProvider() {
                                         step="0.000001"
                                     />
 
-                                    {/* Price Output field */}
                                     <FormInputNumberItem
                                         control={control}
                                         description="Price per 1M output tokens"
@@ -1779,7 +1766,6 @@ function SettingsProvider() {
                                         step="0.000001"
                                     />
 
-                                    {/* Cache Read Price field */}
                                     <FormInputNumberItem
                                         control={control}
                                         description="Price per 1M cached read tokens"
@@ -1791,7 +1777,6 @@ function SettingsProvider() {
                                         step="0.000001"
                                     />
 
-                                    {/* Cache Write Price field */}
                                     <FormInputNumberItem
                                         control={control}
                                         description="Price per 1M cache write tokens"

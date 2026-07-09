@@ -92,9 +92,6 @@ function Flow() {
     const [flowTitle, setOptimisticFlowTitle] = useOptimistic(actualFlowTitle, (_current, next: string) => next);
     const isFlowRunning = flow ? ![StatusType.Failed, StatusType.Finished].includes(flow.status) : false;
 
-    // Single controller drives the desktop toolbar AND the mobile dropdown
-    // row + sheet — Prev/Next, sheet open state, and the position label all
-    // live on one source of truth.
     const flowNav = useFlowDetailNavigation(flowId);
 
     const {
@@ -292,11 +289,8 @@ function Flow() {
                             >
                                 {isMobile && flowNav.total > 0 && (
                                     <>
-                                        {/* Single row that mirrors the desktop toolbar: label on
-                                                the left, prev / position / next button group on the
-                                                right. `onSelect={preventDefault}` stops the menu from
-                                                closing on label clicks; `<DetailNavigationButtons>`
-                                                owns its own click handlers and tooltips. */}
+                                        {/* onSelect={preventDefault} stops the Radix menu from closing on label
+                                                clicks; DetailNavigationButtons owns its own click handlers. */}
                                         <DropdownMenuItem
                                             className="cursor-default hover:bg-transparent focus:bg-transparent"
                                             onSelect={(event) => event.preventDefault()}

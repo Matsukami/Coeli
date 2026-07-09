@@ -2,9 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { normalizeImageSrc, normalizeLinkUrl } from './markdown-editor-toolbar-url';
 
-// normalizeImageSrc makes a scheme-less src absolute (https://) and validates the protocol before it is saved:
-// http(s) and base64 raster data: URLs pass through; data:image/svg+xml is rejected (SVG can carry script), as
-// are data:text/html, application/*, javascript:, vbscript:, and malformed input.
+// data:image/svg+xml is rejected because SVG can carry script — unlike raster data: URLs, which pass through.
 describe('normalizeImageSrc — prepend https to scheme-less src, validate protocol', () => {
     it.each([
         ['example.com/a.png', 'https://example.com/a.png'],
@@ -34,10 +32,8 @@ describe('normalizeImageSrc — prepend https to scheme-less src, validate proto
     });
 });
 
-// A manually-typed link must be made absolute — a scheme-less input like "example.com" would otherwise persist as
-// a relative href the browser resolves against the current origin. normalizeLinkUrl prepends https:// unless the
-// input already carries an allowed scheme, validates the protocol with no base URL, and returns null for
-// unsafe/malformed input. Already-schemed values pass through verbatim (case + query chars preserved).
+// A scheme-less input like "example.com" would otherwise persist as a relative href the browser resolves against
+// the current origin — normalizeLinkUrl prepends https:// to force it absolute.
 describe('normalizeLinkUrl — prepend https to scheme-less input, validate protocol', () => {
     it.each([
         ['example.com', 'https://example.com'],

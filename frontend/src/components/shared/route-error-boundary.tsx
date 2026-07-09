@@ -19,9 +19,6 @@ function RouteErrorBoundary() {
     const isDesync = isDomDesyncError(error);
 
     useEffect(() => {
-        // A stale code-split chunk and a transient DOM desync (e.g. an extension or
-        // auto-translation mutated the tree) both self-heal with a debounced reload;
-        // any other error stays on the card for the user to retry.
         if (isChunk || isDesync) {
             reloadOnce();
         }

@@ -24,7 +24,6 @@ describe('link handle popover key is stable while typing inside a link (LINK-REM
         editor.destroy();
 
         expect(before && after).toBeTruthy();
-        // The fix keys the popover on range.from alone: stable here, so the edit form is not remounted.
         expect(after!.from).toBe(before!.from);
         // range.to grew by the inserted char — the old `${from}-${to}` key would have remounted every keystroke.
         expect(after!.to).toBe(before!.to + 1);

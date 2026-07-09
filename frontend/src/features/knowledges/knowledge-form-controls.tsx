@@ -23,8 +23,6 @@ import type { FormValues } from './knowledge-form';
 
 import { KNOWLEDGE_LIMITS } from './knowledge-form';
 
-// `<Select>` option lists. Co-located with the controls they feed because no
-// other module needs them.
 const docTypeValues = [KnowledgeDocType.Answer, KnowledgeDocType.Guide, KnowledgeDocType.Code] as const;
 const guideTypeValues = Object.values(KnowledgeGuideType) as KnowledgeGuideTypeT[];
 const answerTypeValues = Object.values(KnowledgeAnswerType) as KnowledgeAnswerTypeT[];
@@ -70,7 +68,6 @@ const LANGUAGES = [
 
 interface KnowledgeContentFieldProps {
     control: Control<FormValues>;
-    /** When `true`, the editor stretches to fill its parent (desktop split view). */
     fillParent?: boolean;
     hasLabel?: boolean;
     isSaving: boolean;
@@ -120,13 +117,11 @@ export function KnowledgeContentField({
 
 export function KnowledgeMetaFields({ control, isNew, isSaving }: KnowledgeMetaFieldsProps) {
     // Targeted subscription: only this component re-renders when docType changes,
-    // not the whole form. The full-form `useWatch` from the original code
-    // re-rendered on every keystroke in the markdown editor.
+    // not the whole form. A full-form `useWatch` re-renders on every editor keystroke.
     const docType = useWatch({ control, name: 'docType' });
-    // `setValue` is used to clear subtype fields that no longer apply when the
-    // user switches docType. We do this synchronously inside `onValueChange`
-    // (rather than via `useEffect`) so that a fresh load of an existing
-    // document doesn't wipe its persisted subtype on first render.
+    // Clear no-longer-applicable subtype fields synchronously in `onValueChange`,
+    // not via `useEffect` — an effect keyed on docType would wipe an existing
+    // document's persisted subtype on first render.
     const { setValue } = useFormContext<FormValues>();
 
     const handleDocTypeChange = (next: KnowledgeDocType, fieldOnChange: (value: KnowledgeDocType) => void) => {
@@ -258,12 +253,7 @@ export function KnowledgeMetaFields({ control, isNew, isSaving }: KnowledgeMetaF
                         render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Code language</FormLabel>
-                                {/*
-                                 * `Autocomplete` is a free-text input with a
-                                 * suggestion popover — the backend accepts any
-                                 * string here, so the dropdown is a UX hint
-                                 * rather than a closed enum.
-                                 */}
+                                {/* Backend accepts any string — the dropdown is a UX hint, not a closed enum. */}
                                 <Autocomplete
                                     onValueChange={field.onChange}
                                     value={field.value ?? ''}

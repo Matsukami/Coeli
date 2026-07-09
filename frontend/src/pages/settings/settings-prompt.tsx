@@ -296,9 +296,6 @@ function SettingsPrompt() {
 
     const isLoading = isCreateLoading || isUpdateLoading || isDeleteLoading || isValidateLoading;
 
-    // The field's handle cycles/inserts in both raw and rich modes, so clicking a variable is mode-agnostic:
-    // jump to its next use, or insert `{{.Name}}` at the caret if it isn't used yet. `editorRef` points at the
-    // active tab's field (Radix unmounts the inactive tab), so this drives whichever prompt is on screen.
     const handleVariableClick = useCallback((variable: string) => {
         if (!editorRef.current?.selectNextUse(variable)) {
             editorRef.current?.insertAtCursor(`{{.${variable}}}`);

@@ -1,7 +1,6 @@
 import { getReturnUrlParam } from '@/lib/utils/auth';
 
-// Central definition of every client route path. Build URLs from here instead of hardcoding
-// strings, so a path lives in exactly one place and parameters are typed at the call site.
+// Build URLs from here instead of hardcoding route strings.
 
 function withQuery(path: string, params: Record<string, string | undefined>): string {
     const search = new URLSearchParams();

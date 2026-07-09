@@ -12,7 +12,6 @@ import { api, getApiErrorMessage, unwrapApiResponse } from '@/lib/axios';
 import { useUser } from '@/providers/user-provider';
 
 interface ResourcesContextValue {
-    /** Recursive list of every entry in the user's library (files + directories). */
     error: Error | null | undefined;
     /** Lookup helper: returns `undefined` when the resource is unknown. */
     getResource: (id: string) => undefined | UserResourceFragmentFragment;
@@ -20,6 +19,7 @@ interface ResourcesContextValue {
     isLoading: boolean;
     /** Force a network re-read of the resources list. */
     refetch: () => Promise<unknown>;
+    /** Recursive list of every entry in the user's library (files + directories). */
     resources: UserResourceFragmentFragment[];
 }
 
