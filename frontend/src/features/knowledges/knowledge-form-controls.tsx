@@ -96,6 +96,7 @@ export function KnowledgeContentField({
                     {hasLabel ? <FormLabel>Content</FormLabel> : null}
                     <FormControl>
                         <MarkdownEditorField
+                            aria-label="Content"
                             disabled={isSaving}
                             mode={viewMode}
                             onBlur={field.onBlur}

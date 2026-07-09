@@ -27,7 +27,7 @@ export interface MarkdownEditorFieldHandle {
     selectNextUse: (variable: string) => boolean;
 }
 
-interface MarkdownEditorFieldProps extends Pick<AriaAttributes, 'aria-describedby' | 'aria-invalid'> {
+interface MarkdownEditorFieldProps extends Pick<AriaAttributes, 'aria-describedby' | 'aria-invalid' | 'aria-label'> {
     className?: string;
     disabled?: boolean;
     id?: string;
@@ -42,6 +42,7 @@ interface MarkdownEditorFieldProps extends Pick<AriaAttributes, 'aria-describedb
 export function MarkdownEditorField({
     'aria-describedby': ariaDescribedby,
     'aria-invalid': ariaInvalid,
+    'aria-label': ariaLabel,
     className,
     disabled,
     id,
@@ -86,6 +87,7 @@ export function MarkdownEditorField({
             <Textarea
                 aria-describedby={ariaDescribedby}
                 aria-invalid={ariaInvalid}
+                aria-label={ariaLabel}
                 autoSize={false}
                 // Raw config is applied LAST so a consumer `className` can't override the byte-exact source styling.
                 className={cn(boxClassName, 'aria-invalid:border-destructive resize-none font-mono text-sm')}
@@ -107,6 +109,7 @@ export function MarkdownEditorField({
                     aria-busy="true"
                     aria-describedby={ariaDescribedby}
                     aria-invalid={ariaInvalid}
+                    aria-label={ariaLabel}
                     className={cn(
                         MARKDOWN_EDITOR_WRAPPER_CLASS,
                         'items-center justify-center',
@@ -122,6 +125,7 @@ export function MarkdownEditorField({
             <MarkdownEditor
                 aria-describedby={ariaDescribedby}
                 aria-invalid={ariaInvalid}
+                aria-label={ariaLabel}
                 className={boxClassName}
                 disabled={disabled}
                 id={id}

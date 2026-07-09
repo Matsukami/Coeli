@@ -93,6 +93,7 @@ const humanFormSchema = z.object({
 });
 
 interface FormMarkdownItemProps<T extends FieldValues> {
+    'aria-label'?: string;
     control: Control<T>;
     disabled?: boolean;
     editorRef?: Ref<MarkdownEditorFieldHandle>;
@@ -235,6 +236,7 @@ function DiffContent({ control, oldValue, styles }: DiffContentProps) {
 }
 
 function FormMarkdownItem<T extends FieldValues>({
+    'aria-label': ariaLabel,
     control,
     disabled,
     editorRef,
@@ -255,6 +257,7 @@ function FormMarkdownItem<T extends FieldValues>({
         <FormItem className="flex min-h-0 flex-1 flex-col">
             <FormControl>
                 <MarkdownEditorField
+                    aria-label={ariaLabel}
                     disabled={disabled}
                     mode={mode}
                     onBlur={field.onBlur}
@@ -848,6 +851,7 @@ function SettingsPrompt() {
                         onSubmit={systemForm.handleSubmit(handleSystemSubmit)}
                     >
                         <FormMarkdownItem
+                            aria-label="System prompt template"
                             control={systemForm.control}
                             disabled={isLoading}
                             editorRef={editorRef}
@@ -872,6 +876,7 @@ function SettingsPrompt() {
                             onSubmit={humanForm.handleSubmit(handleHumanSubmit)}
                         >
                             <FormMarkdownItem
+                                aria-label="Human prompt template"
                                 control={humanForm.control}
                                 disabled={isLoading}
                                 editorRef={editorRef}

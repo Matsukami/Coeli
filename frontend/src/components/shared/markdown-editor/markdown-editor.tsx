@@ -27,6 +27,7 @@ export interface MarkdownEditorHandle {
 interface MarkdownEditorProps {
     'aria-describedby'?: string;
     'aria-invalid'?: AriaAttributes['aria-invalid'];
+    'aria-label'?: AriaAttributes['aria-label'];
     className?: string;
     disabled?: boolean;
     id?: string;
@@ -36,7 +37,7 @@ interface MarkdownEditorProps {
     value: string;
 }
 
-interface UseMarkdownEditorOptions extends Pick<AriaAttributes, 'aria-describedby' | 'aria-invalid'> {
+interface UseMarkdownEditorOptions extends Pick<AriaAttributes, 'aria-describedby' | 'aria-invalid' | 'aria-label'> {
     disabled?: boolean;
     handleRef?: Ref<MarkdownEditorHandle>;
     id?: string;
@@ -85,6 +86,7 @@ export const resetUndoHistory = (editor: Editor): void => {
 function MarkdownEditor({
     'aria-describedby': ariaDescribedby,
     'aria-invalid': ariaInvalid,
+    'aria-label': ariaLabel,
     className,
     disabled,
     id,
@@ -97,6 +99,7 @@ function MarkdownEditor({
     const editor = useMarkdownEditor({
         'aria-describedby': ariaDescribedby,
         'aria-invalid': ariaInvalid,
+        'aria-label': ariaLabel,
         disabled,
         handleRef: ref,
         id,
@@ -154,6 +157,7 @@ function MarkdownEditor({
 function useMarkdownEditor({
     'aria-describedby': ariaDescribedby,
     'aria-invalid': ariaInvalid,
+    'aria-label': ariaLabel,
     disabled,
     handleRef,
     id,
@@ -317,6 +321,7 @@ function useMarkdownEditor({
         for (const [name, attribute] of Object.entries({
             'aria-describedby': ariaDescribedby,
             'aria-invalid': ariaInvalid,
+            'aria-label': ariaLabel,
             id,
         })) {
             if (attribute === undefined) {
@@ -325,7 +330,7 @@ function useMarkdownEditor({
                 dom.setAttribute(name, String(attribute));
             }
         }
-    }, [editor, ariaDescribedby, ariaInvalid, id]);
+    }, [editor, ariaDescribedby, ariaInvalid, ariaLabel, id]);
 
     return editor;
 }
