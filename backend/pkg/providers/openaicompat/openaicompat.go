@@ -60,6 +60,10 @@ func New(
 		openai.WithBaseURL(spec.ServerURL),
 		openai.WithHTTPClient(httpClient),
 	}
+	// Do NOT add openai.WithModernReasoningFormat() to these shared opts: DeepSeek's
+	// API requires the legacy top-level "reasoning_effort" string, which langchaingo
+	// emits only while ModernReasoningFormat is off (the default). The modern
+	// "reasoning":{} object form breaks DeepSeek thinking mode.
 	if spec.PreserveReasoning {
 		opts = append(opts, openai.WithPreserveReasoningContent())
 	}

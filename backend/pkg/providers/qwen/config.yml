@@ -16,7 +16,7 @@
 #   - preserve_thinking=true: keeps reasoning_content from previous assistant turns
 #     in subsequent requests. Supported ONLY by qwen3.7-max and qwen3.6-plus families.
 #     Required for agent loops with tool calls to preserve reasoning continuity.
-#     Works together with WithPreserveReasoningContent() in qwen.go.
+#     Works together with WithPreserveReasoningContent() in openaicompat.go.
 #   - qwen3-coder-* (coder, installer) are NOT hybrid thinking models — no thinking
 #     control needed.
 

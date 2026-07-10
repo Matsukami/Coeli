@@ -10,7 +10,7 @@
 # on the standard API endpoint Z.AI defaults to clearing reasoning_content between
 # turns, which hurts agent loops with tool calls. Setting clear_thinking=false
 # preserves reasoning_content across turns, improving reasoning continuity and cache
-# hit rates. Required together with WithPreserveReasoningContent() in glm.go so that
+# hit rates. Required together with WithPreserveReasoningContent() in openaicompat.go so that
 # langchaingo serializes reasoning_content back to the API.
 #
 # Note: langchaingo's IsReasoningModel matches glm-4.5/4.6/4.7 prefixes and force-
