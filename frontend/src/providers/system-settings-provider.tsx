@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 
 import { useQuery } from '@apollo/client/react';
-import { createContext, use } from 'react';
+import { createContext, use, useMemo } from 'react';
 
 import type { SettingsFragmentFragment } from '@/graphql/types';
 
@@ -22,16 +22,15 @@ export function SystemSettingsProvider({ children }: { children: ReactNode }) {
         skip: !isAuthenticated(),
     });
 
-    return (
-        <SystemSettingsContext
-            value={{
-                isLoading: loading,
-                settings: settingsData?.settings ?? null,
-            }}
-        >
-            {children}
-        </SystemSettingsContext>
+    const value = useMemo<SettingsContextType>(
+        () => ({
+            isLoading: loading,
+            settings: settingsData?.settings ?? null,
+        }),
+        [loading, settingsData?.settings],
     );
+
+    return <SystemSettingsContext value={value}>{children}</SystemSettingsContext>;
 }
 
 export function useSystemSettings() {

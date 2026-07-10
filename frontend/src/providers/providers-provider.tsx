@@ -1,5 +1,5 @@
 import { useQuery } from '@apollo/client/react';
-import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 import type { Provider } from '@/models/provider';
 
@@ -28,7 +28,7 @@ export function ProvidersProvider({ children }: ProvidersProviderProps) {
         skip: !isAuthenticated(),
     });
 
-    const providers = sortProviders(providersData?.providers || []);
+    const providers = useMemo(() => sortProviders(providersData?.providers || []), [providersData?.providers]);
 
     const [selectedProviderName, setSelectedProviderName] = useState<null | string>(() => {
         return localStorage.getItem(SELECTED_PROVIDER_KEY);
@@ -56,15 +56,18 @@ export function ProvidersProvider({ children }: ProvidersProviderProps) {
         }
     }, [selectedProvider]);
 
-    const setSelectedProvider = (provider: Provider) => {
+    const setSelectedProvider = useCallback((provider: Provider) => {
         setSelectedProviderName(provider.name);
-    };
+    }, []);
 
-    const value = {
-        providers,
-        selectedProvider,
-        setSelectedProvider,
-    };
+    const value = useMemo(
+        () => ({
+            providers,
+            selectedProvider,
+            setSelectedProvider,
+        }),
+        [providers, selectedProvider, setSelectedProvider],
+    );
 
     return <ProvidersContext.Provider value={value}>{children}</ProvidersContext.Provider>;
 }
