@@ -1,22 +1,13 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import Logo from '@/components/icons/logo';
 import { routes } from '@/lib/routes';
 
 function OAuthResult() {
     const [statusMessage, setStatusMessage] = useState('Authentication in progress...');
-    const messageRef = useRef(statusMessage);
-    const prevMessageRef = useRef(statusMessage);
 
     const successDelay = 2000;
     const errorDelay = 5000;
-
-    useLayoutEffect(() => {
-        if (prevMessageRef.current !== messageRef.current) {
-            setStatusMessage(messageRef.current);
-            prevMessageRef.current = messageRef.current;
-        }
-    }, []);
 
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
@@ -28,7 +19,7 @@ function OAuthResult() {
         let closeTimer: null | ReturnType<typeof setTimeout> = null;
 
         const updateMessage = (message: string) => {
-            messageRef.current = message;
+            setStatusMessage(message);
         };
 
         const handleClose = (delay: number) => {
