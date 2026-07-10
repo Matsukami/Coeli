@@ -129,6 +129,45 @@ func TestQueue_ProcessOrdering(t *testing.T) {
 	}
 }
 
+// A consumer that stops reading output (e.g. ListContainerDir bailing on the
+// first stat error) leaves workers blocked on the unbuffered send; Stop() must
+// still return instead of hanging on wg.Wait().
+func TestQueue_StopDoesNotDeadlockWithUnreadOutput(t *testing.T) {
+	input := make(chan int, 20)
+	output := make(chan int) // unbuffered; deliberately left unread below
+	workers := 4
+
+	q := queue.NewQueue(input, output, workers, func(i int) (int, error) {
+		return i, nil
+	})
+	if err := q.Start(); err != nil {
+		t.Fatalf("failed to start queue: %v", err)
+	}
+
+	for i := 0; i < 20; i++ {
+		input <- i
+	}
+	close(input)
+
+	<-output // take one result, then abandon the channel with items still in flight
+
+	done := make(chan error, 1)
+	go func() { done <- q.Stop() }()
+
+	select {
+	case err := <-done:
+		if err != nil {
+			t.Fatalf("Stop returned an error: %v", err)
+		}
+	case <-time.After(3 * time.Second):
+		t.Fatal("Stop() deadlocked with unread output")
+	}
+
+	if q.Running() {
+		t.Error("expected queue to be stopped")
+	}
+}
+
 func BenchmarkQueue_DefaultWorkers(b *testing.B) {
 	simpleBenchmark(b, 0)
 }

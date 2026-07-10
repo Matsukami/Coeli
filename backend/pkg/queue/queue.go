@@ -150,11 +150,24 @@ func (q *queue[I, O]) worker(wid int) {
 		} else if result, err := q.process(msg.value); err != nil {
 			logger.WithError(err).Error("failed to process message")
 		} else {
-			// wait until the previous message is sent to the output channel
-			<-msg.doneCtx.Done()
+			// Wait for the previous message to be sent (preserves output order),
+			// then send this one. Both waits also select on q.ctx so a stopped
+			// queue whose consumer quit reading output can't block the worker
+			// forever and deadlock Stop() -> wg.Wait(). On stop we return WITHOUT
+			// msg.cancel(): leaving the next message's doneCtx uncancelled makes
+			// every later worker bail via q.ctx too, so output ends at a contiguous
+			// prefix instead of developing gaps.
+			select {
+			case <-msg.doneCtx.Done():
+			case <-q.ctx.Done():
+				return
+			}
 
-			// send the converted events to the output channel
-			q.output <- result
+			select {
+			case q.output <- result:
+			case <-q.ctx.Done():
+				return
+			}
 		}
 
 		// close the context to mark this operation as complete
@@ -196,10 +209,17 @@ func (q *queue[I, O]) reader() {
 			// create a new context for each message
 			newCtx, cancel := context.WithCancel(context.Background())
 
-			q.queue <- &message[I]{
+			// select on q.ctx so a stopped queue whose workers have exited
+			// cannot block the reader forever on a full q.queue.
+			select {
+			case q.queue <- &message[I]{
 				value:   value,
 				doneCtx: lastDoneCtx,
 				cancel:  cancel,
+			}:
+			case <-q.ctx.Done():
+				cancel()
+				return
 			}
 
 			// update lastDoneCtx for next message
