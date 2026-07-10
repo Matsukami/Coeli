@@ -34,8 +34,14 @@ type queue[I any, O any] struct {
 	mx *sync.Mutex
 	wg *sync.WaitGroup
 
-	ctx    context.Context
-	cancel context.CancelFunc
+	// ctx tracks "running"; it is cancelled by Stop() AND by the reader on normal
+	// input-close. stopCtx is a HARD stop, cancelled only by Stop() — workers and
+	// the reader bail on stopCtx (not ctx) so a normal input-close still drains and
+	// delivers every result instead of dropping in-flight ones.
+	ctx        context.Context
+	cancel     context.CancelFunc
+	stopCtx    context.Context
+	stopCancel context.CancelFunc
 
 	instance uuid.UUID
 	workers  int
@@ -49,6 +55,8 @@ func NewQueue[I, O any](input <-chan I, output chan O, workers int, process func
 	mx, wg := &sync.Mutex{}, &sync.WaitGroup{}
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
+	stopCtx, stopCancel := context.WithCancel(context.Background())
+	stopCancel()
 
 	if workers <= 0 {
 		workers = defaultWorkersAmount
@@ -58,8 +66,10 @@ func NewQueue[I, O any](input <-chan I, output chan O, workers int, process func
 		mx: mx,
 		wg: wg,
 
-		ctx:    ctx,
-		cancel: cancel,
+		ctx:        ctx,
+		cancel:     cancel,
+		stopCtx:    stopCtx,
+		stopCancel: stopCancel,
 
 		instance: uuid.New(),
 		workers:  workers,
@@ -89,6 +99,7 @@ func (q *queue[I, O]) Start() error {
 	}
 
 	q.ctx, q.cancel = context.WithCancel(context.Background())
+	q.stopCtx, q.stopCancel = context.WithCancel(context.Background())
 	q.queue = make(chan *message[I], q.workers*2)
 
 	q.wg.Add(q.workers)
@@ -112,11 +123,14 @@ func (q *queue[I, O]) Start() error {
 func (q *queue[I, O]) Stop() error {
 	q.mx.Lock()
 
-	if q.ctx.Err() != nil {
+	// Guard on stopCtx, not ctx: a normal input-close already cancelled ctx, but
+	// the queue is not hard-stopped until Stop() runs.
+	if q.stopCtx.Err() != nil {
 		q.mx.Unlock()
 		return ErrAlreadyStopped
 	}
 
+	q.stopCancel()
 	q.cancel()
 	q.mx.Unlock()
 	q.wg.Wait()
@@ -150,22 +164,20 @@ func (q *queue[I, O]) worker(wid int) {
 		} else if result, err := q.process(msg.value); err != nil {
 			logger.WithError(err).Error("failed to process message")
 		} else {
-			// Wait for the previous message to be sent (preserves output order),
-			// then send this one. Both waits also select on q.ctx so a stopped
-			// queue whose consumer quit reading output can't block the worker
-			// forever and deadlock Stop() -> wg.Wait(). On stop we return WITHOUT
-			// msg.cancel(): leaving the next message's doneCtx uncancelled makes
-			// every later worker bail via q.ctx too, so output ends at a contiguous
-			// prefix instead of developing gaps.
+			// Bail only on a hard Stop() (q.stopCtx), never q.ctx — the reader
+			// cancels q.ctx on a NORMAL input-close, and bailing there would drop
+			// still-undelivered results. On a hard stop, return without msg.cancel()
+			// so later workers stay blocked on their doneCtx and bail too, keeping
+			// output a contiguous prefix.
 			select {
 			case <-msg.doneCtx.Done():
-			case <-q.ctx.Done():
+			case <-q.stopCtx.Done():
 				return
 			}
 
 			select {
 			case q.output <- result:
-			case <-q.ctx.Done():
+			case <-q.stopCtx.Done():
 				return
 			}
 		}
@@ -195,7 +207,7 @@ func (q *queue[I, O]) reader() {
 
 	for {
 		select {
-		case <-q.ctx.Done():
+		case <-q.stopCtx.Done():
 			return
 		case value, ok := <-q.input:
 			// check if the input channel is closed and exit if so
@@ -209,15 +221,15 @@ func (q *queue[I, O]) reader() {
 			// create a new context for each message
 			newCtx, cancel := context.WithCancel(context.Background())
 
-			// select on q.ctx so a stopped queue whose workers have exited
-			// cannot block the reader forever on a full q.queue.
+			// Bail only on a hard Stop() (q.stopCtx) so a stopped queue whose
+			// workers have exited can't block the reader on a full q.queue.
 			select {
 			case q.queue <- &message[I]{
 				value:   value,
 				doneCtx: lastDoneCtx,
 				cancel:  cancel,
 			}:
-			case <-q.ctx.Done():
+			case <-q.stopCtx.Done():
 				cancel()
 				return
 			}

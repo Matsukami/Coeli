@@ -129,12 +129,12 @@ func TestQueue_ProcessOrdering(t *testing.T) {
 	}
 }
 
-// A consumer that stops reading output (e.g. ListContainerDir bailing on the
-// first stat error) leaves workers blocked on the unbuffered send; Stop() must
-// still return instead of hanging on wg.Wait().
+// Stop() must return when the consumer stops reading output (e.g.
+// ListContainerDir bailing on a stat error), leaving workers blocked on the
+// send; otherwise wg.Wait() hangs.
 func TestQueue_StopDoesNotDeadlockWithUnreadOutput(t *testing.T) {
 	input := make(chan int, 20)
-	output := make(chan int) // unbuffered; deliberately left unread below
+	output := make(chan int)
 	workers := 4
 
 	q := queue.NewQueue(input, output, workers, func(i int) (int, error) {
@@ -149,22 +149,86 @@ func TestQueue_StopDoesNotDeadlockWithUnreadOutput(t *testing.T) {
 	}
 	close(input)
 
-	<-output // take one result, then abandon the channel with items still in flight
+	<-output // read one, then abandon output with items still in flight
 
 	done := make(chan error, 1)
 	go func() { done <- q.Stop() }()
 
 	select {
-	case err := <-done:
-		if err != nil {
-			t.Fatalf("Stop returned an error: %v", err)
-		}
+	case <-done:
 	case <-time.After(3 * time.Second):
 		t.Fatal("Stop() deadlocked with unread output")
 	}
 
 	if q.Running() {
 		t.Error("expected queue to be stopped")
+	}
+}
+
+// The ListContainerDir happy path: the consumer reads every result after input
+// closes. A normal input-close must not make workers drop in-flight results, or
+// the consumer waits forever for the last one.
+func TestQueue_DeliversEveryResultAfterInputClose(t *testing.T) {
+	const n = 200
+	input := make(chan int, n)
+	output := make(chan int) // unbuffered, like ListContainerDir's outputStats
+	for i := 0; i < n; i++ {
+		input <- i
+	}
+	close(input)
+
+	q := queue.NewQueue(input, output, 20, func(i int) (int, error) { return i, nil })
+	if err := q.Start(); err != nil {
+		t.Fatalf("failed to start queue: %v", err)
+	}
+
+	done := make(chan struct{})
+	go func() {
+		for i := 0; i < n; i++ {
+			<-output
+		}
+		close(done)
+	}()
+
+	select {
+	case <-done:
+	case <-time.After(5 * time.Second):
+		t.Fatal("consumer hung waiting for a result after input close")
+	}
+
+	_ = q.Stop()
+}
+
+// Small input closes before the consumer bails, so the reader reaches
+// input-close (which cancels ctx) first. Stop() must still hard-stop the
+// blocked workers instead of short-circuiting as "already stopped".
+func TestQueue_StopHardStopsAfterInputClose(t *testing.T) {
+	input := make(chan int, 4)
+	output := make(chan int)
+	for i := 0; i < 4; i++ {
+		input <- i
+	}
+	close(input)
+
+	q := queue.NewQueue(input, output, 4, func(i int) (int, error) { return i, nil })
+	if err := q.Start(); err != nil {
+		t.Fatalf("failed to start queue: %v", err)
+	}
+
+	<-output // read one, abandon the rest
+	for q.Running() {
+		time.Sleep(time.Millisecond) // wait until the reader processes input-close
+	}
+
+	done := make(chan error, 1)
+	go func() { done <- q.Stop() }()
+	select {
+	case err := <-done:
+		if err != nil {
+			t.Fatalf("Stop() short-circuited (%v) instead of hard-stopping blocked workers", err)
+		}
+	case <-time.After(3 * time.Second):
+		t.Fatal("Stop() hung after input close")
 	}
 }
 
