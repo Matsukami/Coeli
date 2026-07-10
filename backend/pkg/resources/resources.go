@@ -323,6 +323,15 @@ func CommitBlob(dataDir, hash, tmpPath string) error {
 // ZipResources writes a ZIP archive to w containing all entries in files.
 // Each ZipEntry maps a .blob file on disk to a path inside the archive.
 func ZipResources(w io.Writer, entries []ZipEntry) (err error) {
+	// The streaming HTTP caller commits its 200 status on the first byte written,
+	// so a missing blob must be caught before then, or the client gets a truncated
+	// archive under 200. Stat all blobs up front; don't fold into the write loop.
+	for _, e := range entries {
+		if _, statErr := os.Lstat(e.BlobPath); statErr != nil {
+			return fmt.Errorf("failed to stat blob %s: %w", e.BlobPath, statErr)
+		}
+	}
+
 	zw := zip.NewWriter(w)
 	defer func() {
 		if cerr := zw.Close(); err == nil {

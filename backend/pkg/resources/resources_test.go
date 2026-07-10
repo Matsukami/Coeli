@@ -251,6 +251,25 @@ func TestZipResourcesSkipsNonRegularBlobs(t *testing.T) {
 	assert.Empty(t, zr.File)
 }
 
+// The valid blob must come first: with the missing one first, even a per-entry
+// check errors before writing anything, so the empty-buffer assertion below would
+// pass regardless. Valid-first forces output unless the missing blob is caught up front.
+func TestZipResourcesFailsCleanlyOnMissingBlob(t *testing.T) {
+	dataDir := t.TempDir()
+	present := BlobPath(dataDir, md5Hex("alpha"))
+	require.NoError(t, os.MkdirAll(filepath.Dir(present), 0755))
+	require.NoError(t, os.WriteFile(present, []byte("alpha"), 0644))
+	missing := BlobPath(dataDir, md5Hex("ghost"))
+
+	var buf bytes.Buffer
+	err := ZipResources(&buf, []ZipEntry{
+		{BlobPath: present, ZipPath: "a.txt"},
+		{BlobPath: missing, ZipPath: "b.txt"},
+	})
+	require.Error(t, err)
+	assert.Empty(t, buf.Bytes(), "no bytes must be written when a blob is missing")
+}
+
 func TestZipDirectory(t *testing.T) {
 	src := t.TempDir()
 	require.NoError(t, os.MkdirAll(filepath.Join(src, "sub"), 0755))
