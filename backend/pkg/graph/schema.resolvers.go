@@ -767,6 +767,10 @@ func (r *mutationResolver) CreateAPIToken(ctx context.Context, input model.Creat
 		return nil, fmt.Errorf("invalid TTL: must be between 60 and 94608000 seconds")
 	}
 
+	if input.Name != nil && len(*input.Name) > maxAPITokenNameLen {
+		return nil, fmt.Errorf("token name must not exceed %d characters", maxAPITokenNameLen)
+	}
+
 	r.Logger.WithFields(logrus.Fields{
 		"uid":  uid,
 		"name": input.Name,
@@ -834,6 +838,10 @@ func (r *mutationResolver) UpdateAPIToken(ctx context.Context, tokenID string, i
 
 	if !isUserSession {
 		return nil, fmt.Errorf("unauthorized: non-user session is not allowed to update API tokens")
+	}
+
+	if input.Name != nil && len(*input.Name) > maxAPITokenNameLen {
+		return nil, fmt.Errorf("token name must not exceed %d characters", maxAPITokenNameLen)
 	}
 
 	r.Logger.WithFields(logrus.Fields{
@@ -1135,10 +1143,46 @@ func (r *mutationResolver) DeleteFlowTemplate(ctx context.Context, templateID in
 	return model.ResultTypeSuccess, nil
 }
 
+// Knowledge-document field limits. MUST stay in sync with the REST request models
+// (server/models/knowledge.go `validate` tags) and the frontend zod schema.
+const (
+	maxKnowledgeContentLen     = 65536
+	maxKnowledgeQuestionLen    = 2048
+	maxKnowledgeDescriptionLen = 1000
+	maxKnowledgeCodeLangLen    = 100
+)
+
+// maxAPITokenNameLen MUST stay in sync with the REST model (server/models/api_tokens.go
+// `validate` tag) and the frontend tokenNameSchema.
+const maxAPITokenNameLen = 100
+
+func validateKnowledgeFieldLengths(content string, question, description, codeLang *string) error {
+	if len(content) > maxKnowledgeContentLen {
+		return fmt.Errorf("content must not exceed %d characters", maxKnowledgeContentLen)
+	}
+	if question != nil && len(*question) > maxKnowledgeQuestionLen {
+		return fmt.Errorf("question must not exceed %d characters", maxKnowledgeQuestionLen)
+	}
+	if description != nil && len(*description) > maxKnowledgeDescriptionLen {
+		return fmt.Errorf("description must not exceed %d characters", maxKnowledgeDescriptionLen)
+	}
+	if codeLang != nil && len(*codeLang) > maxKnowledgeCodeLangLen {
+		return fmt.Errorf("code language must not exceed %d characters", maxKnowledgeCodeLangLen)
+	}
+	return nil
+}
+
 // CreateKnowledgeDocument is the resolver for the createKnowledgeDocument field.
 func (r *mutationResolver) CreateKnowledgeDocument(ctx context.Context, input model.CreateKnowledgeDocumentInput) (*model.KnowledgeDocument, error) {
 	uid, _, err := validatePermission(ctx, "knowledge.create")
 	if err != nil {
+		return nil, err
+	}
+
+	if input.Content == "" || input.Question == "" {
+		return nil, fmt.Errorf("content and question are required")
+	}
+	if err := validateKnowledgeFieldLengths(input.Content, &input.Question, input.Description, input.CodeLang); err != nil {
 		return nil, err
 	}
 
@@ -1154,6 +1198,13 @@ func (r *mutationResolver) CreateKnowledgeDocument(ctx context.Context, input mo
 func (r *mutationResolver) UpdateKnowledgeDocument(ctx context.Context, id string, input model.UpdateKnowledgeDocumentInput) (*model.KnowledgeDocument, error) {
 	uid, admin, err := validatePermission(ctx, "knowledge.edit")
 	if err != nil {
+		return nil, err
+	}
+
+	if input.Content == "" {
+		return nil, fmt.Errorf("content is required")
+	}
+	if err := validateKnowledgeFieldLengths(input.Content, input.Question, input.Description, input.CodeLang); err != nil {
 		return nil, err
 	}
 
