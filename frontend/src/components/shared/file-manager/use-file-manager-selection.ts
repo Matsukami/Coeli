@@ -39,7 +39,6 @@ interface UseFileManagerSelection {
      */
     onToggleSelection: (path: string, subtreePaths?: readonly string[]) => void;
     selectedPaths: Set<string>;
-    setSelection: (paths: Set<string>) => void;
     /** Toggle "select all": clears if everything was selected, otherwise picks every file. */
     toggleSelectAll: () => void;
 }
@@ -163,10 +162,6 @@ export function useFileManagerSelection({
         setRawSelectedPaths((prev) => (prev.size === 0 ? prev : new Set()));
     }, []);
 
-    const setSelection = useCallback((paths: Set<string>) => {
-        setRawSelectedPaths(paths);
-    }, []);
-
     return {
         clearSelection,
         isAllSelected,
@@ -174,7 +169,6 @@ export function useFileManagerSelection({
         onRowClick,
         onToggleSelection,
         selectedPaths,
-        setSelection,
         toggleSelectAll,
     };
 }

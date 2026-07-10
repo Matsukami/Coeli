@@ -83,9 +83,6 @@ export default defineConfig(({ mode }) => {
                         if (/[\\/]@react-pdf[\\/]/.test(id)) {
                             return 'pdf';
                         }
-                        if (/[\\/](monaco-editor|@monaco-editor[\\/]react)[\\/]/.test(id)) {
-                            return 'monaco';
-                        }
                         if (/[\\/](@tiptap|prosemirror-[a-z-]+)[\\/]/.test(id)) {
                             return 'tiptap';
                         }

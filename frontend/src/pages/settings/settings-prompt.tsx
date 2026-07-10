@@ -640,7 +640,6 @@ function SettingsPrompt() {
         onSave: onSaveAndLeave,
     });
 
-    const isNew = promptId === 'new';
     const hasOverride =
         (activeTab === 'system' && !!promptInfo?.userSystemPrompt) ||
         (activeTab === 'human' && !!promptInfo?.userHumanPrompt);
@@ -648,9 +647,7 @@ function SettingsPrompt() {
     const pageHeader = (
         <AppHeader>
             <AppHeaderContent>
-                <AppHeaderTitle icon={<FileText className="size-4 shrink-0" />}>
-                    {isNew ? 'Create Prompt' : 'Edit Prompt'}
-                </AppHeaderTitle>
+                <AppHeaderTitle icon={<FileText className="size-4 shrink-0" />}>Edit Prompt</AppHeaderTitle>
             </AppHeaderContent>
             {promptInfo && (
                 <AppHeaderActions>
@@ -675,7 +672,7 @@ function SettingsPrompt() {
                         size="sm"
                         variant="secondary"
                     >
-                        {isNew ? 'Create' : 'Save'}
+                        Save
                     </FormSubmitButton>
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -782,7 +779,7 @@ function SettingsPrompt() {
     const promptMeta = (
         <>
             <div className="flex flex-col gap-2 text-center">
-                <h2 className="text-2xl font-semibold">{isNew ? 'Create a prompt' : 'Edit prompt'}</h2>
+                <h2 className="text-2xl font-semibold">Edit prompt</h2>
                 <p className="text-muted-foreground">
                     {promptInfo.type === 'agent'
                         ? 'Customize the templates this agent uses'
