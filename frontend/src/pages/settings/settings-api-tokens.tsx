@@ -62,7 +62,8 @@ import { baseUrl } from '@/models/api';
 
 type APIToken = ApiTokenFragmentFragment;
 
-const tokenNameSchema = z.string().trim().max(255, 'Token name must be 255 characters or less').default('');
+// 100 mirrors the backend cap (server/models/api_tokens.go + the createAPIToken/updateAPIToken resolvers).
+const tokenNameSchema = z.string().trim().max(100, 'Token name must be 100 characters or less').default('');
 
 const createTokenFormSchema = z.object({
     // Nullable in form input (the date picker starts empty); the refine gates
