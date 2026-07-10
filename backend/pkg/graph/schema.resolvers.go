@@ -101,6 +101,10 @@ func (r *mutationResolver) PutUserInput(ctx context.Context, flowID int64, input
 		return model.ResultTypeError, err
 	}
 
+	if input == "" {
+		return model.ResultTypeError, fmt.Errorf("user input is required")
+	}
+
 	fields := logrus.Fields{
 		"uid":  uid,
 		"flow": flowID,
@@ -241,6 +245,10 @@ func (r *mutationResolver) RenameFlow(ctx context.Context, flowID int64, title s
 		return model.ResultTypeError, err
 	}
 
+	if title == "" {
+		return model.ResultTypeError, fmt.Errorf("flow title is required")
+	}
+
 	r.Logger.WithFields(logrus.Fields{
 		"uid":   uid,
 		"flow":  flowID,
@@ -353,6 +361,10 @@ func (r *mutationResolver) CallAssistant(ctx context.Context, flowID int64, assi
 	uid, err := validatePermissionWithFlowID(ctx, "assistants.edit", flowID, r.DB)
 	if err != nil {
 		return model.ResultTypeError, err
+	}
+
+	if input == "" {
+		return model.ResultTypeError, fmt.Errorf("user input is required")
 	}
 
 	r.Logger.WithFields(logrus.Fields{
