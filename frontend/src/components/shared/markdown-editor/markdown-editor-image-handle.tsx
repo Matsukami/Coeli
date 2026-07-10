@@ -16,9 +16,6 @@ interface ImageTarget {
     src: string;
 }
 
-// Shows the shared image editor anchored to the selected image. Clicking an image makes it a NodeSelection (it
-// never navigates), so `selection instanceof NodeSelection && node.type.name === 'image'` detects "an image is
-// selected". Overlay-only — it never mutates the doc until a form action runs (like TableHandles / LinkHandle).
 export function ImageHandle({ editor }: { editor: Editor }) {
     const { close, target } = useImageHandle(editor);
 

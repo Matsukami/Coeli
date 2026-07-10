@@ -14,14 +14,6 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
     }
 
     if (isAuthenticated()) {
-        // Only show password change form if the user is ACTUALLY authenticated
-        // with a valid, non-expired session. Do NOT rely solely on authInfo presence in
-        // memory, because clearAuth() is async and during race conditions (e.g., when
-        // session expires and user refreshes the page) the old authInfo may still be in
-        // state while localStorage is already cleared.
-        //
-        // Additional safety check: verify that authInfo.type is 'user', not 'guest'.
-        // If server returned guest status, we should NOT show password change form.
         if (
             authInfo?.user?.password_change_required &&
             authInfo?.type === 'user' &&

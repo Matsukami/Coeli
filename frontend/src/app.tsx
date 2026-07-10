@@ -231,7 +231,6 @@ const router = createBrowserRouter(
                         handle={routeTitles.apiTokens}
                         path="api-tokens"
                     />
-                    {/* Catch-all route for unknown settings paths */}
                     <Route
                         element={
                             <Navigate
