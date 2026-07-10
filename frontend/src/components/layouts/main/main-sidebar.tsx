@@ -150,7 +150,10 @@ export function MainSidebar() {
                                     className="data-[state=open]:bg-accent rounded-sm"
                                     showOnHover
                                 >
-                                    <Link to={routes.newFlow}>
+                                    <Link
+                                        aria-label="New flow"
+                                        to={routes.newFlow}
+                                    >
                                         <Plus />
                                     </Link>
                                 </SidebarMenuAction>
@@ -170,7 +173,10 @@ export function MainSidebar() {
                                     className="data-[state=open]:bg-accent rounded-sm"
                                     showOnHover
                                 >
-                                    <Link to={routes.newTemplate}>
+                                    <Link
+                                        aria-label="New template"
+                                        to={routes.newTemplate}
+                                    >
                                         <Plus />
                                     </Link>
                                 </SidebarMenuAction>
@@ -210,7 +216,10 @@ export function MainSidebar() {
                                     className="data-[state=open]:bg-accent rounded-sm"
                                     showOnHover
                                 >
-                                    <Link to={routes.newKnowledge}>
+                                    <Link
+                                        aria-label="New knowledge"
+                                        to={routes.newKnowledge}
+                                    >
                                         <Plus />
                                     </Link>
                                 </SidebarMenuAction>

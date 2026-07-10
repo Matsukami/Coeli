@@ -118,8 +118,10 @@ export function TableMenu({ columnAlign, disabled, editor, isActive, isHeaderRow
                             <DropdownMenuSubContent>
                                 {ALIGN_OPTIONS.map((option) => (
                                     <DropdownMenuItem
+                                        aria-checked={(columnAlign ?? 'left') === option.value}
                                         key={option.value}
                                         onSelect={() => setColumnAlign(editor, option.value)}
+                                        role="menuitemradio"
                                     >
                                         <option.icon className="text-muted-foreground size-4 shrink-0" />
                                         <span>{option.label}</span>

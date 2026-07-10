@@ -90,8 +90,10 @@ export function HeadingMenu({ activeLevel, disabled, editor }: HeadingMenuProps)
             >
                 {OPTIONS.map((option) => (
                     <DropdownMenuItem
+                        aria-checked={isSelected(option.value)}
                         key={option.value}
                         onSelect={() => applyOption(option.value)}
+                        role="menuitemradio"
                     >
                         <option.icon className={cn('text-muted-foreground size-4 shrink-0', option.iconClassName)} />
                         <span>{option.label}</span>
