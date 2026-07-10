@@ -32,6 +32,7 @@ const (
 	DefaultMetricTimeout  = time.Second * 10
 	DefaultTraceInterval  = time.Second * 30
 	DefaultTraceTimeout   = time.Second * 10
+	DefaultDialTimeout    = time.Second * 10
 )
 
 type TelemetryClient interface {
@@ -100,8 +101,13 @@ func NewTelemetryClient(ctx context.Context, cfg *config.Config) (TelemetryClien
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	}
 
+	// Bound the blocking dial so a set-but-unreachable collector can't hang
+	// startup forever (the signal context has no deadline).
+	dialCtx, cancel := context.WithTimeout(ctx, DefaultDialTimeout)
+	defer cancel()
+
 	conn, err := grpc.DialContext(
-		ctx,
+		dialCtx,
 		cfg.TelemetryEndpoint,
 		opts...,
 	)
