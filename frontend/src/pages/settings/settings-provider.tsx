@@ -1117,7 +1117,7 @@ function SettingsProvider() {
 
     const { control, formState, handleSubmit: handleFormSubmit, reset, setValue, trigger, watch } = form;
 
-    const { isDirty, isValid } = useFormState({ control });
+    const { isDirty } = useFormState({ control });
 
     useEffect(() => {
         if (submitError) {
@@ -1379,11 +1379,35 @@ function SettingsProvider() {
         return performSave();
     };
 
+    // Validity is only needed to gate the unsaved-changes dialog; subscribing to formState.isValid
+    // would make RHF re-run the whole zod schema on every keystroke. Validate lazily when the dialog opens.
+    const [isFormValid, setIsFormValid] = useState(true);
+
     const unsavedGuard = useUnsavedChangesGuard({
         isDirty,
-        isFormValid: isValid,
+        isFormValid,
         onSave: onSaveAndLeave,
     });
+
+    useEffect(() => {
+        if (!unsavedGuard.isOpen) {
+            return;
+        }
+
+        let cancelled = false;
+
+        void (async () => {
+            const valid = await trigger();
+
+            if (!cancelled) {
+                setIsFormValid(valid);
+            }
+        })();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [unsavedGuard.isOpen, trigger]);
 
     const handleSubmit = async () => {
         const saved = await performSave();
@@ -1890,7 +1914,7 @@ function SettingsProvider() {
             />
 
             <UnsavedChangesDialog
-                canSave={isValid}
+                canSave={isFormValid}
                 handleCancel={unsavedGuard.handleCancel}
                 handleDiscard={unsavedGuard.handleDiscard}
                 handleOpenChange={unsavedGuard.handleOpenChange}
