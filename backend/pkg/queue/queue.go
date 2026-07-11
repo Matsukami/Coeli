@@ -34,12 +34,12 @@ type queue[I any, O any] struct {
 	mx *sync.Mutex
 	wg *sync.WaitGroup
 
-	// ctx tracks "running"; it is cancelled by Stop() AND by the reader on normal
-	// input-close. stopCtx is a HARD stop, cancelled only by Stop() — workers and
-	// the reader bail on stopCtx (not ctx) so a normal input-close still drains and
-	// delivers every result instead of dropping in-flight ones.
-	ctx        context.Context
-	cancel     context.CancelFunc
+	// running is the liveness flag: true from Start() until the input closes OR
+	// Stop() runs. stopCtx is the ONLY cancellation signal — workers and the
+	// reader bail on it, and it is cancelled ONLY by Stop(). A normal input-close
+	// flips running without touching stopCtx, so the queue still drains and
+	// delivers every in-flight result rather than dropping them.
+	running    bool
 	stopCtx    context.Context
 	stopCancel context.CancelFunc
 
@@ -53,8 +53,6 @@ type queue[I any, O any] struct {
 
 func NewQueue[I, O any](input <-chan I, output chan O, workers int, process func(I) (O, error)) Queue {
 	mx, wg := &sync.Mutex{}, &sync.WaitGroup{}
-	ctx, cancel := context.WithCancel(context.Background())
-	cancel()
 	stopCtx, stopCancel := context.WithCancel(context.Background())
 	stopCancel()
 
@@ -66,8 +64,6 @@ func NewQueue[I, O any](input <-chan I, output chan O, workers int, process func
 		mx: mx,
 		wg: wg,
 
-		ctx:        ctx,
-		cancel:     cancel,
 		stopCtx:    stopCtx,
 		stopCancel: stopCancel,
 
@@ -87,18 +83,22 @@ func (q *queue[I, O]) Running() bool {
 	q.mx.Lock()
 	defer q.mx.Unlock()
 
-	return q.ctx.Err() == nil
+	return q.running
 }
 
 func (q *queue[I, O]) Start() error {
 	q.mx.Lock()
 	defer q.mx.Unlock()
 
-	if q.ctx.Err() == nil {
+	// stopCtx is live between Start() and Stop(); a normal input-close does NOT
+	// cancel it. So a live stopCtx means a previous run is still winding down and
+	// must be Stop()ped before restarting — this also prevents leaking the old
+	// workers/stopCtx onto the shared wg.
+	if q.stopCtx.Err() == nil {
 		return ErrAlreadyRunning
 	}
 
-	q.ctx, q.cancel = context.WithCancel(context.Background())
+	q.running = true
 	q.stopCtx, q.stopCancel = context.WithCancel(context.Background())
 	q.queue = make(chan *message[I], q.workers*2)
 
@@ -123,15 +123,13 @@ func (q *queue[I, O]) Start() error {
 func (q *queue[I, O]) Stop() error {
 	q.mx.Lock()
 
-	// Guard on stopCtx, not ctx: a normal input-close already cancelled ctx, but
-	// the queue is not hard-stopped until Stop() runs.
 	if q.stopCtx.Err() != nil {
 		q.mx.Unlock()
 		return ErrAlreadyStopped
 	}
 
 	q.stopCancel()
-	q.cancel()
+	q.running = false
 	q.mx.Unlock()
 	q.wg.Wait()
 
@@ -164,11 +162,9 @@ func (q *queue[I, O]) worker(wid int) {
 		} else if result, err := q.process(msg.value); err != nil {
 			logger.WithError(err).Error("failed to process message")
 		} else {
-			// Bail only on a hard Stop() (q.stopCtx), never q.ctx — the reader
-			// cancels q.ctx on a NORMAL input-close, and bailing there would drop
-			// still-undelivered results. On a hard stop, return without msg.cancel()
-			// so later workers stay blocked on their doneCtx and bail too, keeping
-			// output a contiguous prefix.
+			// On a hard stop, return WITHOUT msg.cancel() so later workers stay
+			// blocked on their doneCtx and bail too — output ends at a contiguous
+			// prefix, never with a gap.
 			select {
 			case <-msg.doneCtx.Done():
 			case <-q.stopCtx.Done():
@@ -210,10 +206,12 @@ func (q *queue[I, O]) reader() {
 		case <-q.stopCtx.Done():
 			return
 		case value, ok := <-q.input:
-			// check if the input channel is closed and exit if so
+			// input closed: stop reading and let the workers drain q.queue. This is
+			// NOT a hard stop, so stopCtx stays live and every queued result is
+			// still delivered.
 			if !ok {
 				q.mx.Lock()
-				q.cancel()
+				q.running = false
 				q.mx.Unlock()
 				return
 			}
@@ -221,8 +219,8 @@ func (q *queue[I, O]) reader() {
 			// create a new context for each message
 			newCtx, cancel := context.WithCancel(context.Background())
 
-			// Bail only on a hard Stop() (q.stopCtx) so a stopped queue whose
-			// workers have exited can't block the reader on a full q.queue.
+			// Bail only on a hard Stop() so a stopped queue whose workers have
+			// exited can't block the reader on a full q.queue.
 			select {
 			case q.queue <- &message[I]{
 				value:   value,
