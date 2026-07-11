@@ -102,6 +102,39 @@ func TestStatContainerEntries_RespectsConcurrencyLimit(t *testing.T) {
 	}
 }
 
+// A non-positive worker count must fall back to a safe bound rather than
+// deadlock (errgroup SetLimit(0)) or run unbounded (SetLimit(<0)).
+func TestStatContainerEntries_NonPositiveWorkersFallBack(t *testing.T) {
+	names := make([]string, 50)
+	for i := range names {
+		names[i] = fmt.Sprintf("e%d", i)
+	}
+	for _, workers := range []int{0, -1} {
+		t.Run(fmt.Sprintf("workers=%d", workers), func(t *testing.T) {
+			type out struct {
+				stats []container.PathStat
+				err   error
+			}
+			done := make(chan out, 1)
+			go func() {
+				stats, err := statContainerEntries(context.Background(), names, workers, okStat)
+				done <- out{stats, err}
+			}()
+			select {
+			case got := <-done:
+				if got.err != nil {
+					t.Fatalf("unexpected error: %v", got.err)
+				}
+				if len(got.stats) != len(names) {
+					t.Fatalf("got %d stats, want %d", len(got.stats), len(names))
+				}
+			case <-time.After(3 * time.Second):
+				t.Fatal("statContainerEntries hung with a non-positive worker count")
+			}
+		})
+	}
+}
+
 // The caller's context reaches each stat call, so a cancellation aborts them.
 func TestStatContainerEntries_ContextPropagates(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())

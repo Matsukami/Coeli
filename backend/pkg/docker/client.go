@@ -646,6 +646,13 @@ func statContainerEntries(
 	workers int,
 	statFn func(context.Context, string) (container.PathStat, error),
 ) ([]container.PathStat, error) {
+	// errgroup.SetLimit(0) blocks the first Go() forever and SetLimit(<0) runs
+	// unbounded; clamp a non-positive count to the standard bound so the pool
+	// never deadlocks or floods the Docker daemon.
+	if workers <= 0 {
+		workers = containerListWorkers
+	}
+
 	stats := make([]container.PathStat, len(names))
 	errs := make([]error, len(names))
 
