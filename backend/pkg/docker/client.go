@@ -14,7 +14,6 @@ import (
 
 	"pentagi/pkg/config"
 	"pentagi/pkg/database"
-	"pentagi/pkg/queue"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -26,6 +25,7 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
 	"github.com/sirupsen/logrus"
+	"golang.org/x/sync/errgroup"
 )
 
 const WorkFolderPathInContainer = "/work"
@@ -41,17 +41,6 @@ const (
 	limitContainerPortsNumber   = 2000
 	containerListWorkers        = 20
 )
-
-type containerPathStatRequest struct {
-	name string
-	path string
-}
-
-type containerPathStatResult struct {
-	name string
-	stat container.PathStat
-	err  error
-}
 
 type dockerClient struct {
 	db       database.Querier
@@ -637,39 +626,48 @@ func (dc *dockerClient) ListContainerDir(
 		names = append(names, name)
 	}
 
-	input := make(chan containerPathStatRequest, len(names))
-	outputStats := make(chan containerPathStatResult)
-	for _, name := range names {
-		input <- containerPathStatRequest{
-			name: name,
-			path: path.Join(dirPath, name),
-		}
-	}
-	close(input)
-
-	statQueue := queue.NewQueue(input, outputStats, containerListWorkers, func(req containerPathStatRequest) (containerPathStatResult, error) {
-		stat, err := dc.ContainerStatPath(ctx, containerID, req.path)
-
-		return containerPathStatResult{
-			name: req.name,
-			stat: stat,
-			err:  err,
-		}, nil
+	stats, err := statContainerEntries(ctx, names, containerListWorkers, func(ctx context.Context, name string) (container.PathStat, error) {
+		return dc.ContainerStatPath(ctx, containerID, path.Join(dirPath, name))
 	})
-	if err := statQueue.Start(); err != nil {
-		return nil, fmt.Errorf("failed to start container stat queue: %w", err)
+	if err != nil {
+		return nil, err
 	}
 
-	stats := make([]container.PathStat, 0, len(names))
-	for range names {
-		result := <-outputStats
-		if result.err != nil {
-			_ = statQueue.Stop()
-			return nil, fmt.Errorf("failed to stat container entry '%s': %w", result.name, result.err)
-		}
-		stats = append(stats, result.stat)
+	return stats, nil
+}
+
+// statContainerEntries stats every name concurrently, bounded to `workers`
+// in-flight calls, and returns the results in input order. It waits for all
+// stats before reporting, so the surfaced error is the lowest-index failure
+// deterministically — not whichever call happened to fail first.
+func statContainerEntries(
+	ctx context.Context,
+	names []string,
+	workers int,
+	statFn func(context.Context, string) (container.PathStat, error),
+) ([]container.PathStat, error) {
+	stats := make([]container.PathStat, len(names))
+	errs := make([]error, len(names))
+
+	var g errgroup.Group
+	g.SetLimit(workers)
+	for i, name := range names {
+		g.Go(func() error {
+			if stat, err := statFn(ctx, name); err != nil {
+				errs[i] = err
+			} else {
+				stats[i] = stat
+			}
+			return nil
+		})
 	}
-	_ = statQueue.Stop()
+	_ = g.Wait()
+
+	for i, name := range names {
+		if errs[i] != nil {
+			return nil, fmt.Errorf("failed to stat container entry '%s': %w", name, errs[i])
+		}
+	}
 
 	return stats, nil
 }
