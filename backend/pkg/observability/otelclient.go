@@ -117,6 +117,7 @@ func NewTelemetryClient(ctx context.Context, cfg *config.Config) (TelemetryClien
 
 	logExporter, err := otlploggrpc.New(ctx, otlploggrpc.WithGRPCConn(conn))
 	if err != nil {
+		_ = conn.Close()
 		return nil, fmt.Errorf("failed to create log exporter: %w", err)
 	}
 
@@ -132,6 +133,7 @@ func NewTelemetryClient(ctx context.Context, cfg *config.Config) (TelemetryClien
 
 	metricExporter, err := otlpmetricgrpc.New(ctx, otlpmetricgrpc.WithGRPCConn(conn))
 	if err != nil {
+		_ = conn.Close()
 		return nil, fmt.Errorf("failed to create metric exporter: %w", err)
 	}
 
@@ -148,6 +150,7 @@ func NewTelemetryClient(ctx context.Context, cfg *config.Config) (TelemetryClien
 
 	spanExporter, err := otlptracegrpc.New(ctx, otlptracegrpc.WithGRPCConn(conn))
 	if err != nil {
+		_ = conn.Close()
 		return nil, fmt.Errorf("failed to create tracer exporter: %w", err)
 	}
 
