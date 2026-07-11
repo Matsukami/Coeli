@@ -9,6 +9,8 @@ import (
 	"time"
 
 	"pentagi/pkg/queue"
+
+	"github.com/google/uuid"
 )
 
 // Inputs are 0..n-1 and process returns the value unchanged, so a correct queue
@@ -266,6 +268,68 @@ func TestQueue_DoubleStop(t *testing.T) {
 	if err := q.Stop(); !errors.Is(err, queue.ErrAlreadyStopped) {
 		t.Fatalf("stop2: want ErrAlreadyStopped, got %v", err)
 	}
+}
+
+// Non-positive workers must fall back to the default; otherwise zero workers
+// leave nothing to drain q.queue and delivery hangs.
+func TestQueue_DefaultWorkersWhenNonPositive(t *testing.T) {
+	for _, workers := range []int{0, -5} {
+		t.Run(fmt.Sprintf("workers=%d", workers), func(t *testing.T) {
+			const n = 20
+			input := make(chan int, n)
+			output := make(chan int)
+			for i := 0; i < n; i++ {
+				input <- i
+			}
+			close(input)
+
+			q := newIntQueue(input, output, workers)
+			if err := q.Start(); err != nil {
+				t.Fatalf("start: %v", err)
+			}
+			readPrefix(t, output, n, 5*time.Second)
+			mustStopWithin(t, q, 3*time.Second)
+		})
+	}
+}
+
+func TestQueue_InstanceStable(t *testing.T) {
+	input := make(chan int)
+	output := make(chan int)
+	q := newIntQueue(input, output, 2)
+	id := q.Instance()
+	if id == uuid.Nil {
+		t.Fatal("Instance() returned the nil UUID")
+	}
+	if q.Instance() != id {
+		t.Fatal("Instance() changed between calls")
+	}
+	if newIntQueue(input, output, 2).Instance() == id {
+		t.Fatal("two queues share an instance id")
+	}
+}
+
+// A nil process function is a misconfiguration: the worker logs and drops each
+// item rather than delivering or panicking, and Stop() still returns cleanly.
+func TestQueue_NilProcessDropsWithoutHang(t *testing.T) {
+	const n = 5
+	input := make(chan int, n)
+	output := make(chan int)
+	for i := 0; i < n; i++ {
+		input <- i
+	}
+	close(input)
+
+	q := queue.NewQueue[int, int](input, output, 3, nil)
+	if err := q.Start(); err != nil {
+		t.Fatalf("start: %v", err)
+	}
+	select {
+	case v := <-output:
+		t.Fatalf("nil process delivered %d; want nothing", v)
+	case <-time.After(500 * time.Millisecond):
+	}
+	mustStopWithin(t, q, 3*time.Second)
 }
 
 func TestQueue_RunningTransitions(t *testing.T) {
