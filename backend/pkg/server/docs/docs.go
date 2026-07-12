@@ -8374,6 +8374,10 @@ const docTemplate = `{
                 },
                 "total": {
                     "type": "integer"
+                },
+                "truncated": {
+                    "description": "Truncated is true when the directory held more entries than the listing cap\nand only the first page was returned.",
+                    "type": "boolean"
                 }
             }
         },

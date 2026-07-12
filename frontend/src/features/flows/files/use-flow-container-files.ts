@@ -36,6 +36,8 @@ interface UseFlowContainerFilesResult {
      * the dialog.
      */
     refetch: () => Promise<void>;
+    /** True when the directory had more entries than the cap and only the first page was returned. */
+    truncated: boolean;
 }
 
 /**
@@ -54,6 +56,7 @@ interface UseFlowContainerFilesResult {
 export function useFlowContainerFiles({ flowId, paths }: UseFlowContainerFilesParams): UseFlowContainerFilesResult {
     const [files, setFiles] = useState<FileNode[]>([]);
     const [failures, setFailures] = useState<ContainerFileFailure[]>([]);
+    const [truncated, setTruncated] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<Error | null>(null);
 
@@ -69,11 +72,18 @@ export function useFlowContainerFiles({ flowId, paths }: UseFlowContainerFilesPa
     // when the user drills in / out faster than the server can respond).
     const currentTokenRef = useRef(0);
 
+    // The path key of the last fetch. A fetch clears the visible listing only when
+    // the path actually changes, so an in-place refetch (Refresh / post-Pull) keeps
+    // the current rows under the loading guard instead of flashing a skeleton.
+    const lastPathsKeyRef = useRef<null | string>(null);
+
     const fetchListing = useCallback(async () => {
         if (!flowId || paths.length === 0) {
             currentTokenRef.current += 1;
+            lastPathsKeyRef.current = null;
             setFiles([]);
             setFailures([]);
+            setTruncated(false);
             setIsLoading(false);
             setError(null);
 
@@ -84,10 +94,17 @@ export function useFlowContainerFiles({ flowId, paths }: UseFlowContainerFilesPa
 
         setIsLoading(true);
         setError(null);
-        // Clear the previous directory's data so a pending navigation never shows
-        // the old listing / old failure banner attributed to the new breadcrumb.
-        setFiles([]);
-        setFailures([]);
+
+        // Only reset the listing when navigating to a different path, so a pending
+        // navigation never shows the old listing under the new breadcrumb — a
+        // same-path refetch keeps the current rows visible.
+        if (pathsKey !== lastPathsKeyRef.current) {
+            setFiles([]);
+            setFailures([]);
+            setTruncated(false);
+        }
+
+        lastPathsKeyRef.current = pathsKey;
 
         try {
             const url = `${FLOW_FILES_CONTAINER_API_PATH(flowId)}?${buildPathsQuery(paths)}`;
@@ -103,6 +120,7 @@ export function useFlowContainerFiles({ flowId, paths }: UseFlowContainerFilesPa
 
             setFiles(data.files.map(containerFileToFileNode));
             setFailures(data.failures ?? []);
+            setTruncated(data.truncated ?? false);
         } catch (caught) {
             if (token !== currentTokenRef.current) {
                 return;
@@ -111,12 +129,13 @@ export function useFlowContainerFiles({ flowId, paths }: UseFlowContainerFilesPa
             setError(new Error(getApiErrorMessage(caught, 'Failed to load container files')));
             setFiles([]);
             setFailures([]);
+            setTruncated(false);
         } finally {
             if (token === currentTokenRef.current) {
                 setIsLoading(false);
             }
         }
-    }, [flowId, paths]);
+    }, [flowId, paths, pathsKey]);
 
     useEffect(() => {
         // fetchListing is an async callback that handles its own loading state via setState
@@ -135,5 +154,6 @@ export function useFlowContainerFiles({ flowId, paths }: UseFlowContainerFilesPa
         files,
         isLoading,
         refetch: fetchListing,
+        truncated,
     };
 }

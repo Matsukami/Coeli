@@ -102,3 +102,33 @@ func TestGetFlowContainerFiles_PathNeverInBothArrays(t *testing.T) {
 			"order %q: /work/x must NOT also be in Failures", order)
 	}
 }
+
+// A live container whose entries all fail to stat degrades to a 200 partial
+// listing (empty files, entries in Failures), not a 500.
+func TestGetFlowContainerFiles_AllEntriesFailedStillReturns200(t *testing.T) {
+	fake := &fakeDockerClient{running: true}
+	fake.statPathMap = map[string]container.PathStat{"/work": {Mode: os.ModeDir | 0755}}
+	fake.listDirMap = map[string][]container.PathStat{"/work": {}}
+	fake.listDirFailMap = map[string][]docker.ContainerEntryError{
+		"/work": {
+			{Name: "a", Path: "/work/a", Err: fmt.Errorf("stat: gone")},
+			{Name: "b", Path: "/work/b", Err: fmt.Errorf("stat: gone")},
+		},
+	}
+	code, resp := listContainerFiles(t, fake, "paths[]=/work")
+	require.Equal(t, http.StatusOK, *code)
+	assert.Empty(t, resp.Files)
+	assert.Len(t, resp.Failures, 2)
+}
+
+// A truncated listing surfaces Truncated so the UI can warn the user they are not
+// seeing every entry.
+func TestGetFlowContainerFiles_TruncatedFlagSurfaced(t *testing.T) {
+	fake := &fakeDockerClient{running: true}
+	fake.statPathMap = map[string]container.PathStat{"/big": {Mode: os.ModeDir | 0755}}
+	fake.listDirMap = map[string][]container.PathStat{"/big": {{Name: "f", Mode: 0644, Size: 1}}}
+	fake.listDirTruncated = map[string]bool{"/big": true}
+	code, resp := listContainerFiles(t, fake, "paths[]=/big")
+	require.Equal(t, http.StatusOK, *code)
+	assert.True(t, resp.Truncated)
+}

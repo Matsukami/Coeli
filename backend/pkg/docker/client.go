@@ -597,6 +597,9 @@ type ContainerEntryError struct {
 type ContainerDirListing struct {
 	Files    []container.PathStat
 	Failures []ContainerEntryError
+	// Truncated is set when the directory held more than maxListEntries children
+	// and only the first maxListEntries were listed.
+	Truncated bool
 }
 
 func (dc *dockerClient) ListContainerDir(
@@ -660,25 +663,27 @@ func (dc *dockerClient) ListContainerDir(
 		entryPaths = append(entryPaths, tok)
 	}
 
+	// Over the cap, list the first maxListEntries and flag the truncation rather
+	// than failing the whole listing — the caller reports the partiality.
+	truncated := false
 	if len(entryPaths) > maxListEntries {
-		return ContainerDirListing{}, fmt.Errorf("container directory '%s' has too many entries (%d, limit %d) — narrow the path", dirPath, len(entryPaths), maxListEntries)
+		entryPaths = entryPaths[:maxListEntries]
+		truncated = true
 	}
 
 	stats, failures := statContainerEntries(ctx, entryPaths, containerListWorkers, func(ctx context.Context, entryPath string) (container.PathStat, error) {
 		return dc.ContainerStatPath(ctx, containerID, entryPath)
 	})
 
-	// A cancelled context, or a listing where every entry failed, is a directory-
-	// level fault (client gone, or the container/daemon died mid fan-out) — not a
-	// partial listing. Surface it as an error rather than a misleading empty 200.
+	// A cancelled context is a directory-level fault (the client is gone), not a
+	// partial listing, so surface it as an error. Entries that individually failed
+	// to stat are carried in Failures — the find exec already proved the container
+	// alive, so a live directory degrades rather than 500s even if every entry failed.
 	if err := ctx.Err(); err != nil {
 		return ContainerDirListing{}, fmt.Errorf("listing container directory '%s': %w", dirPath, err)
 	}
-	if len(entryPaths) > 0 && len(stats) == 0 {
-		return ContainerDirListing{}, fmt.Errorf("failed to read any of the %d entries in container directory '%s' (container may be gone): %w", len(entryPaths), dirPath, failures[0].err)
-	}
 
-	listing := ContainerDirListing{Files: stats}
+	listing := ContainerDirListing{Files: stats, Truncated: truncated}
 	for _, f := range failures {
 		listing.Failures = append(listing.Failures, ContainerEntryError{
 			Name: path.Base(f.name),

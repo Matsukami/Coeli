@@ -968,11 +968,12 @@ type fakeDockerClient struct {
 
 	// Per-path overrides for multi-path tests; take precedence over the
 	// single-value fields above when the queried path has an entry here.
-	statPathMap    map[string]container.PathStat
-	statPathErrMap map[string]error
-	listDirMap     map[string][]container.PathStat
-	listDirFailMap map[string][]docker.ContainerEntryError
-	listDirErrMap  map[string]error
+	statPathMap      map[string]container.PathStat
+	statPathErrMap   map[string]error
+	listDirMap       map[string][]container.PathStat
+	listDirFailMap   map[string][]docker.ContainerEntryError
+	listDirErrMap    map[string]error
+	listDirTruncated map[string]bool
 
 	// CopyFromContainer behaviour.
 	copyFromBody    []byte
@@ -1058,12 +1059,12 @@ func (f *fakeDockerClient) ListContainerDir(_ context.Context, _ string, p strin
 	}
 	if f.listDirFailMap != nil {
 		if fails, ok := f.listDirFailMap[p]; ok {
-			return docker.ContainerDirListing{Files: f.listDirMap[p], Failures: fails}, nil
+			return docker.ContainerDirListing{Files: f.listDirMap[p], Failures: fails, Truncated: f.listDirTruncated[p]}, nil
 		}
 	}
 	if f.listDirMap != nil {
 		if dir, ok := f.listDirMap[p]; ok {
-			return docker.ContainerDirListing{Files: dir}, nil
+			return docker.ContainerDirListing{Files: dir, Truncated: f.listDirTruncated[p]}, nil
 		}
 	}
 	return docker.ContainerDirListing{Files: f.listDir}, f.listDirErr

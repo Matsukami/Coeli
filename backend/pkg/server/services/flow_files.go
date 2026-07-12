@@ -987,6 +987,7 @@ func (s *FlowFileService) GetFlowContainerFiles(c *gin.Context) {
 	// EVERY path fails at the directory level, nothing could be listed and the
 	// request is failed as a whole (checked after the loop).
 	pathsListed := 0
+	truncated := false
 	var firstPathErr error
 	recordPathFailure := func(p string, err error) {
 		if firstPathErr == nil {
@@ -1035,6 +1036,9 @@ func (s *FlowFileService) GetFlowContainerFiles(c *gin.Context) {
 			continue
 		}
 		pathsListed++
+		if listing.Truncated {
+			truncated = true
+		}
 		for _, stat := range listing.Files {
 			file := convertContainerFile(containerPath, stat)
 			if _, seen := seenPaths[file.Path]; !seen {
@@ -1128,10 +1132,11 @@ func (s *FlowFileService) GetFlowContainerFiles(c *gin.Context) {
 	}
 
 	response.Success(c, http.StatusOK, models.ContainerFiles{
-		Path:     responsePath,
-		Files:    allFiles,
-		Failures: allFailures,
-		Total:    uint64(len(allFiles)),
+		Path:      responsePath,
+		Files:     allFiles,
+		Failures:  allFailures,
+		Total:     uint64(len(allFiles)),
+		Truncated: truncated,
 	})
 }
 

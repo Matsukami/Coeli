@@ -138,6 +138,7 @@ function FlowFilesPullDialogForm({ cachedFiles, flowId, onClose, onSuccess }: Fl
         files,
         isLoading: isListingLoading,
         refetch: refetchListing,
+        truncated: isListingTruncated,
     } = useFlowContainerFiles({ flowId, paths: listingPaths });
 
     /**
@@ -464,6 +465,17 @@ function FlowFilesPullDialogForm({ cachedFiles, flowId, onClose, onSuccess }: Fl
                                     .map((failure) => failure.name)
                                     .join(', ')}
                                 {listingFailures.length > 5 ? `, and ${listingFailures.length - 5} more` : ''}.
+                            </AlertDescription>
+                        </Alert>
+                    )}
+
+                    {isListingTruncated && (
+                        <Alert>
+                            <TriangleAlert />
+                            <AlertTitle>Directory truncated</AlertTitle>
+                            <AlertDescription>
+                                This directory has too many entries to list in full; only the first {files.length} are
+                                shown. Open a subfolder to see the rest.
                             </AlertDescription>
                         </Alert>
                     )}

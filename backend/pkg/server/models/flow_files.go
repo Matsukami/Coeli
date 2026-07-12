@@ -43,6 +43,9 @@ type ContainerFiles struct {
 	Files    []ContainerFile      `json:"files"`
 	Failures []ContainerFileError `json:"failures,omitempty"`
 	Total    uint64               `json:"total"`
+	// Truncated is true when the directory held more entries than the listing cap
+	// and only the first page was returned.
+	Truncated bool `json:"truncated,omitempty"`
 }
 
 // PullFlowFilesRequest is the request body for pulling files from a container.

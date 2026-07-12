@@ -21,6 +21,8 @@ export interface ContainerFilesResponse {
     files: RestContainerFile[];
     path: string;
     total: number;
+    /** True when the directory held more entries than the cap and only the first page was returned. */
+    truncated?: boolean;
 }
 
 export type FlowFile = FlowFileFragmentFragment;
