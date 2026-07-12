@@ -173,28 +173,13 @@ func main() {
 	select {
 	case <-ctx.Done():
 		logrus.Warn("Shutdown signal received, cleaning up resources...")
-		// ctx is already cancelled here, so drain telemetry on a fresh deadline.
-		// Flush before Shutdown: langfuse's Shutdown cancels without flushing, so its
-		// final batch drains only via Flush. The drain runs in a goroutine bounded by
-		// the select below because a provider Shutdown can ignore a spent context and
-		// block on its own — an unreachable collector must not stall process exit.
-		flushCtx, cancelFlush := context.WithTimeout(context.Background(), 5*time.Second)
-		drained := make(chan struct{})
-		go func() {
-			defer close(drained)
-			if err := obs.Observer.Flush(flushCtx); err != nil {
-				logrus.WithError(err).Warn("Telemetry flush incomplete")
-			}
-			if err := obs.Observer.Shutdown(flushCtx); err != nil {
-				logrus.WithError(err).Warn("Telemetry shutdown incomplete")
-			}
-		}()
-		select {
-		case <-drained:
-		case <-flushCtx.Done():
-			logrus.Warn("Telemetry cleanup exceeded its deadline")
+		// ctx is already cancelled here — drain telemetry on a fresh deadline so the
+		// final batch still reaches the collector before the process exits.
+		drainCtx, cancelDrain := context.WithTimeout(context.Background(), 5*time.Second)
+		if err := obs.Observer.Drain(drainCtx); err != nil {
+			logrus.WithError(err).Warn("Telemetry drain incomplete")
 		}
-		cancelFlush()
+		cancelDrain()
 	case err := <-serverErrChan:
 		logrus.Fatalf("Server terminated unexpectedly: %v", err)
 	}

@@ -46,6 +46,10 @@ const (
 	// so a hostile /work with hundreds of thousands of files can't fan out into
 	// that many Docker API calls per request.
 	maxListEntries = 10000
+	// maxListStdoutBytes bounds the exec stdout buffered before parsing so a
+	// compromised sandbox can't stream unbounded output into memory; sized as the
+	// entry cap × a generous per-path length (PATH_MAX).
+	maxListStdoutBytes = maxListEntries * 4096
 )
 
 type dockerClient struct {
@@ -709,6 +713,9 @@ func demuxExecStdout(r io.Reader) ([]byte, error) {
 		}
 		if _, err := io.CopyN(sink, r, size); err != nil {
 			return nil, err
+		}
+		if stdout.Len() > maxListStdoutBytes {
+			return nil, fmt.Errorf("listing output exceeded %d bytes", maxListStdoutBytes)
 		}
 	}
 	return stdout.Bytes(), nil

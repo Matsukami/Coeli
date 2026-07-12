@@ -25,6 +25,7 @@ import (
 	"pentagi/pkg/server/models"
 	"pentagi/pkg/server/response"
 	"pentagi/pkg/tools"
+	"pentagi/pkg/version"
 
 	"github.com/docker/docker/api/types/container"
 	"github.com/gin-gonic/gin"
@@ -968,6 +969,18 @@ func (s *FlowFileService) GetFlowContainerFiles(c *gin.Context) {
 	allFiles := make([]models.ContainerFile, 0)
 	allFailures := make([]models.ContainerFileError, 0)
 
+	// The client-facing failure Message is generic unless running in develop mode:
+	// the raw error carries docker-layer detail (container ids, the daemon address)
+	// that must not leave in an API body. rawFailureMessages keeps the unredacted
+	// text keyed by path for the server-side log only.
+	rawFailureMessages := make(map[string]string)
+	failureMessage := func(err error) string {
+		if version.IsDevelopMode() {
+			return err.Error()
+		}
+		return "entry could not be read"
+	}
+
 	// A directory-level failure on ONE path (nonexistent, not a directory, list
 	// command failed) records that path as a failure and keeps serving the paths
 	// that worked — only a cancelled request (client gone) aborts the response. If
@@ -983,10 +996,11 @@ func (s *FlowFileService) GetFlowContainerFiles(c *gin.Context) {
 			return
 		}
 		seenFailPaths[p] = struct{}{}
+		rawFailureMessages[p] = err.Error()
 		allFailures = append(allFailures, models.ContainerFileError{
 			Name:    path.Base(p),
 			Path:    p,
-			Message: err.Error(),
+			Message: failureMessage(err),
 		})
 	}
 
@@ -1029,19 +1043,15 @@ func (s *FlowFileService) GetFlowContainerFiles(c *gin.Context) {
 			}
 		}
 		for _, fe := range listing.Failures {
-			// If an overlapping path already read this entry successfully, keep the
-			// success and drop the contradictory failure.
-			if _, ok := seenPaths[fe.Path]; ok {
-				continue
-			}
 			if _, seen := seenFailPaths[fe.Path]; seen {
 				continue
 			}
 			seenFailPaths[fe.Path] = struct{}{}
+			rawFailureMessages[fe.Path] = fe.Err.Error()
 			allFailures = append(allFailures, models.ContainerFileError{
 				Name:    fe.Name,
 				Path:    fe.Path,
-				Message: fe.Err.Error(),
+				Message: failureMessage(fe.Err),
 			})
 		}
 	}
@@ -1052,6 +1062,19 @@ func (s *FlowFileService) GetFlowContainerFiles(c *gin.Context) {
 		logger.FromContext(c).WithError(firstPathErr).WithField("flow_id", flowID).Error("error listing container directory")
 		response.Error(c, response.ErrInternal, firstPathErr)
 		return
+	}
+
+	// A path read successfully by any query wins over a contradictory failure for
+	// the same path, regardless of the order the paths were processed, so the same
+	// path can never appear in both Files and Failures.
+	if len(allFailures) > 0 && len(seenPaths) > 0 {
+		kept := allFailures[:0]
+		for _, fe := range allFailures {
+			if _, ok := seenPaths[fe.Path]; !ok {
+				kept = append(kept, fe)
+			}
+		}
+		allFailures = kept
 	}
 
 	// Sort by name for deterministic output across all paths.
@@ -1094,7 +1117,7 @@ func (s *FlowFileService) GetFlowContainerFiles(c *gin.Context) {
 				"flow_id":    flowID,
 				"entry":      fe.Name,
 				"entry_path": fe.Path,
-				"error":      fe.Message,
+				"error":      rawFailureMessages[fe.Path],
 			}).Warn("container entry skipped: could not stat")
 		}
 		log.WithFields(map[string]any{
