@@ -201,27 +201,33 @@ func InitObserver(ctx context.Context, lfclient LangfuseClient, otelclient Telem
 }
 
 func (obs *observer) Flush(ctx context.Context) error {
+	var errs []error
 	if obs.lfclient != nil {
-		return obs.lfclient.ForceFlush(ctx)
+		if err := obs.lfclient.ForceFlush(ctx); err != nil {
+			errs = append(errs, err)
+		}
 	}
-
 	if obs.otelclient != nil {
-		return obs.otelclient.ForceFlush(ctx)
+		if err := obs.otelclient.ForceFlush(ctx); err != nil {
+			errs = append(errs, err)
+		}
 	}
-
-	return nil
+	return errors.Join(errs...)
 }
 
 func (obs *observer) Shutdown(ctx context.Context) error {
+	var errs []error
 	if obs.lfclient != nil {
-		return obs.lfclient.Shutdown(ctx)
+		if err := obs.lfclient.Shutdown(ctx); err != nil {
+			errs = append(errs, err)
+		}
 	}
-
 	if obs.otelclient != nil {
-		return obs.otelclient.Shutdown(ctx)
+		if err := obs.otelclient.Shutdown(ctx); err != nil {
+			errs = append(errs, err)
+		}
 	}
-
-	return nil
+	return errors.Join(errs...)
 }
 
 func (obs *observer) StartProcessMetricCollect(attrs ...attribute.KeyValue) error {

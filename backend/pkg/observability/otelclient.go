@@ -2,6 +2,7 @@ package observability
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -62,29 +63,36 @@ func (c *telemetryClient) Meter() otelmetric.MeterProvider {
 }
 
 func (c *telemetryClient) Shutdown(ctx context.Context) error {
+	var errs []error
 	if err := c.logger.Shutdown(ctx); err != nil {
-		return fmt.Errorf("failed to shutdown logger: %w", err)
+		errs = append(errs, fmt.Errorf("failed to shutdown logger: %w", err))
 	}
 	if err := c.meter.Shutdown(ctx); err != nil {
-		return fmt.Errorf("failed to shutdown meter: %w", err)
+		errs = append(errs, fmt.Errorf("failed to shutdown meter: %w", err))
 	}
 	if err := c.tracer.Shutdown(ctx); err != nil {
-		return fmt.Errorf("failed to shutdown tracer: %w", err)
+		errs = append(errs, fmt.Errorf("failed to shutdown tracer: %w", err))
 	}
-	return c.conn.Close()
+	// Always close the connection, even if a provider shutdown failed above, so a
+	// stalled flush can't leak the grpc conn.
+	if err := c.conn.Close(); err != nil {
+		errs = append(errs, fmt.Errorf("failed to close telemetry connection: %w", err))
+	}
+	return errors.Join(errs...)
 }
 
 func (c *telemetryClient) ForceFlush(ctx context.Context) error {
+	var errs []error
 	if err := c.logger.ForceFlush(ctx); err != nil {
-		return fmt.Errorf("failed to force flush logger: %w", err)
+		errs = append(errs, fmt.Errorf("failed to force flush logger: %w", err))
 	}
 	if err := c.meter.ForceFlush(ctx); err != nil {
-		return fmt.Errorf("failed to force flush meter: %w", err)
+		errs = append(errs, fmt.Errorf("failed to force flush meter: %w", err))
 	}
 	if err := c.tracer.ForceFlush(ctx); err != nil {
-		return fmt.Errorf("failed to force flush tracer: %w", err)
+		errs = append(errs, fmt.Errorf("failed to force flush tracer: %w", err))
 	}
-	return nil
+	return errors.Join(errs...)
 }
 
 func NewTelemetryClient(ctx context.Context, cfg *config.Config) (TelemetryClient, error) {
