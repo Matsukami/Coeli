@@ -65,7 +65,7 @@ type DockerClient interface {
 	ContainerExecAttach(ctx context.Context, execID string, config container.ExecAttachOptions) (types.HijackedResponse, error)
 	ContainerExecInspect(ctx context.Context, execID string) (container.ExecInspect, error)
 	ContainerStatPath(ctx context.Context, containerID string, path string) (container.PathStat, error)
-	ListContainerDir(ctx context.Context, containerID string, dirPath string) ([]container.PathStat, error)
+	ListContainerDir(ctx context.Context, containerID string, dirPath string) (ContainerDirListing, error)
 	CopyToContainer(ctx context.Context, containerID string, dstPath string, content io.Reader, options container.CopyToContainerOptions) error
 	CopyFromContainer(ctx context.Context, containerID string, srcPath string) (io.ReadCloser, container.PathStat, error)
 	Cleanup(ctx context.Context) error
@@ -570,21 +570,38 @@ func (dc *dockerClient) ContainerStatPath(
 	return dc.client.ContainerStatPath(ctx, containerID, path)
 }
 
+// ContainerEntryError is a directory entry that could not be stat'd during a
+// listing; the rest of the listing is still returned.
+type ContainerEntryError struct {
+	Name string
+	Path string
+	Err  error
+}
+
+// ContainerDirListing is the result of ListContainerDir: the entries that
+// stat'd successfully, plus per-entry failures. A directory-level fault (path
+// not a directory, ls failed, container gone) is returned as an error instead —
+// a single unreadable entry never blanks the whole listing.
+type ContainerDirListing struct {
+	Files    []container.PathStat
+	Failures []ContainerEntryError
+}
+
 func (dc *dockerClient) ListContainerDir(
 	ctx context.Context,
 	containerID string,
 	dirPath string,
-) ([]container.PathStat, error) {
+) (ContainerDirListing, error) {
 	if strings.TrimSpace(dirPath) == "" {
 		dirPath = WorkFolderPathInContainer
 	}
 
 	dirStat, err := dc.ContainerStatPath(ctx, containerID, dirPath)
 	if err != nil {
-		return nil, fmt.Errorf("failed to stat container path '%s': %w", dirPath, err)
+		return ContainerDirListing{}, fmt.Errorf("failed to stat container path '%s': %w", dirPath, err)
 	}
 	if !dirStat.Mode.IsDir() {
-		return nil, fmt.Errorf("container path '%s' is not a directory", dirPath)
+		return ContainerDirListing{}, fmt.Errorf("container path '%s' is not a directory", dirPath)
 	}
 
 	createResp, err := dc.ContainerExecCreate(ctx, containerID, container.ExecOptions{
@@ -594,27 +611,27 @@ func (dc *dockerClient) ListContainerDir(
 		Tty:          true,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("failed to create ls exec for '%s': %w", dirPath, err)
+		return ContainerDirListing{}, fmt.Errorf("failed to create ls exec for '%s': %w", dirPath, err)
 	}
 
 	resp, err := dc.ContainerExecAttach(ctx, createResp.ID, container.ExecAttachOptions{
 		Tty: true,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("failed to attach ls exec for '%s': %w", dirPath, err)
+		return ContainerDirListing{}, fmt.Errorf("failed to attach ls exec for '%s': %w", dirPath, err)
 	}
 	output, readErr := io.ReadAll(resp.Reader)
 	resp.Close()
 	if readErr != nil {
-		return nil, fmt.Errorf("failed to read ls output for '%s': %w", dirPath, readErr)
+		return ContainerDirListing{}, fmt.Errorf("failed to read ls output for '%s': %w", dirPath, readErr)
 	}
 
 	inspect, err := dc.ContainerExecInspect(ctx, createResp.ID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to inspect ls exec for '%s': %w", dirPath, err)
+		return ContainerDirListing{}, fmt.Errorf("failed to inspect ls exec for '%s': %w", dirPath, err)
 	}
 	if inspect.ExitCode != 0 {
-		return nil, fmt.Errorf("ls command failed for '%s' with exit code %d: %s", dirPath, inspect.ExitCode, string(output))
+		return ContainerDirListing{}, fmt.Errorf("ls command failed for '%s' with exit code %d: %s", dirPath, inspect.ExitCode, string(output))
 	}
 
 	names := make([]string, 0)
@@ -626,26 +643,37 @@ func (dc *dockerClient) ListContainerDir(
 		names = append(names, name)
 	}
 
-	stats, err := statContainerEntries(ctx, names, containerListWorkers, func(ctx context.Context, name string) (container.PathStat, error) {
+	stats, failures := statContainerEntries(ctx, names, containerListWorkers, func(ctx context.Context, name string) (container.PathStat, error) {
 		return dc.ContainerStatPath(ctx, containerID, path.Join(dirPath, name))
 	})
-	if err != nil {
-		return nil, err
+
+	listing := ContainerDirListing{Files: stats}
+	for _, f := range failures {
+		listing.Failures = append(listing.Failures, ContainerEntryError{
+			Name: f.name,
+			Path: path.Join(dirPath, f.name),
+			Err:  f.err,
+		})
 	}
 
-	return stats, nil
+	return listing, nil
+}
+
+type statFailure struct {
+	name string
+	err  error
 }
 
 // statContainerEntries stats every name concurrently, bounded to `workers`
-// in-flight calls, and returns the results in input order. It waits for all
-// stats before reporting, so the surfaced error is the lowest-index failure
-// deterministically — not whichever call happened to fail first.
+// in-flight calls. A per-entry stat error never aborts the batch: the successful
+// stats and the failures are both returned (in input order) so the caller can
+// serve a partial listing rather than discarding everything on one bad entry.
 func statContainerEntries(
 	ctx context.Context,
 	names []string,
 	workers int,
 	statFn func(context.Context, string) (container.PathStat, error),
-) ([]container.PathStat, error) {
+) ([]container.PathStat, []statFailure) {
 	// errgroup.SetLimit(0) blocks the first Go() forever and SetLimit(<0) runs
 	// unbounded; clamp a non-positive count to the standard bound so the pool
 	// never deadlocks or floods the Docker daemon.
@@ -670,13 +698,17 @@ func statContainerEntries(
 	}
 	_ = g.Wait()
 
+	oks := make([]container.PathStat, 0, len(names))
+	var failures []statFailure
 	for i, name := range names {
 		if errs[i] != nil {
-			return nil, fmt.Errorf("failed to stat container entry '%s': %w", name, errs[i])
+			failures = append(failures, statFailure{name: name, err: errs[i]})
+		} else {
+			oks = append(oks, stats[i])
 		}
 	}
 
-	return stats, nil
+	return oks, failures
 }
 
 func (dc *dockerClient) CopyToContainer(

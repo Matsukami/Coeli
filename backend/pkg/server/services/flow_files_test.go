@@ -971,6 +971,7 @@ type fakeDockerClient struct {
 	statPathMap    map[string]container.PathStat
 	statPathErrMap map[string]error
 	listDirMap     map[string][]container.PathStat
+	listDirFailMap map[string][]docker.ContainerEntryError
 	listDirErrMap  map[string]error
 
 	// CopyFromContainer behaviour.
@@ -1049,18 +1050,23 @@ func (f *fakeDockerClient) ContainerStatPath(_ context.Context, _ string, p stri
 	}
 	return f.statPath, f.statPathErr
 }
-func (f *fakeDockerClient) ListContainerDir(_ context.Context, _ string, p string) ([]container.PathStat, error) {
+func (f *fakeDockerClient) ListContainerDir(_ context.Context, _ string, p string) (docker.ContainerDirListing, error) {
 	if f.listDirErrMap != nil {
 		if err, ok := f.listDirErrMap[p]; ok {
-			return nil, err
+			return docker.ContainerDirListing{}, err
+		}
+	}
+	if f.listDirFailMap != nil {
+		if fails, ok := f.listDirFailMap[p]; ok {
+			return docker.ContainerDirListing{Files: f.listDirMap[p], Failures: fails}, nil
 		}
 	}
 	if f.listDirMap != nil {
 		if dir, ok := f.listDirMap[p]; ok {
-			return dir, nil
+			return docker.ContainerDirListing{Files: dir}, nil
 		}
 	}
-	return f.listDir, f.listDirErr
+	return docker.ContainerDirListing{Files: f.listDir}, f.listDirErr
 }
 func (f *fakeDockerClient) CopyToContainer(_ context.Context, containerID string, dstPath string, content io.Reader, options container.CopyToContainerOptions) error {
 	body, _ := io.ReadAll(content)
@@ -3012,19 +3018,20 @@ func TestFlowFileService_PullFlowFilesScenarios(t *testing.T) {
 
 func TestFlowFileService_GetFlowContainerFilesScenarios(t *testing.T) {
 	tests := []struct {
-		name           string
-		flowOwner      uint64
-		uid            uint64
-		flowID         uint64
-		privs          []string
-		queryPath      string // builds ?path=<value>
-		rawQuery       string // when set, used verbatim as query string (overrides queryPath)
-		dockerSetup    func(*fakeDockerClient)
-		dockerNil      bool
-		wantStatus     int
-		wantPathInResp string
-		wantFileNames  []string // expected file names in sorted order (nil = don't check)
-		wantTotal      uint64   // > 0: verify response Total
+		name             string
+		flowOwner        uint64
+		uid              uint64
+		flowID           uint64
+		privs            []string
+		queryPath        string // builds ?path=<value>
+		rawQuery         string // when set, used verbatim as query string (overrides queryPath)
+		dockerSetup      func(*fakeDockerClient)
+		dockerNil        bool
+		wantStatus       int
+		wantPathInResp   string
+		wantFileNames    []string // expected file names in sorted order (nil = don't check)
+		wantTotal        uint64   // > 0: verify response Total
+		wantFailureNames []string // expected Failures[].Name (nil = don't check)
 	}{
 		// ── single-path: existing behaviour (backward compatibility) ──────────
 		{
@@ -3165,6 +3172,36 @@ func TestFlowFileService_GetFlowContainerFilesScenarios(t *testing.T) {
 			wantStatus:     http.StatusOK,
 			wantPathInResp: "/etc",
 			wantFileNames:  []string{"passwd"},
+		},
+		{
+			// A per-entry stat failure (dangling symlink, a file removed
+			// mid-listing, a transient /proc pid) must degrade to a partial
+			// listing — HTTP 200 with the readable files plus the failure
+			// surfaced in Failures — not a 500 that blanks the whole directory.
+			name:      "per-entry stat failure returns partial listing not 500",
+			flowOwner: 1, uid: 1, flowID: 1,
+			privs:     []string{"flow_files.view", "containers.view"},
+			queryPath: "/work",
+			dockerSetup: func(d *fakeDockerClient) {
+				d.running = true
+				d.statPathMap = map[string]container.PathStat{
+					"/work": {Mode: os.ModeDir | 0755},
+				}
+				d.listDirMap = map[string][]container.PathStat{
+					"/work": {{Name: "good.txt", Size: 3, Mode: 0644}},
+				}
+				d.listDirFailMap = map[string][]docker.ContainerEntryError{
+					"/work": {{
+						Name: "dangling",
+						Path: "/work/dangling",
+						Err:  fmt.Errorf("no such file or directory"),
+					}},
+				}
+			},
+			wantStatus:       http.StatusOK,
+			wantPathInResp:   "/work",
+			wantFileNames:    []string{"good.txt"},
+			wantFailureNames: []string{"dangling"},
 		},
 		{
 			// Two directories are queried; results are merged and sorted by name.
@@ -3379,6 +3416,13 @@ func TestFlowFileService_GetFlowContainerFilesScenarios(t *testing.T) {
 			if tt.wantTotal > 0 {
 				assert.Equal(t, tt.wantTotal, resp.Total, "response Total mismatch")
 				assert.Len(t, resp.Files, int(tt.wantTotal), "response Files length mismatch")
+			}
+			if tt.wantFailureNames != nil {
+				names := make([]string, len(resp.Failures))
+				for i, f := range resp.Failures {
+					names[i] = f.Name
+				}
+				assert.ElementsMatch(t, tt.wantFailureNames, names)
 			}
 		})
 	}

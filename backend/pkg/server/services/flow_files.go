@@ -964,7 +964,9 @@ func (s *FlowFileService) GetFlowContainerFiles(c *gin.Context) {
 	// resolved file.Path so that overlapping queries never return the same
 	// entry twice.
 	seenPaths := make(map[string]struct{})
+	seenFailPaths := make(map[string]struct{})
 	allFiles := make([]models.ContainerFile, 0)
+	allFailures := make([]models.ContainerFileError, 0)
 	for _, containerPath := range containerPaths {
 		pathStat, err := s.dockerClient.ContainerStatPath(c.Request.Context(), containerName, containerPath)
 		if err != nil {
@@ -985,7 +987,7 @@ func (s *FlowFileService) GetFlowContainerFiles(c *gin.Context) {
 			continue
 		}
 
-		stats, err := s.dockerClient.ListContainerDir(c.Request.Context(), containerName, containerPath)
+		listing, err := s.dockerClient.ListContainerDir(c.Request.Context(), containerName, containerPath)
 		if err != nil {
 			logger.FromContext(c).WithError(err).WithFields(map[string]any{
 				"flow_id":        flowID,
@@ -994,12 +996,23 @@ func (s *FlowFileService) GetFlowContainerFiles(c *gin.Context) {
 			response.Error(c, response.ErrInternal, err)
 			return
 		}
-		for _, stat := range stats {
+		for _, stat := range listing.Files {
 			file := convertContainerFile(containerPath, stat)
 			if _, seen := seenPaths[file.Path]; !seen {
 				seenPaths[file.Path] = struct{}{}
 				allFiles = append(allFiles, file)
 			}
+		}
+		for _, fe := range listing.Failures {
+			if _, seen := seenFailPaths[fe.Path]; seen {
+				continue
+			}
+			seenFailPaths[fe.Path] = struct{}{}
+			allFailures = append(allFailures, models.ContainerFileError{
+				Name:    fe.Name,
+				Path:    fe.Path,
+				Message: fe.Err.Error(),
+			})
 		}
 	}
 
@@ -1024,10 +1037,40 @@ func (s *FlowFileService) GetFlowContainerFiles(c *gin.Context) {
 		responsePath = containerPaths[0]
 	}
 
+	// A per-entry stat failure (dangling symlink, a file removed mid-listing,
+	// transient /proc entries) degrades the listing but must not blank it: the
+	// readable files are returned and each skipped entry is logged and carried
+	// back in Failures so an operator can tell what and how much was skipped.
+	if len(allFailures) > 0 {
+		log := logger.FromContext(c)
+		const maxLoggedFailures = 20
+		for i, fe := range allFailures {
+			if i >= maxLoggedFailures {
+				log.WithFields(map[string]any{
+					"flow_id":    flowID,
+					"suppressed": len(allFailures) - maxLoggedFailures,
+				}).Warn("additional container entries skipped (log capped)")
+				break
+			}
+			log.WithFields(map[string]any{
+				"flow_id":    flowID,
+				"entry":      fe.Name,
+				"entry_path": fe.Path,
+				"error":      fe.Message,
+			}).Warn("container entry skipped: could not stat")
+		}
+		log.WithFields(map[string]any{
+			"flow_id": flowID,
+			"listed":  len(allFiles),
+			"failed":  len(allFailures),
+		}).Warn("container listing degraded: some entries could not be read")
+	}
+
 	response.Success(c, http.StatusOK, models.ContainerFiles{
-		Path:  responsePath,
-		Files: allFiles,
-		Total: uint64(len(allFiles)),
+		Path:     responsePath,
+		Files:    allFiles,
+		Failures: allFailures,
+		Total:    uint64(len(allFiles)),
 	})
 }
 
