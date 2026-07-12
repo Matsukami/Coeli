@@ -76,10 +76,6 @@ func TestNewTelemetryClient_SuccessPathExportsAndShutsDown(t *testing.T) {
 	}
 }
 
-// A set-but-unreachable collector must not hang startup. The endpoint
-// accepts the TCP connection but never completes the gRPC handshake, so a
-// WithBlock dial would wait forever without the internal DefaultDialTimeout that
-// this bounds — the caller's context has no deadline.
 // A set-but-unreachable collector must not stall startup: grpc.NewClient is
 // non-blocking, so the client is returned immediately and connects in the
 // background if the collector later comes up.
