@@ -442,8 +442,21 @@ definitions:
       size:
         type: integer
     type: object
+  models.ContainerFileError:
+    properties:
+      message:
+        type: string
+      name:
+        type: string
+      path:
+        type: string
+    type: object
   models.ContainerFiles:
     properties:
+      failures:
+        items:
+          $ref: '#/definitions/models.ContainerFileError'
+        type: array
       files:
         items:
           $ref: '#/definitions/models.ContainerFile'
@@ -1032,6 +1045,15 @@ definitions:
     - message
     - result_format
     - type
+    type: object
+  models.NameChange:
+    properties:
+      name:
+        maxLength: 70
+        minLength: 1
+        type: string
+    required:
+    - name
     type: object
   models.Password:
     properties:
@@ -6766,6 +6788,39 @@ paths:
       summary: Update email for current user (account)
       tags:
       - Users
+  /user/name:
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: new display name
+        in: body
+        name: json
+        required: true
+        schema:
+          $ref: '#/definitions/models.NameChange'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: account name updated successful
+          schema:
+            $ref: '#/definitions/SuccessResponse'
+        "400":
+          description: invalid account name form data
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: current user not found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: internal error on updating account name
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Change current account display name
+      tags:
+      - User
   /user/password:
     put:
       consumes:

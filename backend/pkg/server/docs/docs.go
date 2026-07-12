@@ -7150,6 +7150,57 @@ const docTemplate = `{
                 }
             }
         },
+        "/user/name": {
+            "put": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User"
+                ],
+                "summary": "Change current account display name",
+                "parameters": [
+                    {
+                        "description": "new display name",
+                        "name": "json",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.NameChange"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "account name updated successful",
+                        "schema": {
+                            "$ref": "#/definitions/SuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "invalid account name form data",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "current user not found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "internal error on updating account name",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/user/password": {
             "put": {
                 "consumes": [
@@ -8289,9 +8340,29 @@ const docTemplate = `{
                 }
             }
         },
+        "models.ContainerFileError": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "path": {
+                    "type": "string"
+                }
+            }
+        },
         "models.ContainerFiles": {
             "type": "object",
             "properties": {
+                "failures": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.ContainerFileError"
+                    }
+                },
                 "files": {
                     "type": "array",
                     "items": {
@@ -9112,6 +9183,19 @@ const docTemplate = `{
                 },
                 "type": {
                     "type": "string"
+                }
+            }
+        },
+        "models.NameChange": {
+            "type": "object",
+            "required": [
+                "name"
+            ],
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "maxLength": 70,
+                    "minLength": 1
                 }
             }
         },
