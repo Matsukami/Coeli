@@ -77,7 +77,6 @@ The full stack runs at `https://localhost:8443` when using Docker Compose. Copy 
 | `pkg/tools/` | Penetration testing tool integrations |
 | `pkg/docker/` | Docker SDK wrapper for sandboxed container execution |
 | `pkg/terminal/` | Terminal session and command execution management |
-| `pkg/queue/` | Async task queue |
 | `pkg/csum/` | Chain summarization for LLM context management |
 | `pkg/graphiti/` | Knowledge graph (Neo4j via Graphiti) integration |
 | `pkg/observability/` | OpenTelemetry tracing, metrics, structured logging |

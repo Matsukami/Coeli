@@ -76,7 +76,7 @@ func TestNewTelemetryClient_SuccessPathExportsAndShutsDown(t *testing.T) {
 	}
 }
 
-// H4 guard: a set-but-unreachable collector must not hang startup. The endpoint
+// A set-but-unreachable collector must not hang startup. The endpoint
 // accepts the TCP connection but never completes the gRPC handshake, so a
 // WithBlock dial would wait forever without the internal DefaultDialTimeout that
 // this bounds — the caller's context has no deadline.
@@ -110,6 +110,6 @@ func TestNewTelemetryClient_UnreachableReturnsWithinDialTimeout(t *testing.T) {
 			t.Fatal("expected an error for an unreachable collector")
 		}
 	case <-time.After(DefaultDialTimeout + 10*time.Second):
-		t.Fatal("NewTelemetryClient hung past the dial timeout (H4 regression)")
+		t.Fatal("NewTelemetryClient hung past the dial timeout")
 	}
 }
