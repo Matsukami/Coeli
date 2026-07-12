@@ -40,6 +40,10 @@ const (
 	containerPortsNumber        = 2
 	limitContainerPortsNumber   = 2000
 	containerListWorkers        = 20
+	// maxListEntries caps how many directory children a single listing will stat,
+	// so a hostile /work with hundreds of thousands of files can't fan out into
+	// that many Docker API calls per request.
+	maxListEntries = 10000
 )
 
 type dockerClient struct {
@@ -579,9 +583,11 @@ type ContainerEntryError struct {
 }
 
 // ContainerDirListing is the result of ListContainerDir: the entries that
-// stat'd successfully, plus per-entry failures. A directory-level fault (path
-// not a directory, ls failed, container gone) is returned as an error instead —
-// a single unreadable entry never blanks the whole listing.
+// stat'd successfully, plus per-entry failures for entries that individually
+// couldn't be read. A directory-level fault — path not a directory, the list
+// command failed, the request was cancelled, or every entry failed (which
+// signals the container is gone) — is returned as an error instead, so a
+// partial listing never silently hides a systemic failure.
 type ContainerDirListing struct {
 	Files    []container.PathStat
 	Failures []ContainerEntryError
@@ -604,54 +610,73 @@ func (dc *dockerClient) ListContainerDir(
 		return ContainerDirListing{}, fmt.Errorf("container path '%s' is not a directory", dirPath)
 	}
 
+	// List direct children NUL-delimited. Parsing `ls` output is unsafe: under a
+	// TTY GNU coreutils shell-quotes names and busybox wraps them in ANSI escapes,
+	// so a readable file with a space / quote / non-ASCII byte would be mis-stat'd
+	// and reported unreadable. `find -print0` emits literal bytes and is portable
+	// (GNU + busybox); the NUL delimiter also survives names containing newlines.
 	createResp, err := dc.ContainerExecCreate(ctx, containerID, container.ExecOptions{
-		Cmd:          []string{"ls", "-1", "--", dirPath},
+		Cmd:          []string{"find", dirPath, "-maxdepth", "1", "-mindepth", "1", "!", "-name", ".*", "-print0"},
 		AttachStdout: true,
 		AttachStderr: true,
 		Tty:          true,
 	})
 	if err != nil {
-		return ContainerDirListing{}, fmt.Errorf("failed to create ls exec for '%s': %w", dirPath, err)
+		return ContainerDirListing{}, fmt.Errorf("failed to create list exec for '%s': %w", dirPath, err)
 	}
 
 	resp, err := dc.ContainerExecAttach(ctx, createResp.ID, container.ExecAttachOptions{
 		Tty: true,
 	})
 	if err != nil {
-		return ContainerDirListing{}, fmt.Errorf("failed to attach ls exec for '%s': %w", dirPath, err)
+		return ContainerDirListing{}, fmt.Errorf("failed to attach list exec for '%s': %w", dirPath, err)
 	}
 	output, readErr := io.ReadAll(resp.Reader)
 	resp.Close()
 	if readErr != nil {
-		return ContainerDirListing{}, fmt.Errorf("failed to read ls output for '%s': %w", dirPath, readErr)
+		return ContainerDirListing{}, fmt.Errorf("failed to read list output for '%s': %w", dirPath, readErr)
 	}
 
 	inspect, err := dc.ContainerExecInspect(ctx, createResp.ID)
 	if err != nil {
-		return ContainerDirListing{}, fmt.Errorf("failed to inspect ls exec for '%s': %w", dirPath, err)
+		return ContainerDirListing{}, fmt.Errorf("failed to inspect list exec for '%s': %w", dirPath, err)
 	}
 	if inspect.ExitCode != 0 {
-		return ContainerDirListing{}, fmt.Errorf("ls command failed for '%s' with exit code %d: %s", dirPath, inspect.ExitCode, string(output))
+		return ContainerDirListing{}, fmt.Errorf("list command failed for '%s' with exit code %d: %s", dirPath, inspect.ExitCode, string(output))
 	}
 
-	names := make([]string, 0)
-	for _, line := range strings.Split(string(output), "\n") {
-		name := strings.TrimSpace(line)
-		if name == "" {
+	// find -print0 emits `<absolute-path>\0<absolute-path>\0…`.
+	entryPaths := make([]string, 0)
+	for _, tok := range strings.Split(string(output), "\x00") {
+		if tok == "" {
 			continue
 		}
-		names = append(names, name)
+		entryPaths = append(entryPaths, tok)
 	}
 
-	stats, failures := statContainerEntries(ctx, names, containerListWorkers, func(ctx context.Context, name string) (container.PathStat, error) {
-		return dc.ContainerStatPath(ctx, containerID, path.Join(dirPath, name))
+	if len(entryPaths) > maxListEntries {
+		return ContainerDirListing{}, fmt.Errorf("container directory '%s' has too many entries (%d, limit %d) — narrow the path", dirPath, len(entryPaths), maxListEntries)
+	}
+
+	stats, failures := statContainerEntries(ctx, entryPaths, containerListWorkers, func(ctx context.Context, entryPath string) (container.PathStat, error) {
+		return dc.ContainerStatPath(ctx, containerID, entryPath)
 	})
+
+	// A cancelled context, or a listing where every entry failed, is a directory-
+	// level fault (client gone, or the container/daemon died mid fan-out) — not a
+	// partial listing. Surface it as an error rather than a misleading empty 200.
+	if err := ctx.Err(); err != nil {
+		return ContainerDirListing{}, fmt.Errorf("listing container directory '%s': %w", dirPath, err)
+	}
+	if len(entryPaths) > 0 && len(stats) == 0 {
+		return ContainerDirListing{}, fmt.Errorf("failed to read any of the %d entries in container directory '%s' (container may be gone): %w", len(entryPaths), dirPath, failures[0].err)
+	}
 
 	listing := ContainerDirListing{Files: stats}
 	for _, f := range failures {
 		listing.Failures = append(listing.Failures, ContainerEntryError{
-			Name: f.name,
-			Path: path.Join(dirPath, f.name),
+			Name: path.Base(f.name),
+			Path: f.name,
 			Err:  f.err,
 		})
 	}
