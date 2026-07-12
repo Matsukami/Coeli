@@ -640,7 +640,7 @@ func (dc *dockerClient) ListContainerDir(
 	if err != nil {
 		return ContainerDirListing{}, fmt.Errorf("failed to attach list exec for '%s': %w", dirPath, err)
 	}
-	output, readErr := demuxExecStdout(resp.Reader)
+	output, readErr := demuxExecStdout(resp.Reader, maxListStdoutBytes)
 	resp.Close()
 	if readErr != nil {
 		return ContainerDirListing{}, fmt.Errorf("failed to read list output for '%s': %w", dirPath, readErr)
@@ -654,22 +654,7 @@ func (dc *dockerClient) ListContainerDir(
 		return ContainerDirListing{}, fmt.Errorf("list command failed for '%s' with exit code %d: %s", dirPath, inspect.ExitCode, string(output))
 	}
 
-	// find -print0 emits `<absolute-path>\0<absolute-path>\0…`.
-	entryPaths := make([]string, 0)
-	for _, tok := range strings.Split(string(output), "\x00") {
-		if tok == "" {
-			continue
-		}
-		entryPaths = append(entryPaths, tok)
-	}
-
-	// Over the cap, list the first maxListEntries and flag the truncation rather
-	// than failing the whole listing — the caller reports the partiality.
-	truncated := false
-	if len(entryPaths) > maxListEntries {
-		entryPaths = entryPaths[:maxListEntries]
-		truncated = true
-	}
+	entryPaths, truncated := parseFindEntries(output)
 
 	stats, failures := statContainerEntries(ctx, entryPaths, containerListWorkers, func(ctx context.Context, entryPath string) (container.PathStat, error) {
 		return dc.ContainerStatPath(ctx, containerID, entryPath)
@@ -695,10 +680,27 @@ func (dc *dockerClient) ListContainerDir(
 	return listing, nil
 }
 
+// parseFindEntries splits `find -print0` output (NUL-delimited absolute paths),
+// dropping empties, and caps the result at maxListEntries — returning truncated=true
+// so the caller reports the partiality instead of failing or silently dropping.
+func parseFindEntries(output []byte) (entries []string, truncated bool) {
+	for _, tok := range strings.Split(string(output), "\x00") {
+		if tok == "" {
+			continue
+		}
+		entries = append(entries, tok)
+	}
+	if len(entries) > maxListEntries {
+		return entries[:maxListEntries], true
+	}
+	return entries, false
+}
+
 // demuxExecStdout reads a non-TTY Docker exec stream — stdout and stderr
 // interleaved as frames with an 8-byte header (stream id + big-endian size) —
-// and returns only the stdout bytes.
-func demuxExecStdout(r io.Reader) ([]byte, error) {
+// and returns only the stdout bytes, erroring if stdout exceeds maxStdout so a
+// compromised sandbox can't stream unbounded output into memory.
+func demuxExecStdout(r io.Reader, maxStdout int) ([]byte, error) {
 	var stdout bytes.Buffer
 	header := make([]byte, 8)
 	for {
@@ -719,8 +721,8 @@ func demuxExecStdout(r io.Reader) ([]byte, error) {
 		if _, err := io.CopyN(sink, r, size); err != nil {
 			return nil, err
 		}
-		if stdout.Len() > maxListStdoutBytes {
-			return nil, fmt.Errorf("listing output exceeded %d bytes", maxListStdoutBytes)
+		if stdout.Len() > maxStdout {
+			return nil, fmt.Errorf("listing output exceeded %d bytes", maxStdout)
 		}
 	}
 	return stdout.Bytes(), nil

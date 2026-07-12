@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strconv"
+	"strings"
 	"testing"
 
 	"pentagi/pkg/docker"
@@ -131,4 +133,30 @@ func TestGetFlowContainerFiles_TruncatedFlagSurfaced(t *testing.T) {
 	code, resp := listContainerFiles(t, fake, "paths[]=/big")
 	require.Equal(t, http.StatusOK, *code)
 	assert.True(t, resp.Truncated)
+}
+
+// The per-request path count is bounded so the per-path entry cap can't be
+// multiplied by an attacker-chosen number of paths.
+func TestGetFlowContainerFiles_TooManyPathsRejected(t *testing.T) {
+	buildQuery := func(n int) string {
+		parts := make([]string, n)
+		for i := range parts {
+			parts[i] = "paths[]=/p" + strconv.Itoa(i)
+		}
+		return strings.Join(parts, "&")
+	}
+
+	// One over the cap → 400 before any docker call.
+	db := setupFlowFileServiceTestDB(t)
+	seedFlow(t, db, 1, 1)
+	svc := NewFlowFileService(db, t.TempDir(), &fakeDockerClient{running: true}, nil)
+	c, w := newFlowFileTestContext(http.MethodGet,
+		"/flows/1/files/container?"+buildQuery(maxContainerListPaths+1), nil,
+		[]string{"flow_files.view", "containers.view"}, 1, 1)
+	svc.GetFlowContainerFiles(c)
+	require.Equal(t, http.StatusBadRequest, w.Code)
+
+	// Exactly at the cap is allowed.
+	code, _ := listContainerFiles(t, &fakeDockerClient{running: true}, buildQuery(maxContainerListPaths))
+	require.Equal(t, http.StatusOK, *code)
 }

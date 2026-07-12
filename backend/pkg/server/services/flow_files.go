@@ -38,6 +38,11 @@ import (
 //	resources/  ← user resources copied from user_resources table; also pushed to container /work/resources/
 //	container/  ← files synced from the container via pull; never sent back to container
 
+// maxContainerListPaths bounds how many directory paths one container-files
+// request may list, so the per-path entry cap can't be multiplied into an
+// unbounded fan-out or response.
+const maxContainerListPaths = 128
+
 type pendingUpload struct {
 	fileName string
 	dstPath  string
@@ -937,6 +942,14 @@ func (s *FlowFileService) GetFlowContainerFiles(c *gin.Context) {
 	if len(rawPaths) > 0 && len(containerPaths) == 0 {
 		err = errors.New("at least one valid path is required (use 'path' or 'paths[]' query parameters)")
 		logger.FromContext(c).WithError(err).WithField("flow_id", flowID).Error("missing container paths")
+		response.Error(c, response.ErrFlowFilesInvalidRequest, err)
+		return
+	}
+	// Bound the number of paths per request so the per-path entry cap can't be
+	// multiplied by an attacker-chosen path count into a huge fan-out / response.
+	if len(containerPaths) > maxContainerListPaths {
+		err = fmt.Errorf("too many paths requested (%d, limit %d)", len(containerPaths), maxContainerListPaths)
+		logger.FromContext(c).WithError(err).WithField("flow_id", flowID).Error("too many container paths")
 		response.Error(c, response.ErrFlowFilesInvalidRequest, err)
 		return
 	}
