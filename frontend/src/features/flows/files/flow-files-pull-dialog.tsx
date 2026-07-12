@@ -341,9 +341,21 @@ function FlowFilesPullDialogForm({ cachedFiles, flowId, onClose, onSuccess }: Fl
                 </EmptyMedia>
                 <EmptyTitle>Nothing readable here</EmptyTitle>
                 <EmptyDescription>
-                    None of the entries in <code>{currentPath}</code> could be read.
+                    None of the {listingFailures.length} {listingFailures.length === 1 ? 'entry' : 'entries'} in{' '}
+                    <code>{currentPath}</code> could be read.
                 </EmptyDescription>
             </EmptyHeader>
+            <ul className="text-muted-foreground max-w-full space-y-1 px-4 text-left text-xs">
+                {listingFailures.slice(0, 5).map((failure) => (
+                    <li
+                        className="truncate"
+                        key={failure.path}
+                    >
+                        <span className="text-foreground font-medium">{failure.name}</span> — {failure.message}
+                    </li>
+                ))}
+                {listingFailures.length > 5 && <li>…and {listingFailures.length - 5} more</li>}
+            </ul>
         </Empty>
     ) : (
         <Empty>

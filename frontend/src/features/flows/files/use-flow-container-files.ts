@@ -84,6 +84,10 @@ export function useFlowContainerFiles({ flowId, paths }: UseFlowContainerFilesPa
 
         setIsLoading(true);
         setError(null);
+        // Clear the previous directory's data so a pending navigation never shows
+        // the old listing / old failure banner attributed to the new breadcrumb.
+        setFiles([]);
+        setFailures([]);
 
         try {
             const url = `${FLOW_FILES_CONTAINER_API_PATH(flowId)}?${buildPathsQuery(paths)}`;
