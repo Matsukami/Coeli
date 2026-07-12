@@ -1,7 +1,9 @@
 package docker
 
 import (
+	"bytes"
 	"context"
+	"encoding/binary"
 	"fmt"
 	"hash/crc32"
 	"io"
@@ -615,23 +617,23 @@ func (dc *dockerClient) ListContainerDir(
 	// so a readable file with a space / quote / non-ASCII byte would be mis-stat'd
 	// and reported unreadable. `find -print0` emits literal bytes and is portable
 	// (GNU + busybox); the NUL delimiter also survives names containing newlines.
+	// No TTY: a TTY's onlcr would rewrite every \n in the stream to \r\n —
+	// including a \n that is part of a filename — corrupting the name. Without a
+	// TTY the exec stream is multiplexed and demuxed below.
 	createResp, err := dc.ContainerExecCreate(ctx, containerID, container.ExecOptions{
 		Cmd:          []string{"find", dirPath, "-maxdepth", "1", "-mindepth", "1", "!", "-name", ".*", "-print0"},
 		AttachStdout: true,
 		AttachStderr: true,
-		Tty:          true,
 	})
 	if err != nil {
 		return ContainerDirListing{}, fmt.Errorf("failed to create list exec for '%s': %w", dirPath, err)
 	}
 
-	resp, err := dc.ContainerExecAttach(ctx, createResp.ID, container.ExecAttachOptions{
-		Tty: true,
-	})
+	resp, err := dc.ContainerExecAttach(ctx, createResp.ID, container.ExecAttachOptions{})
 	if err != nil {
 		return ContainerDirListing{}, fmt.Errorf("failed to attach list exec for '%s': %w", dirPath, err)
 	}
-	output, readErr := io.ReadAll(resp.Reader)
+	output, readErr := demuxExecStdout(resp.Reader)
 	resp.Close()
 	if readErr != nil {
 		return ContainerDirListing{}, fmt.Errorf("failed to read list output for '%s': %w", dirPath, readErr)
@@ -682,6 +684,34 @@ func (dc *dockerClient) ListContainerDir(
 	}
 
 	return listing, nil
+}
+
+// demuxExecStdout reads a non-TTY Docker exec stream — stdout and stderr
+// interleaved as frames with an 8-byte header (stream id + big-endian size) —
+// and returns only the stdout bytes.
+func demuxExecStdout(r io.Reader) ([]byte, error) {
+	var stdout bytes.Buffer
+	header := make([]byte, 8)
+	for {
+		if _, err := io.ReadFull(r, header); err != nil {
+			if err == io.EOF || err == io.ErrUnexpectedEOF {
+				break
+			}
+			return nil, err
+		}
+		size := int64(binary.BigEndian.Uint32(header[4:8]))
+		if size == 0 {
+			continue
+		}
+		sink := io.Writer(io.Discard)
+		if header[0] == 1 { // stdout
+			sink = &stdout
+		}
+		if _, err := io.CopyN(sink, r, size); err != nil {
+			return nil, err
+		}
+	}
+	return stdout.Bytes(), nil
 }
 
 type statFailure struct {
