@@ -3325,9 +3325,10 @@ func TestFlowFileService_GetFlowContainerFilesScenarios(t *testing.T) {
 			wantTotal:      1,
 		},
 		{
-			// First path succeeds; second path's stat call fails.
-			// The handler must return 500 (fail-fast).
-			name:      "second path stat error in batch returns internal error",
+			// First path succeeds; second path's stat call fails. The readable path
+			// is still served (HTTP 200) and the bad path is surfaced as a failure —
+			// one bad path no longer blanks the whole multi-path request.
+			name:      "second path stat error in batch: good path served, bad path a failure",
 			flowOwner: 1, uid: 1, flowID: 1,
 			privs:    []string{"flow_files.view", "containers.view"},
 			rawQuery: "paths[]=/work&paths[]=/etc",
@@ -3343,12 +3344,15 @@ func TestFlowFileService_GetFlowContainerFilesScenarios(t *testing.T) {
 					"/work": {{Name: "uploads", Mode: os.ModeDir | 0755}},
 				}
 			},
-			wantStatus: http.StatusInternalServerError,
+			wantStatus:       http.StatusOK,
+			wantFileNames:    []string{"uploads"},
+			wantFailureNames: []string{"etc"},
 		},
 		{
-			// First path directory listing succeeds; second path's listing fails.
-			// The handler must return 500 (fail-fast).
-			name:      "second path list dir error in batch returns internal error",
+			// First path directory listing succeeds; second path's listing fails at
+			// the directory level. The readable path is still served (HTTP 200) and
+			// the failed path is surfaced as a failure, not a 500.
+			name:      "second path list dir error in batch: good path served, bad path a failure",
 			flowOwner: 1, uid: 1, flowID: 1,
 			privs:    []string{"flow_files.view", "containers.view"},
 			rawQuery: "paths[]=/work&paths[]=/etc",
@@ -3365,7 +3369,9 @@ func TestFlowFileService_GetFlowContainerFilesScenarios(t *testing.T) {
 					"/etc": fmt.Errorf("permission denied"),
 				}
 			},
-			wantStatus: http.StatusInternalServerError,
+			wantStatus:       http.StatusOK,
+			wantFileNames:    []string{"uploads"},
+			wantFailureNames: []string{"etc"},
 		},
 	}
 

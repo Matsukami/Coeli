@@ -967,18 +967,42 @@ func (s *FlowFileService) GetFlowContainerFiles(c *gin.Context) {
 	seenFailPaths := make(map[string]struct{})
 	allFiles := make([]models.ContainerFile, 0)
 	allFailures := make([]models.ContainerFileError, 0)
+
+	// A directory-level failure on ONE path (nonexistent, not a directory, list
+	// command failed) records that path as a failure and keeps serving the paths
+	// that worked — only a cancelled request (client gone) aborts the response. If
+	// EVERY path fails at the directory level, nothing could be listed and the
+	// request is failed as a whole (checked after the loop).
+	pathsListed := 0
+	var firstPathErr error
+	recordPathFailure := func(p string, err error) {
+		if firstPathErr == nil {
+			firstPathErr = err
+		}
+		if _, seen := seenFailPaths[p]; seen {
+			return
+		}
+		seenFailPaths[p] = struct{}{}
+		allFailures = append(allFailures, models.ContainerFileError{
+			Name:    path.Base(p),
+			Path:    p,
+			Message: err.Error(),
+		})
+	}
+
 	for _, containerPath := range containerPaths {
 		pathStat, err := s.dockerClient.ContainerStatPath(c.Request.Context(), containerName, containerPath)
 		if err != nil {
-			logger.FromContext(c).WithError(err).WithFields(map[string]any{
-				"flow_id":        flowID,
-				"container_path": containerPath,
-			}).Error("error stating container path")
-			response.Error(c, response.ErrInternal, err)
-			return
+			if cerr := c.Request.Context().Err(); cerr != nil {
+				response.Error(c, response.ErrInternal, cerr)
+				return
+			}
+			recordPathFailure(containerPath, err)
+			continue
 		}
 
 		if !pathStat.Mode.IsDir() {
+			pathsListed++
 			file := convertContainerFile(path.Dir(containerPath), pathStat)
 			if _, seen := seenPaths[file.Path]; !seen {
 				seenPaths[file.Path] = struct{}{}
@@ -989,13 +1013,14 @@ func (s *FlowFileService) GetFlowContainerFiles(c *gin.Context) {
 
 		listing, err := s.dockerClient.ListContainerDir(c.Request.Context(), containerName, containerPath)
 		if err != nil {
-			logger.FromContext(c).WithError(err).WithFields(map[string]any{
-				"flow_id":        flowID,
-				"container_path": containerPath,
-			}).Error("error listing container directory")
-			response.Error(c, response.ErrInternal, err)
-			return
+			if cerr := c.Request.Context().Err(); cerr != nil {
+				response.Error(c, response.ErrInternal, cerr)
+				return
+			}
+			recordPathFailure(containerPath, err)
+			continue
 		}
+		pathsListed++
 		for _, stat := range listing.Files {
 			file := convertContainerFile(containerPath, stat)
 			if _, seen := seenPaths[file.Path]; !seen {
@@ -1004,6 +1029,11 @@ func (s *FlowFileService) GetFlowContainerFiles(c *gin.Context) {
 			}
 		}
 		for _, fe := range listing.Failures {
+			// If an overlapping path already read this entry successfully, keep the
+			// success and drop the contradictory failure.
+			if _, ok := seenPaths[fe.Path]; ok {
+				continue
+			}
 			if _, seen := seenFailPaths[fe.Path]; seen {
 				continue
 			}
@@ -1014,6 +1044,14 @@ func (s *FlowFileService) GetFlowContainerFiles(c *gin.Context) {
 				Message: fe.Err.Error(),
 			})
 		}
+	}
+
+	// Every requested path failed at the directory level — nothing could be
+	// listed, so fail the request instead of returning an empty 200.
+	if pathsListed == 0 && len(containerPaths) > 0 {
+		logger.FromContext(c).WithError(firstPathErr).WithField("flow_id", flowID).Error("error listing container directory")
+		response.Error(c, response.ErrInternal, firstPathErr)
+		return
 	}
 
 	// Sort by name for deterministic output across all paths.
