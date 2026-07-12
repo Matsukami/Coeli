@@ -80,36 +80,33 @@ func TestNewTelemetryClient_SuccessPathExportsAndShutsDown(t *testing.T) {
 // accepts the TCP connection but never completes the gRPC handshake, so a
 // WithBlock dial would wait forever without the internal DefaultDialTimeout that
 // this bounds — the caller's context has no deadline.
-func TestNewTelemetryClient_UnreachableReturnsWithinDialTimeout(t *testing.T) {
-	ln, err := net.Listen("tcp", "127.0.0.1:0")
-	if err != nil {
-		t.Fatalf("listen: %v", err)
+// A set-but-unreachable collector must not stall startup: grpc.NewClient is
+// non-blocking, so the client is returned immediately and connects in the
+// background if the collector later comes up.
+func TestNewTelemetryClient_UnreachableDoesNotBlockStartup(t *testing.T) {
+	type result struct {
+		client TelemetryClient
+		err    error
 	}
-	defer ln.Close()
+	cfg := &config.Config{TelemetryEndpoint: "127.0.0.1:1"} // nothing listening
+	done := make(chan result, 1)
 	go func() {
-		for {
-			conn, err := ln.Accept()
-			if err != nil {
-				return
-			}
-			// hold the connection open and stay silent (no HTTP/2 handshake)
-			defer conn.Close()
-		}
-	}()
-
-	cfg := &config.Config{TelemetryEndpoint: ln.Addr().String()}
-	done := make(chan error, 1)
-	go func() {
-		_, e := NewTelemetryClient(context.Background(), cfg)
-		done <- e
+		c, e := NewTelemetryClient(context.Background(), cfg)
+		done <- result{c, e}
 	}()
 
 	select {
-	case err := <-done:
-		if err == nil {
-			t.Fatal("expected an error for an unreachable collector")
+	case res := <-done:
+		if res.err != nil {
+			t.Fatalf("non-blocking client must not error on an unreachable collector: %v", res.err)
 		}
-	case <-time.After(DefaultDialTimeout + 10*time.Second):
-		t.Fatal("NewTelemetryClient hung past the dial timeout")
+		if res.client == nil {
+			t.Fatal("expected a non-nil client")
+		}
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+		defer cancel()
+		_ = res.client.Shutdown(shutdownCtx)
+	case <-time.After(3 * time.Second):
+		t.Fatal("NewTelemetryClient blocked on an unreachable collector")
 	}
 }
