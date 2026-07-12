@@ -10,7 +10,14 @@ import { CONTAINER_PATH_PREFIX, RESOURCES_PATH_PREFIX, UPLOADS_PATH_PREFIX } fro
  * Wire shape of `models.ContainerFiles`. `path` echoes back the queried path
  * when exactly one was requested — empty string for multi-path queries.
  */
+export interface ContainerFileFailure {
+    message: string;
+    name: string;
+    path: string;
+}
+
 export interface ContainerFilesResponse {
+    failures?: ContainerFileFailure[];
     files: RestContainerFile[];
     path: string;
     total: number;

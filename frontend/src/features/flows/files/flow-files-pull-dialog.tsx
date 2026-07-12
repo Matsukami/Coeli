@@ -1,4 +1,4 @@
-import { ArrowDownToLine, ArrowUp, FolderOpen, Loader2, RefreshCw } from 'lucide-react';
+import { ArrowDownToLine, ArrowUp, FolderOpen, Loader2, RefreshCw, TriangleAlert } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
 
 import {
@@ -8,6 +8,7 @@ import {
     type FileNode,
 } from '@/components/shared/file-manager';
 import { OverwriteButtons, OverwriteDialog, useOverwrite } from '@/components/shared/overwrite';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import {
     Autocomplete,
     AutocompleteContent,
@@ -133,6 +134,7 @@ function FlowFilesPullDialogForm({ cachedFiles, flowId, onClose, onSuccess }: Fl
 
     const {
         error: listingError,
+        failures: listingFailures,
         files,
         isLoading: isListingLoading,
         refetch: refetchListing,
@@ -331,6 +333,18 @@ function FlowFilesPullDialogForm({ cachedFiles, flowId, onClose, onSuccess }: Fl
                 <EmptyDescription>{listingError.message}</EmptyDescription>
             </EmptyHeader>
         </Empty>
+    ) : listingFailures.length > 0 ? (
+        <Empty>
+            <EmptyHeader>
+                <EmptyMedia variant="icon">
+                    <TriangleAlert />
+                </EmptyMedia>
+                <EmptyTitle>Nothing readable here</EmptyTitle>
+                <EmptyDescription>
+                    None of the entries in <code>{currentPath}</code> could be read.
+                </EmptyDescription>
+            </EmptyHeader>
+        </Empty>
     ) : (
         <Empty>
             <EmptyHeader>
@@ -423,6 +437,24 @@ function FlowFilesPullDialogForm({ cachedFiles, flowId, onClose, onSuccess }: Fl
                             <TooltipContent>Refresh listing</TooltipContent>
                         </Tooltip>
                     </div>
+
+                    {listingFailures.length > 0 && flatFiles.length > 0 && (
+                        <Alert>
+                            <TriangleAlert />
+                            <AlertTitle>
+                                {listingFailures.length} {listingFailures.length === 1 ? 'entry' : 'entries'} could not
+                                be read
+                            </AlertTitle>
+                            <AlertDescription>
+                                The readable entries are shown below. Skipped:{' '}
+                                {listingFailures
+                                    .slice(0, 5)
+                                    .map((failure) => failure.name)
+                                    .join(', ')}
+                                {listingFailures.length > 5 ? `, and ${listingFailures.length - 5} more` : ''}.
+                            </AlertDescription>
+                        </Alert>
+                    )}
 
                     <FileManager
                         bulkActions={bulkActions}

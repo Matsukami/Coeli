@@ -6,7 +6,7 @@ import { buildPathsQuery } from '@/features/resources/resources-utils';
 import { api, getApiErrorMessage, unwrapApiResponse } from '@/lib/axios';
 
 import { FLOW_FILES_CONTAINER_API_PATH } from './flow-files-constants';
-import { type ContainerFilesResponse, containerFileToFileNode } from './flow-files-utils';
+import { type ContainerFileFailure, type ContainerFilesResponse, containerFileToFileNode } from './flow-files-utils';
 
 interface UseFlowContainerFilesParams {
     flowId: null | string;
@@ -21,6 +21,13 @@ interface UseFlowContainerFilesParams {
 
 interface UseFlowContainerFilesResult {
     error: Error | null;
+    /**
+     * Entries the backend could not stat (dangling symlink, a file removed
+     * mid-listing, a transient /proc pid). The listing still succeeds with the
+     * readable entries in `files`; these are surfaced so the UI can warn that
+     * the directory is shown partially.
+     */
+    failures: ContainerFileFailure[];
     files: FileNode[];
     isLoading: boolean;
     /**
@@ -46,6 +53,7 @@ interface UseFlowContainerFilesResult {
  */
 export function useFlowContainerFiles({ flowId, paths }: UseFlowContainerFilesParams): UseFlowContainerFilesResult {
     const [files, setFiles] = useState<FileNode[]>([]);
+    const [failures, setFailures] = useState<ContainerFileFailure[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<Error | null>(null);
 
@@ -65,6 +73,7 @@ export function useFlowContainerFiles({ flowId, paths }: UseFlowContainerFilesPa
         if (!flowId || paths.length === 0) {
             currentTokenRef.current += 1;
             setFiles([]);
+            setFailures([]);
             setIsLoading(false);
             setError(null);
 
@@ -89,6 +98,7 @@ export function useFlowContainerFiles({ flowId, paths }: UseFlowContainerFilesPa
             }
 
             setFiles(data.files.map(containerFileToFileNode));
+            setFailures(data.failures ?? []);
         } catch (caught) {
             if (token !== currentTokenRef.current) {
                 return;
@@ -96,6 +106,7 @@ export function useFlowContainerFiles({ flowId, paths }: UseFlowContainerFilesPa
 
             setError(new Error(getApiErrorMessage(caught, 'Failed to load container files')));
             setFiles([]);
+            setFailures([]);
         } finally {
             if (token === currentTokenRef.current) {
                 setIsLoading(false);
@@ -116,6 +127,7 @@ export function useFlowContainerFiles({ flowId, paths }: UseFlowContainerFilesPa
 
     return {
         error,
+        failures,
         files,
         isLoading,
         refetch: fetchListing,
