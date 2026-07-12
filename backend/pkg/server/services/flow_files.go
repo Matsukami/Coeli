@@ -1108,6 +1108,15 @@ func (s *FlowFileService) GetFlowContainerFiles(c *gin.Context) {
 		return allFiles[i].ModifiedAt.Before(allFiles[j].ModifiedAt)
 	})
 
+	// Failures are sorted too so the dialog's first-N skipped-entries preview is
+	// deterministic rather than in raw find/readdir order.
+	sort.Slice(allFailures, func(i, j int) bool {
+		if allFailures[i].Path != allFailures[j].Path {
+			return allFailures[i].Path < allFailures[j].Path
+		}
+		return allFailures[i].Name < allFailures[j].Name
+	})
+
 	// Backward-compat: when exactly one container path was queried, echo it back
 	// as Path so existing callers receive the same field value as before.
 	responsePath := ""
@@ -1115,27 +1124,22 @@ func (s *FlowFileService) GetFlowContainerFiles(c *gin.Context) {
 		responsePath = containerPaths[0]
 	}
 
-	// A per-entry stat failure (dangling symlink, a file removed mid-listing,
-	// transient /proc entries) degrades the listing but must not blank it: the
-	// readable files are returned and each skipped entry is logged and carried
-	// back in Failures so an operator can tell what and how much was skipped.
+	// A per-entry stat failure (a file removed mid-listing, a transient /proc pid,
+	// a symlink loop) degrades the listing but must not blank it: the readable
+	// files are returned and each skipped entry is carried back in Failures so the
+	// caller can tell what and how much was skipped.
 	if len(allFailures) > 0 {
 		log := logger.FromContext(c)
-		const maxLoggedFailures = 20
-		for i, fe := range allFailures {
-			if i >= maxLoggedFailures {
-				log.WithFields(map[string]any{
-					"flow_id":    flowID,
-					"suppressed": len(allFailures) - maxLoggedFailures,
-				}).Warn("additional container entries skipped (log capped)")
-				break
-			}
+		for _, fe := range allFailures {
+			// Detail is already in the Failures response, so log per-entry at Debug,
+			// not Warn — this endpoint is hit on every navigation. Quote the names so
+			// control bytes in a hostile filename can't inject into the log line.
 			log.WithFields(map[string]any{
 				"flow_id":    flowID,
-				"entry":      fe.Name,
-				"entry_path": fe.Path,
+				"entry":      strconv.Quote(fe.Name),
+				"entry_path": strconv.Quote(fe.Path),
 				"error":      rawFailureMessages[fe.Path],
-			}).Warn("container entry skipped: could not stat")
+			}).Debug("container entry skipped: could not stat")
 		}
 		log.WithFields(map[string]any{
 			"flow_id": flowID,

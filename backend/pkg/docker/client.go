@@ -705,24 +705,34 @@ func demuxExecStdout(r io.Reader, maxStdout int) ([]byte, error) {
 	header := make([]byte, 8)
 	for {
 		if _, err := io.ReadFull(r, header); err != nil {
-			if err == io.EOF || err == io.ErrUnexpectedEOF {
-				break
+			if err == io.EOF {
+				break // clean end at a frame boundary
 			}
-			return nil, err
+			// A header cut short (ErrUnexpectedEOF) means the stream was truncated
+			// mid-frame — the listing is incomplete, so fail rather than silently
+			// dropping the tail.
+			return nil, fmt.Errorf("truncated exec stream: %w", err)
 		}
 		size := int64(binary.BigEndian.Uint32(header[4:8]))
 		if size == 0 {
 			continue
 		}
-		sink := io.Writer(io.Discard)
-		if header[0] == 1 { // stdout
-			sink = &stdout
-		}
-		if _, err := io.CopyN(sink, r, size); err != nil {
-			return nil, err
-		}
-		if stdout.Len() > maxStdout {
-			return nil, fmt.Errorf("listing output exceeded %d bytes", maxStdout)
+		switch header[0] {
+		case 1: // stdout
+			if _, err := io.CopyN(&stdout, r, size); err != nil {
+				return nil, err
+			}
+			if stdout.Len() > maxStdout {
+				return nil, fmt.Errorf("listing output exceeded %d bytes", maxStdout)
+			}
+		case 3: // systemerr — a daemon-level error injected mid-stream; surface it
+			var msg bytes.Buffer
+			_, _ = io.CopyN(&msg, r, size)
+			return nil, fmt.Errorf("docker exec systemerr: %s", strings.TrimSpace(msg.String()))
+		default: // stderr and anything else — discard
+			if _, err := io.CopyN(io.Discard, r, size); err != nil {
+				return nil, err
+			}
 		}
 	}
 	return stdout.Bytes(), nil

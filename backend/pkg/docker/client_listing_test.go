@@ -53,3 +53,17 @@ func TestDemuxExecStdout_StdoutOnly_AndByteCap(t *testing.T) {
 		t.Fatalf("want cap error, got %v", err)
 	}
 }
+
+func TestDemuxExecStdout_TruncatedAndSystemerr(t *testing.T) {
+	// a header cut short mid-frame must error, not silently drop the tail
+	torn := append(listingFrame(1, "a.txt\x00"), 0x01, 0x00, 0x00) // 3 stray header bytes
+	if _, err := demuxExecStdout(bytes.NewReader(torn), 1<<20); err == nil || !strings.Contains(err.Error(), "truncated") {
+		t.Fatalf("want truncated-stream error, got %v", err)
+	}
+
+	// a systemerr (stream id 3) daemon error must surface, not be discarded
+	sys := append(listingFrame(1, "ok"), listingFrame(3, "daemon connection reset")...)
+	if _, err := demuxExecStdout(bytes.NewReader(sys), 1<<20); err == nil || !strings.Contains(err.Error(), "systemerr") {
+		t.Fatalf("want systemerr, got %v", err)
+	}
+}

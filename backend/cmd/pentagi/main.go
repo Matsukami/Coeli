@@ -57,8 +57,8 @@ func main() {
 		logrus.SetLevel(logrus.InfoLevel)
 	}
 
-	// Telemetry is optional: degrade to a no-op observer on init failure instead
-	// of killing the process, so an unreachable collector can't take the app down.
+	// Telemetry is optional — degrade to a no-op observer on init failure so an
+	// unreachable collector can't take the app down.
 	lfclient, err := obs.NewLangfuseClient(ctx, cfg)
 	if err != nil && !errors.Is(err, obs.ErrNotConfigured) {
 		logrus.WithError(err).Warn("langfuse telemetry disabled: client init failed")
