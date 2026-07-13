@@ -160,7 +160,13 @@ interface FormModelComboboxItemProps<T extends FieldValues = FieldValues> extend
 interface ModelOption {
     name: string;
     price?: null | { cacheRead: number; cacheWrite: number; input: number; output: number };
-    reasoning?: null | { efforts?: null | ReasoningEffort[]; mode?: ModelReasoningMode | null };
+    reasoning?: null | {
+        cannotDisable?: boolean | null;
+        defaultOn?: boolean | null;
+        efforts?: null | ReasoningEffort[];
+        mode?: ModelReasoningMode | null;
+        supported?: boolean | null;
+    };
     thinking?: boolean | null;
 }
 
@@ -643,6 +649,10 @@ const getReasoningMode = (mode: null | string | undefined): null | ReasoningMode
             return ReasoningMode.Budget;
         }
 
+        case ReasoningMode.Off: {
+            return ReasoningMode.Off;
+        }
+
         default: {
             return null;
         }
@@ -675,18 +685,34 @@ function ReasoningFields({
     setValue: UseFormSetValue<FormInput>;
 }) {
     const selectedModel = useWatch({ control, name: `agents.${agentKey}.model` });
+    const reasoningMode = useWatch({ control, name: `agents.${agentKey}.reasoning.mode` });
     const capability = models.find((model) => model.name === selectedModel)?.reasoning ?? null;
     const isAdaptiveOnly = capability?.mode === ModelReasoningMode.AdaptiveOnly;
     const supportsAdaptive = isAdaptiveOnly || capability?.mode === ModelReasoningMode.Adaptive;
+    // Off is offered only where the capability confirms a disable actually takes
+    // effect (cannotDisable=false). An absent capability, an always-on model, or a
+    // model where Off would be a silent no-op keeps the Off option hidden.
+    const canDisable = capability != null && capability.cannotDisable !== true;
+    const isOff = reasoningMode === ReasoningMode.Off;
     const allowedEfforts =
         capability?.efforts && capability.efforts.length > 0 ? capability.efforts : defaultReasoningEfforts;
+
+    // Reconcile a stale Off when the current model can't disable (e.g. after typing
+    // a custom model name): otherwise mode=off is orphaned with no control to clear
+    // it and silently persists, disabling thinking with no UI affordance. Guarded on
+    // models.length so a still-loading capability list does not wipe a saved Off.
+    useEffect(() => {
+        if (isOff && !canDisable && models.length > 0) {
+            setValue(`agents.${agentKey}.reasoning.mode` as const, null);
+        }
+    }, [isOff, canDisable, models.length, agentKey, setValue]);
 
     return (
         <div className="col-span-full p-px">
             <div className="mt-6 flex flex-col gap-4">
                 <h4 className="text-sm font-medium">Reasoning Configuration</h4>
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    {supportsAdaptive && (
+                    {(supportsAdaptive || canDisable) && (
                         <FormField
                             control={control}
                             name={`agents.${agentKey}.reasoning.mode`}
@@ -694,7 +720,7 @@ function ReasoningFields({
                                 <FormItem>
                                     <FormLabel>Reasoning Mode</FormLabel>
                                     <Select
-                                        disabled={isLoading || isAdaptiveOnly}
+                                        disabled={isLoading || (isAdaptiveOnly && !canDisable)}
                                         onValueChange={(value) => field.onChange(value !== 'none' ? value : null)}
                                         value={field.value ?? (isAdaptiveOnly ? ReasoningMode.Adaptive : 'none')}
                                     >
@@ -705,16 +731,23 @@ function ReasoningFields({
                                         </FormControl>
                                         <SelectContent>
                                             {!isAdaptiveOnly && <SelectItem value="none">Not selected</SelectItem>}
-                                            <SelectItem value={ReasoningMode.Adaptive}>Adaptive</SelectItem>
+                                            {supportsAdaptive && (
+                                                <SelectItem value={ReasoningMode.Adaptive}>Adaptive</SelectItem>
+                                            )}
                                             {!isAdaptiveOnly && (
                                                 <SelectItem value={ReasoningMode.Budget}>Budget</SelectItem>
+                                            )}
+                                            {canDisable && (
+                                                <SelectItem value={ReasoningMode.Off}>Off (no thinking)</SelectItem>
                                             )}
                                         </SelectContent>
                                     </Select>
                                     <FormDescription>
                                         {isAdaptiveOnly
-                                            ? 'This model supports only adaptive thinking.'
-                                            : 'Adaptive lets the model decide how much to think; budget uses a fixed token budget.'}
+                                            ? canDisable
+                                                ? 'This model thinks adaptively; choose Off to disable thinking.'
+                                                : 'This model supports only adaptive thinking and cannot be disabled.'
+                                            : 'Adaptive lets the model decide how much to think; budget uses a fixed token budget; off disables thinking.'}
                                     </FormDescription>
                                     <FormMessage />
                                 </FormItem>
@@ -729,7 +762,7 @@ function ReasoningFields({
                             <FormItem>
                                 <FormLabel>Reasoning Effort</FormLabel>
                                 <Select
-                                    disabled={isLoading}
+                                    disabled={isLoading || isOff}
                                     onValueChange={(value) => {
                                         const next = value !== 'none' ? value : null;
                                         field.onChange(next);
@@ -772,7 +805,7 @@ function ReasoningFields({
 
                     <FormInputNumberItem
                         control={control}
-                        disabled={isLoading}
+                        disabled={isLoading || isOff}
                         label="Reasoning Max Tokens"
                         min="1"
                         name={`agents.${agentKey}.reasoning.maxTokens`}

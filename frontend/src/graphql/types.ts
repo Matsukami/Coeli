@@ -229,6 +229,7 @@ export enum ReasoningEffort {
 export enum ReasoningMode {
     Adaptive = 'adaptive',
     Budget = 'budget',
+    Off = 'off',
 }
 
 export enum ResultFormat {
@@ -497,7 +498,13 @@ export type ProviderTestResultFragmentFragment = {
 export type ModelConfigFragmentFragment = {
     name: string;
     thinking: boolean | null;
-    reasoning: { mode: ModelReasoningMode | null; efforts: Array<ReasoningEffort> | null } | null;
+    reasoning: {
+        mode: ModelReasoningMode | null;
+        efforts: Array<ReasoningEffort> | null;
+        supported: boolean | null;
+        cannotDisable: boolean | null;
+        defaultOn: boolean | null;
+    } | null;
     price: { input: number; output: number; cacheRead: number; cacheWrite: number } | null;
 };
 
@@ -2113,6 +2120,9 @@ export const ModelConfigFragmentFragmentDoc = {
                             selections: [
                                 { kind: 'Field', name: { kind: 'Name', value: 'mode' } },
                                 { kind: 'Field', name: { kind: 'Name', value: 'efforts' } },
+                                { kind: 'Field', name: { kind: 'Name', value: 'supported' } },
+                                { kind: 'Field', name: { kind: 'Name', value: 'cannotDisable' } },
+                                { kind: 'Field', name: { kind: 'Name', value: 'defaultOn' } },
                             ],
                         },
                     },
@@ -4079,6 +4089,9 @@ export const SettingsProvidersDocument = {
                             selections: [
                                 { kind: 'Field', name: { kind: 'Name', value: 'mode' } },
                                 { kind: 'Field', name: { kind: 'Name', value: 'efforts' } },
+                                { kind: 'Field', name: { kind: 'Name', value: 'supported' } },
+                                { kind: 'Field', name: { kind: 'Name', value: 'cannotDisable' } },
+                                { kind: 'Field', name: { kind: 'Name', value: 'defaultOn' } },
                             ],
                         },
                     },
