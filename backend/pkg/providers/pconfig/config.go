@@ -212,6 +212,10 @@ const (
 	ReasoningModeDefault  ReasoningMode = ""
 	ReasoningModeAdaptive ReasoningMode = "adaptive"
 	ReasoningModeBudget   ReasoningMode = "budget"
+	// ReasoningModeOff explicitly disables thinking. It is distinct from Default:
+	// Default defers to the model (models like Gemini 2.5 / Claude Fable 5 think
+	// by default), while Off forces the provider's disable wire via langchaingo.
+	ReasoningModeOff ReasoningMode = "off"
 )
 
 type ReasoningConfig struct {
@@ -715,6 +719,8 @@ func (ac *AgentConfig) BuildOptions() []llms.CallOption {
 	}
 	if _, ok := ac.raw["reasoning"]; ok && !ac.Reasoning.IsZero() {
 		switch ac.Reasoning.EffectiveMode() {
+		case ReasoningModeOff:
+			options = append(options, llms.WithReasoningDisabled())
 		case ReasoningModeAdaptive:
 			// Adaptive thinking is applied per-call by PrepareAdaptiveCallOptions
 			// (it appends llms.WithAdaptiveReasoning); no CallOption is emitted here.
@@ -997,6 +1003,12 @@ func (pc *ProviderConfig) reasoningConfigForType(opt ProviderOptionsType) (Reaso
 // thinking: the agent selected adaptive mode, or the model only supports adaptive
 // (e.g. Opus 4.7/4.8, where budget thinking returns a 400).
 func (pc *ProviderConfig) UsesAdaptiveThinking(models ModelsConfig, opt ProviderOptionsType) bool {
+	// An explicit off wins over the adaptive-only auto-adaptive below: the caller
+	// disabled thinking, so no adaptive CallOption may be appended (the disable is
+	// emitted in BuildOptions instead).
+	if reasoning, ok := pc.reasoningConfigForType(opt); ok && reasoning.EffectiveMode() == ReasoningModeOff {
+		return false
+	}
 	if pc.modelReasoningMode(models, opt) == ModelReasoningAdaptiveOnly {
 		return true
 	}

@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/vxcontrol/langchaingo/llms"
+	"github.com/vxcontrol/langchaingo/llms/reasoning"
 )
 
 func TestIsAgentTool(t *testing.T) {
@@ -76,7 +77,7 @@ func TestConvertModelsReasoning(t *testing.T) {
 	}
 
 	byName := make(map[string]*model.ModelConfig)
-	for _, m := range ConvertModels(models) {
+	for _, m := range ConvertModels(models, reasoning.ProviderUnknown) {
 		byName[m.Name] = m
 	}
 
@@ -91,4 +92,84 @@ func TestConvertModelsReasoning(t *testing.T) {
 	assert.Equal(t, model.ModelReasoningModeBudget, *byName["bd"].Reasoning.Mode)
 
 	assert.Nil(t, byName["none"].Reasoning, "model without a reasoning descriptor maps to nil")
+}
+
+func TestConvertModels_OffCapability(t *testing.T) {
+	tr := func(b bool) *bool { return &b }
+	models := pconfig.ModelsConfig{
+		// Gemini: thinking:true, no reasoning block -> capability still surfaced,
+		// Off effective via thinkingBudget:0.
+		{Name: "gemini-2.5-flash", Thinking: tr(true)},
+		// Unclassified OpenAI-family reasoning model: Off is a silent no-op (OffOmit,
+		// default-on unknown) -> cannotDisable must be true so the UI hides Off.
+		{Name: "glm-5.2", Reasoning: &pconfig.ModelReasoningInfo{Mode: pconfig.ModelReasoningBudget}},
+		// Adaptive-only but off by default: Off works by omission -> disablable.
+		{Name: "claude-opus-4-8", Reasoning: &pconfig.ModelReasoningInfo{Mode: pconfig.ModelReasoningAdaptiveOnly}},
+		// Always-on Claude: Off is rejected (OffUnsupported) -> not disablable.
+		{Name: "claude-fable-5", Reasoning: &pconfig.ModelReasoningInfo{Mode: pconfig.ModelReasoningAdaptiveOnly}},
+		// Plain non-thinking model: no reasoning capability at all.
+		{Name: "gpt-4.1"},
+	}
+
+	byProvider := map[string]reasoning.Provider{
+		"gemini-2.5-flash": reasoning.ProviderGoogleAI,
+		"glm-5.2":          reasoning.ProviderOpenAI,
+		"claude-opus-4-8":  reasoning.ProviderAnthropic,
+		"claude-fable-5":   reasoning.ProviderAnthropic,
+		"gpt-4.1":          reasoning.ProviderOpenAI,
+	}
+
+	get := func(name string) *model.ModelReasoningInfo {
+		for _, mc := range ConvertModels(pconfig.ModelsConfig{lookup(models, name)}, byProvider[name]) {
+			if mc.Name == name {
+				return mc.Reasoning
+			}
+		}
+		return nil
+	}
+
+	// Gemini: capability present, Off effective.
+	gem := get("gemini-2.5-flash")
+	require.NotNil(t, gem, "thinking-capable model must surface reasoning capability")
+	require.NotNil(t, gem.CannotDisable)
+	assert.False(t, *gem.CannotDisable, "Gemini Off works via thinkingBudget:0")
+
+	// glm-5.2: Off is a no-op -> cannotDisable true (UI hides Off).
+	glm := get("glm-5.2")
+	require.NotNil(t, glm)
+	require.NotNil(t, glm.CannotDisable)
+	assert.True(t, *glm.CannotDisable, "unclassified default-on model: Off is a no-op, must hide it")
+
+	// opus-4-8: off by default -> disablable.
+	opus := get("claude-opus-4-8")
+	require.NotNil(t, opus.CannotDisable)
+	assert.False(t, *opus.CannotDisable, "off-by-default model: Off works by omission")
+
+	// fable-5: always on -> not disablable.
+	fable := get("claude-fable-5")
+	require.NotNil(t, fable.CannotDisable)
+	assert.True(t, *fable.CannotDisable, "always-on model rejects Off")
+
+	// non-thinking model: no capability.
+	assert.Nil(t, get("gpt-4.1"), "non-thinking model has no reasoning capability")
+}
+
+func lookup(ms pconfig.ModelsConfig, name string) pconfig.ModelConfig {
+	for _, m := range ms {
+		if m.Name == name {
+			return m
+		}
+	}
+	return pconfig.ModelConfig{}
+}
+
+func TestOffEffective(t *testing.T) {
+	tr := func(b bool) *bool { return &b }
+	assert.True(t, offEffective(reasoning.OffDisableClaude, nil))
+	assert.True(t, offEffective(reasoning.OffZeroBudget, nil))
+	assert.True(t, offEffective(reasoning.OffEffortNone, nil))
+	assert.True(t, offEffective(reasoning.OffOmit, tr(false)), "off-by-default: omit disables")
+	assert.False(t, offEffective(reasoning.OffOmit, tr(true)), "default-on + omit = no-op")
+	assert.False(t, offEffective(reasoning.OffOmit, nil), "unknown default + omit = assume no-op")
+	assert.False(t, offEffective(reasoning.OffUnsupported, nil), "rejected")
 }

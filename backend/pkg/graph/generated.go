@@ -341,8 +341,11 @@ type ComplexityRoot struct {
 	}
 
 	ModelReasoningInfo struct {
-		Efforts func(childComplexity int) int
-		Mode    func(childComplexity int) int
+		CannotDisable func(childComplexity int) int
+		DefaultOn     func(childComplexity int) int
+		Efforts       func(childComplexity int) int
+		Mode          func(childComplexity int) int
+		Supported     func(childComplexity int) int
 	}
 
 	ModelUsageStats struct {
@@ -2242,6 +2245,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ModelPrice.Output(childComplexity), true
 
+	case "ModelReasoningInfo.cannotDisable":
+		if e.complexity.ModelReasoningInfo.CannotDisable == nil {
+			break
+		}
+
+		return e.complexity.ModelReasoningInfo.CannotDisable(childComplexity), true
+
+	case "ModelReasoningInfo.defaultOn":
+		if e.complexity.ModelReasoningInfo.DefaultOn == nil {
+			break
+		}
+
+		return e.complexity.ModelReasoningInfo.DefaultOn(childComplexity), true
+
 	case "ModelReasoningInfo.efforts":
 		if e.complexity.ModelReasoningInfo.Efforts == nil {
 			break
@@ -2255,6 +2272,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.ModelReasoningInfo.Mode(childComplexity), true
+
+	case "ModelReasoningInfo.supported":
+		if e.complexity.ModelReasoningInfo.Supported == nil {
+			break
+		}
+
+		return e.complexity.ModelReasoningInfo.Supported(childComplexity), true
 
 	case "ModelUsageStats.model":
 		if e.complexity.ModelUsageStats.Model == nil {
@@ -17550,6 +17574,12 @@ func (ec *executionContext) fieldContext_ModelConfig_reasoning(_ context.Context
 				return ec.fieldContext_ModelReasoningInfo_mode(ctx, field)
 			case "efforts":
 				return ec.fieldContext_ModelReasoningInfo_efforts(ctx, field)
+			case "supported":
+				return ec.fieldContext_ModelReasoningInfo_supported(ctx, field)
+			case "cannotDisable":
+				return ec.fieldContext_ModelReasoningInfo_cannotDisable(ctx, field)
+			case "defaultOn":
+				return ec.fieldContext_ModelReasoningInfo_defaultOn(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ModelReasoningInfo", field.Name)
 		},
@@ -17861,6 +17891,129 @@ func (ec *executionContext) fieldContext_ModelReasoningInfo_efforts(_ context.Co
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type ReasoningEffort does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ModelReasoningInfo_supported(ctx context.Context, field graphql.CollectedField, obj *model.ModelReasoningInfo) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ModelReasoningInfo_supported(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Supported, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*bool)
+	fc.Result = res
+	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ModelReasoningInfo_supported(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ModelReasoningInfo",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ModelReasoningInfo_cannotDisable(ctx context.Context, field graphql.CollectedField, obj *model.ModelReasoningInfo) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ModelReasoningInfo_cannotDisable(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CannotDisable, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*bool)
+	fc.Result = res
+	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ModelReasoningInfo_cannotDisable(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ModelReasoningInfo",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ModelReasoningInfo_defaultOn(ctx context.Context, field graphql.CollectedField, obj *model.ModelReasoningInfo) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ModelReasoningInfo_defaultOn(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.DefaultOn, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*bool)
+	fc.Result = res
+	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ModelReasoningInfo_defaultOn(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ModelReasoningInfo",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
 		},
 	}
 	return fc, nil
@@ -39088,6 +39241,12 @@ func (ec *executionContext) _ModelReasoningInfo(ctx context.Context, sel ast.Sel
 			out.Values[i] = ec._ModelReasoningInfo_mode(ctx, field, obj)
 		case "efforts":
 			out.Values[i] = ec._ModelReasoningInfo_efforts(ctx, field, obj)
+		case "supported":
+			out.Values[i] = ec._ModelReasoningInfo_supported(ctx, field, obj)
+		case "cannotDisable":
+			out.Values[i] = ec._ModelReasoningInfo_cannotDisable(ctx, field, obj)
+		case "defaultOn":
+			out.Values[i] = ec._ModelReasoningInfo_defaultOn(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

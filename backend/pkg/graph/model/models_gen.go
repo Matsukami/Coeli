@@ -329,8 +329,11 @@ type ModelPrice struct {
 }
 
 type ModelReasoningInfo struct {
-	Mode    *ModelReasoningMode `json:"mode,omitempty"`
-	Efforts []ReasoningEffort   `json:"efforts,omitempty"`
+	Mode          *ModelReasoningMode `json:"mode,omitempty"`
+	Efforts       []ReasoningEffort   `json:"efforts,omitempty"`
+	Supported     *bool               `json:"supported,omitempty"`
+	CannotDisable *bool               `json:"cannotDisable,omitempty"`
+	DefaultOn     *bool               `json:"defaultOn,omitempty"`
 }
 
 type ModelUsageStats struct {
@@ -1285,16 +1288,18 @@ type ReasoningMode string
 const (
 	ReasoningModeAdaptive ReasoningMode = "adaptive"
 	ReasoningModeBudget   ReasoningMode = "budget"
+	ReasoningModeOff      ReasoningMode = "off"
 )
 
 var AllReasoningMode = []ReasoningMode{
 	ReasoningModeAdaptive,
 	ReasoningModeBudget,
+	ReasoningModeOff,
 }
 
 func (e ReasoningMode) IsValid() bool {
 	switch e {
-	case ReasoningModeAdaptive, ReasoningModeBudget:
+	case ReasoningModeAdaptive, ReasoningModeBudget, ReasoningModeOff:
 		return true
 	}
 	return false

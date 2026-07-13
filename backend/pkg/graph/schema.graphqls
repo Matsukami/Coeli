@@ -33,10 +33,13 @@ enum ReasoningEffort {
   low
 }
 
-# Reasoning control mode for provider-specific thinking APIs
+# Reasoning control mode for provider-specific thinking APIs. "off" explicitly
+# disables thinking (distinct from an absent mode, which defers to the model
+# default — models like Gemini 2.5 / Claude Fable 5 think by default).
 enum ReasoningMode {
   adaptive
   budget
+  off
 }
 
 # A model's reasoning capability — distinct from the per-agent ReasoningMode
@@ -48,10 +51,17 @@ enum ModelReasoningMode {
 }
 
 # Declares how a model supports extended thinking so the UI can offer a valid
-# mode/effort without hardcoding model names.
+# mode/effort/on-off without hardcoding model names. The capability fields are
+# derived from the langchaingo reasoning tables. An absent reasoning object means
+# the model is not thinking-capable (no reasoning controls); cannotDisable=true
+# hides the off option (the disable would error or be a no-op); defaultOn=true
+# means the model thinks unless explicitly turned off.
 type ModelReasoningInfo {
   mode: ModelReasoningMode
   efforts: [ReasoningEffort!]
+  supported: Boolean
+  cannotDisable: Boolean
+  defaultOn: Boolean
 }
 
 # Template types for AI agent prompts and system operations

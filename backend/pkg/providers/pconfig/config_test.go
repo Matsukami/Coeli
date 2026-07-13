@@ -29,6 +29,8 @@ func TestProviderConfig_UsesAdaptiveThinking(t *testing.T) {
 			adaptiveOnly, &AgentConfig{Model: "opus-4-8"}, true},
 		{"adaptive-only model overrides an agent budget choice",
 			adaptiveOnly, &AgentConfig{Model: "opus-4-8", Reasoning: ReasoningConfig{Mode: ReasoningModeBudget, MaxTokens: 4096}}, true},
+		{"explicit off wins over the adaptive-only auto-adaptive",
+			adaptiveOnly, &AgentConfig{Model: "opus-4-8", Reasoning: ReasoningConfig{Mode: ReasoningModeOff}}, false},
 		{"agent selects adaptive on an adaptive-capable model",
 			adaptiveCapable, &AgentConfig{Model: "opus-4-6", Reasoning: ReasoningConfig{Mode: ReasoningModeAdaptive}}, true},
 		{"agent selects budget on an adaptive-capable model",

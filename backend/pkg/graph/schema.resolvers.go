@@ -2124,22 +2124,22 @@ func (r *queryResolver) SettingsProviders(ctx context.Context) (*model.Providers
 		case provider.ProviderOpenAI:
 			config.Default.Openai = mpcfg
 			if models, err := openai.DefaultModels(); err == nil {
-				config.Models.Openai = converter.ConvertModels(models)
+				config.Models.Openai = converter.ConvertModels(models, prvtype.ReasoningProvider())
 			}
 		case provider.ProviderAnthropic:
 			config.Default.Anthropic = mpcfg
 			if models, err := anthropic.DefaultModels(); err == nil {
-				config.Models.Anthropic = converter.ConvertModels(models)
+				config.Models.Anthropic = converter.ConvertModels(models, prvtype.ReasoningProvider())
 			}
 		case provider.ProviderGemini:
 			config.Default.Gemini = mpcfg
 			if models, err := gemini.DefaultModels(); err == nil {
-				config.Models.Gemini = converter.ConvertModels(models)
+				config.Models.Gemini = converter.ConvertModels(models, prvtype.ReasoningProvider())
 			}
 		case provider.ProviderBedrock:
 			config.Default.Bedrock = mpcfg
 			if models, err := bedrock.DefaultModels(r.Config); err == nil {
-				config.Models.Bedrock = converter.ConvertModels(models)
+				config.Models.Bedrock = converter.ConvertModels(models, prvtype.ReasoningProvider())
 			} else {
 				// A bad BEDROCK_MODELS_PATH otherwise yields an empty model list with no signal.
 				r.Logger.WithError(err).Warn("failed to load bedrock models")
@@ -2151,27 +2151,27 @@ func (r *queryResolver) SettingsProviders(ctx context.Context) (*model.Providers
 		case provider.ProviderDeepSeek:
 			config.Default.Deepseek = mpcfg
 			if models, err := deepseek.DefaultModels(); err == nil {
-				config.Models.Deepseek = converter.ConvertModels(models)
+				config.Models.Deepseek = converter.ConvertModels(models, prvtype.ReasoningProvider())
 			}
 		case provider.ProviderGLM:
 			config.Default.Glm = mpcfg
 			if models, err := glm.DefaultModels(); err == nil {
-				config.Models.Glm = converter.ConvertModels(models)
+				config.Models.Glm = converter.ConvertModels(models, prvtype.ReasoningProvider())
 			}
 		case provider.ProviderKimi:
 			config.Default.Kimi = mpcfg
 			if models, err := kimi.DefaultModels(); err == nil {
-				config.Models.Kimi = converter.ConvertModels(models)
+				config.Models.Kimi = converter.ConvertModels(models, prvtype.ReasoningProvider())
 			}
 		case provider.ProviderQwen:
 			config.Default.Qwen = mpcfg
 			if models, err := qwen.DefaultModels(); err == nil {
-				config.Models.Qwen = converter.ConvertModels(models)
+				config.Models.Qwen = converter.ConvertModels(models, prvtype.ReasoningProvider())
 			}
 		case provider.ProviderMiniMax:
 			config.Default.Minimax = mpcfg
 			if models, err := minimax.DefaultModels(); err == nil {
-				config.Models.Minimax = converter.ConvertModels(models)
+				config.Models.Minimax = converter.ConvertModels(models, prvtype.ReasoningProvider())
 			}
 		}
 	}
@@ -2190,12 +2190,12 @@ func (r *queryResolver) SettingsProviders(ctx context.Context) (*model.Providers
 		case provider.ProviderOllama:
 			config.Enabled.Ollama = true
 			if p, ok := defaultProviders[provider.DefaultProviderNameOllama]; ok {
-				config.Models.Ollama = converter.ConvertModels(p.GetModels())
+				config.Models.Ollama = converter.ConvertModels(p.GetModels(), prvtype.ReasoningProvider())
 			}
 		case provider.ProviderCustom:
 			config.Enabled.Custom = true
 			if p, ok := defaultProviders[provider.DefaultProviderNameCustom]; ok {
-				config.Models.Custom = converter.ConvertModels(p.GetModels())
+				config.Models.Custom = converter.ConvertModels(p.GetModels(), prvtype.ReasoningProvider())
 			}
 		case provider.ProviderDeepSeek:
 			config.Enabled.Deepseek = true

@@ -10,6 +10,7 @@ import (
 	"pentagi/pkg/templates"
 
 	"github.com/vxcontrol/langchaingo/llms"
+	"github.com/vxcontrol/langchaingo/llms/reasoning"
 	"github.com/vxcontrol/langchaingo/llms/streaming"
 )
 
@@ -17,6 +18,24 @@ type ProviderType string
 
 func (p ProviderType) String() string {
 	return string(p)
+}
+
+// ReasoningProvider maps the provider type to the langchaingo reasoning.Provider
+// consumed by capability introspection (llms.ReasoningSupportFor) and the disable
+// resolver. OpenAI-compatible providers all speak the OpenAI reasoning wire.
+func (p ProviderType) ReasoningProvider() reasoning.Provider {
+	switch p {
+	case ProviderAnthropic:
+		return reasoning.ProviderAnthropic
+	case ProviderBedrock:
+		return reasoning.ProviderBedrock
+	case ProviderGemini:
+		return reasoning.ProviderGoogleAI
+	case ProviderOpenAI, ProviderDeepSeek, ProviderGLM, ProviderKimi, ProviderQwen, ProviderMiniMax, ProviderCustom:
+		return reasoning.ProviderOpenAI
+	default: // ProviderOllama and anything unrecognized
+		return reasoning.ProviderUnknown
+	}
 }
 
 const (
