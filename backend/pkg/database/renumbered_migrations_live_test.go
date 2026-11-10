@@ -71,8 +71,8 @@ func openTenant(t *testing.T) (*sql.DB, string) {
 func recordEarlierNumbering(t *testing.T, db *sql.DB) {
 	t.Helper()
 
-	if _, err := db.Exec(`DELETE FROM goose_db_version WHERE version_id > 20260720`); err != nil {
-		t.Fatalf("drop the migrations the earlier numbering did not have: %v", err)
+	if err := goose.DownTo(db, "sql", 20260720); err != nil {
+		t.Fatalf("restore the schema the earlier numbering had: %v", err)
 	}
 	if _, err := db.Exec(`
 		UPDATE goose_db_version SET version_id = CASE version_id

@@ -37,6 +37,7 @@ import { VersionInfoProvider } from '@/providers/version-info-provider';
 
 import { SystemSettingsProvider } from './providers/system-settings-provider';
 
+const Coeli = lazy(() => import('@/pages/coeli/coeli'));
 const Dashboard = lazy(() => import('@/pages/dashboard/dashboard'));
 const Flow = lazy(() => import('@/pages/flows/flow'));
 const FlowReport = lazy(() => import('@/pages/flows/flow-report'));
@@ -138,6 +139,10 @@ const router = createBrowserRouter(
         >
             <Route element={<ProtectedAppLayout />}>
                 <Route element={<MainLayout />}>
+                    <Route
+                        element={<Coeli />}
+                        path="coeli"
+                    />
                     <Route
                         element={<Dashboard />}
                         handle={routeTitles.dashboard}

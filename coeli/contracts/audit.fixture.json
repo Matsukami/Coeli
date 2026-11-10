@@ -1,0 +1,1 @@
+{"schema_version":"coeli.audit.v1","source":"cloudflare-compatible-adapter-fixture","commit":"fixture-only-no-upstream-incorporated","coverage":[{"unit":"records authorization","status":"reviewed"}],"findings":[{"id":"fixture-idor","status":"hypothesis","boundary":"alice cannot read bob records","evidence":["fixture-source-reference"]}]}

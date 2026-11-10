@@ -14,6 +14,7 @@ import (
 	"strings"
 	"time"
 
+	"pentagi/pkg/coeli"
 	"pentagi/pkg/config"
 	"pentagi/pkg/controller"
 	"pentagi/pkg/database"
@@ -67,6 +68,7 @@ var frontendRoutes = []string{
 	"/resources",
 	"/knowledges",
 	"/dashboard",
+	"/coeli",
 }
 
 // @title PentAGI Swagger API
@@ -310,6 +312,8 @@ func NewRouter(
 
 	privateUserGroup := api.Group("/")
 	privateUserGroup.Use(authMiddleware.AuthUserRequired)
+
+	coeli.Register(privateUserGroup.Group("/coeli"), api.Group("/coeli-worker/:owner"), coeli.Store{Pool: cfg.PgxPool}, providers, cfg.SchemaName())
 
 	registerPrivateRoutes(privateGroup, privateUserGroup, privateServices{
 		agentlog:     agentlogService,

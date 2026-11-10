@@ -140,6 +140,17 @@ export function MainSidebar() {
                             <SidebarMenuItem>
                                 <SidebarMenuButton
                                     asChild
+                                    isActive={location.pathname === '/coeli'}
+                                >
+                                    <Link to="/coeli">
+                                        <GitFork />
+                                        Coeli Purple Team
+                                    </Link>
+                                </SidebarMenuButton>
+                            </SidebarMenuItem>
+                            <SidebarMenuItem>
+                                <SidebarMenuButton
+                                    asChild
                                     isActive={!!isFlowsActive}
                                 >
                                     <Link to={routes.flows}>

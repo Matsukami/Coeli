@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://coeli.invalid/contracts/v1/evidence",
+  "type": "object",
+  "properties": {
+    "lease": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{48}$"
+    },
+    "content": {
+      "type": "object",
+      "required": [
+        "schema_version"
+      ],
+      "properties": {
+        "schema_version": {
+          "enum": [
+            "coeli.result.v1",
+            "coeli.audit.v1"
+          ]
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "required": [
+    "lease",
+    "content"
+  ],
+  "additionalProperties": false
+}

@@ -200,3 +200,13 @@ func TestFailover_WithFailover_ReturnsThePrimaryWithoutAUsableBackup(t *testing.
 	assert.Same(t, Provider(primary), WithFailover(primary, &fakeProvider{name: "primary"}, nil),
 		"a backup equal to the primary is not a backup")
 }
+
+func TestFailover_WithoutFailover_DoesNotCallBackup(t *testing.T) {
+	primary := &fakeProvider{name: "primary", err: errFailoverVendorDown}
+	backup := &fakeProvider{name: "backup"}
+	selected := WithoutFailover(WithFailover(primary, backup, nil))
+	_, err := selected.Call(context.Background(), pconfig.OptionsTypeSimple, "synthetic")
+	require.ErrorIs(t, err, errFailoverVendorDown)
+	assert.Equal(t, 1, primary.calls)
+	assert.Equal(t, 0, backup.calls)
+}

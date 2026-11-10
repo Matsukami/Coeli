@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://coeli.invalid/contracts/v1/task",
+  "type": "object",
+  "required": [
+    "id",
+    "run_id",
+    "capability",
+    "stage",
+    "status",
+    "execution",
+    "lease_until",
+    "attempts"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{48}$"
+    },
+    "run_id": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{48}$"
+    },
+    "capability": {
+      "enum": [
+        "development.v1",
+        "database.v1",
+        "infrastructure.v1",
+        "audit.v1",
+        "verification.v1",
+        "telemetry.v1"
+      ]
+    },
+    "stage": {
+      "enum": [
+        "audit",
+        "attack",
+        "defend",
+        "maintain",
+        "retest",
+        "evaluate",
+        "remember"
+      ]
+    },
+    "status": {
+      "enum": [
+        "queued",
+        "leased",
+        "succeeded",
+        "failed",
+        "cancelled",
+        "inconclusive"
+      ]
+    },
+    "execution": {
+      "enum": [
+        "internal",
+        "external"
+      ]
+    },
+    "worker_id": {
+      "type": "string"
+    },
+    "lease_until": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "attempts": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "progress": {
+      "type": "string",
+      "maxLength": 240
+    },
+    "outcome": {
+      "type": "string"
+    },
+    "result": {},
+    "receipt": {
+      "type": "string"
+    },
+    "depends_on": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

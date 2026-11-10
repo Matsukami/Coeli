@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://coeli.invalid/contracts/v1/result",
+  "type": "object",
+  "properties": {
+    "lease": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{48}$"
+    },
+    "outcome": {
+      "enum": [
+        "succeeded",
+        "failed",
+        "cancelled",
+        "inconclusive"
+      ]
+    },
+    "result": {
+      "type": "object",
+      "required": [
+        "schema_version"
+      ],
+      "properties": {
+        "schema_version": {
+          "enum": [
+            "coeli.result.v1",
+            "coeli.audit.v1"
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    "receipt": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    }
+  },
+  "required": [
+    "lease",
+    "outcome",
+    "result",
+    "receipt"
+  ],
+  "additionalProperties": false
+}

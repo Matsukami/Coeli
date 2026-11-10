@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://coeli.invalid/contracts/v1/telemetry",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 100
+    },
+    "schema_version": {
+      "const": "coeli.telemetry.v1"
+    },
+    "run_id": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{48}$"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "source": {
+      "const": "coeli-lab"
+    },
+    "asset": {
+      "const": "synthetic-records"
+    },
+    "kind": {
+      "enum": [
+        "cross_owner_access",
+        "legitimate_access"
+      ]
+    },
+    "status": {
+      "enum": [
+        200,
+        403
+      ]
+    }
+  },
+  "required": [
+    "id",
+    "schema_version",
+    "run_id",
+    "timestamp",
+    "source",
+    "asset",
+    "kind",
+    "status"
+  ],
+  "additionalProperties": false
+}

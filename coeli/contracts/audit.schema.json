@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://coeli.invalid/contracts/v1/audit",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "const": "coeli.audit.v1"
+    },
+    "source": {
+      "type": "string",
+      "minLength": 1
+    },
+    "commit": {
+      "type": "string",
+      "minLength": 1
+    },
+    "coverage": {
+      "type": [
+        "object",
+        "array"
+      ]
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "status": {
+            "const": "hypothesis"
+          },
+          "boundary": {
+            "type": "string",
+            "minLength": 1
+          },
+          "evidence": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "boundary",
+          "evidence"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "schema_version",
+    "source",
+    "commit",
+    "coverage",
+    "findings"
+  ],
+  "additionalProperties": false
+}

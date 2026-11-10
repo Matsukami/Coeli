@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "oneOf": [
+    {
+      "type": "object",
+      "required": [
+        "schema_version",
+        "task"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": "coeli.worker.v1"
+        },
+        "task": {
+          "type": "null"
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": [
+        "schema_version",
+        "task",
+        "lease",
+        "payload"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": "coeli.worker.v1"
+        },
+        "task": {
+          "$ref": "./task.schema.json"
+        },
+        "lease": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{48}$"
+        },
+        "payload": {
+          "type": "object",
+          "required": [
+            "asset",
+            "environment",
+            "data_policy",
+            "effects"
+          ],
+          "properties": {
+            "asset": {
+              "const": "synthetic-records"
+            },
+            "environment": {
+              "enum": [
+                "laboratory",
+                "staging"
+              ]
+            },
+            "data_policy": {
+              "const": "synthetic-only"
+            },
+            "effects": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  ]
+}

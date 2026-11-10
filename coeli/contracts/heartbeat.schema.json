@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://coeli.invalid/contracts/v1/heartbeat",
+  "type": "object",
+  "properties": {
+    "lease": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{48}$"
+    },
+    "progress": {
+      "type": "string",
+      "maxLength": 240
+    }
+  },
+  "required": [
+    "lease",
+    "progress"
+  ],
+  "additionalProperties": false
+}

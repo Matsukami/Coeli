@@ -1,0 +1,436 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Coeli Worker API",
+    "version": "1.0.0",
+    "description": "Pull workers; HTTPS outside loopback; no Claude Code connector. Session cookie name follows PentAGI tenant configuration."
+  },
+  "paths": {
+    "/api/v1/coeli/workers": {
+      "post": {
+        "operationId": "registerWorker",
+        "summary": "Owner provisions capability-bound worker credential; no Claude authentication",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Accepted; worker results remain candidates"
+          },
+          "400": {
+            "description": "Invalid schema"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Scope or capability refused"
+          },
+          "409": {
+            "description": "Lease expired, cancellation, pause or conflict"
+          },
+          "503": {
+            "description": "Integration unavailable"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./registration.schema.json"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/coeli-worker/{owner}/claim": {
+      "post": {
+        "operationId": "claimTask",
+        "summary": "Claim compatible queued task; task null if none; response includes task, lease, payload and schema_version",
+        "security": [
+          {
+            "worker": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "owner",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "X-Coeli-Worker",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{48}$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Accepted; worker results remain candidates",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./claim.schema.json"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid schema"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Scope or capability refused"
+          },
+          "409": {
+            "description": "Lease expired, cancellation, pause or conflict"
+          },
+          "503": {
+            "description": "Integration unavailable"
+          }
+        }
+      }
+    },
+    "/api/v1/coeli-worker/{owner}/tasks/{id}/heartbeat": {
+      "post": {
+        "operationId": "heartbeat",
+        "summary": "Extend lease 45 seconds and report progress; stop on 401/403/409",
+        "security": [
+          {
+            "worker": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "owner",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{48}$"
+            }
+          },
+          {
+            "name": "X-Coeli-Worker",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{48}$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Accepted; worker results remain candidates"
+          },
+          "400": {
+            "description": "Invalid schema"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Scope or capability refused"
+          },
+          "409": {
+            "description": "Lease expired, cancellation, pause or conflict"
+          },
+          "503": {
+            "description": "Integration unavailable"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./heartbeat.schema.json"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/coeli-worker/{owner}/tasks/{id}/evidence": {
+      "post": {
+        "operationId": "uploadEvidence",
+        "summary": "Store JSON candidate evidence up to 64 KiB",
+        "security": [
+          {
+            "worker": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "owner",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{48}$"
+            }
+          },
+          {
+            "name": "X-Coeli-Worker",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{48}$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Accepted; worker results remain candidates"
+          },
+          "400": {
+            "description": "Invalid schema"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Scope or capability refused"
+          },
+          "409": {
+            "description": "Lease expired, cancellation, pause or conflict"
+          },
+          "503": {
+            "description": "Integration unavailable"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./evidence.schema.json"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/coeli-worker/{owner}/tasks/{id}/result": {
+      "post": {
+        "operationId": "completeTask",
+        "summary": "Complete once; receipt is SHA-256 of exact serialized result bytes",
+        "security": [
+          {
+            "worker": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "owner",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{48}$"
+            }
+          },
+          {
+            "name": "X-Coeli-Worker",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{48}$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Accepted; worker results remain candidates"
+          },
+          "400": {
+            "description": "Invalid schema"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Scope or capability refused"
+          },
+          "409": {
+            "description": "Lease expired, cancellation, pause or conflict"
+          },
+          "503": {
+            "description": "Integration unavailable"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./result.schema.json"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/coeli-worker/{owner}/telemetry": {
+      "post": {
+        "operationId": "ingestTelemetry",
+        "summary": "Requires telemetry.v1 capability and matching environment",
+        "security": [
+          {
+            "worker": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "owner",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "X-Coeli-Worker",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{48}$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Accepted; worker results remain candidates"
+          },
+          "400": {
+            "description": "Invalid schema"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Scope or capability refused"
+          },
+          "409": {
+            "description": "Lease expired, cancellation, pause or conflict"
+          },
+          "503": {
+            "description": "Integration unavailable"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./telemetry.schema.json"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/coeli/workers/{id}/revoke": {
+      "post": {
+        "operationId": "revokeWorker",
+        "summary": "Owner revokes worker credential",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{48}$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Accepted; worker results remain candidates"
+          },
+          "400": {
+            "description": "Invalid schema"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Scope or capability refused"
+          },
+          "409": {
+            "description": "Lease expired, cancellation, pause or conflict"
+          },
+          "503": {
+            "description": "Integration unavailable"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "worker": {
+        "type": "http",
+        "scheme": "bearer"
+      },
+      "session": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "auth"
+      }
+    }
+  }
+}

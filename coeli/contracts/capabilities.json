@@ -1,0 +1,11 @@
+{
+  "schema_version": "coeli.worker.v1",
+  "capabilities": [
+    {"name":"development.v1","input":"finding and evidence references","output":"candidate patch, diff digest, tests and migration plan; no application"},
+    {"name":"database.v1","input":"schema findings and synthetic migration context","output":"candidate migration and separate rollback analysis; execution unavailable"},
+    {"name":"infrastructure.v1","input":"laboratory task metadata","output":"candidate investigation or network plan; privileged effects unavailable to worker"},
+    {"name":"audit.v1","input":"source references, approved scope and coverage units","output":"coeli.audit.v1 candidates or coeli.result.v1 result"},
+    {"name":"verification.v1","input":"candidate references excluding private evaluator criteria","output":"candidate verification; final evaluator remains internal"},
+    {"name":"telemetry.v1","input":"local telemetry from approved asset","output":"coeli.telemetry.v1 events; no state/permission modifications"}
+  ]
+}

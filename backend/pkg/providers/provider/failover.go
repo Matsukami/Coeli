@@ -128,3 +128,14 @@ func (f *failoverProvider) GetToolCallIDTemplate(ctx context.Context, prompter t
 
 	return f.backup.GetToolCallIDTemplate(ctx, prompter)
 }
+
+// WithoutFailover preserves the selected provider when a caller forbids sending data to a backup.
+func WithoutFailover(p Provider) Provider {
+	for {
+		f, ok := p.(*failoverProvider)
+		if !ok {
+			return p
+		}
+		p = f.Provider
+	}
+}

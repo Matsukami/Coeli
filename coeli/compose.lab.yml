@@ -1,0 +1,17 @@
+services:
+  exercise:
+    build: ./lab
+    network_mode: none
+    read_only: true
+    user: "1000:1000"
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 64
+    mem_limit: 256m
+    cpus: 1.0
+    ulimits:
+      nofile: {soft: 128, hard: 128}
+      fsize: {soft: 16777216, hard: 16777216}
+    tmpfs:
+      - /scratch:size=64m,uid=1000,gid=1000,mode=0700
+      - /tmp:size=16m,uid=1000,gid=1000,mode=0700
