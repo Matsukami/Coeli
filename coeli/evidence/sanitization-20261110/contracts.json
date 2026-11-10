@@ -1,0 +1,7 @@
+{
+  "command": [
+    "python3",
+    "coeli/contracts/test_contracts.py"
+  ],
+  "exit_code": 0
+}

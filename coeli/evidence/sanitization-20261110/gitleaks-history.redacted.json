@@ -1,0 +1,55 @@
+{
+  "scanner": "gitleaks",
+  "version": "8.24.3",
+  "scope": "all local refs, full history",
+  "max_decode_depth": 2,
+  "redaction_percent": 100,
+  "ignore_inline_allow_comments": true,
+  "repository_ignore_files_used": false,
+  "finding_suppressions_added": false,
+  "exit_code": 1,
+  "findings": [
+    {
+      "rule": "generic-api-key",
+      "path": "backend/pkg/server/middleware_test.go",
+      "commit": "4da7e09c419bf6ab0e15be66327bdee1e1f89d58",
+      "start_line": 227,
+      "classification": "Sec-WebSocket-Key protocol nonce in a request fixture; not an authentication secret"
+    },
+    {
+      "rule": "generic-api-key",
+      "path": "frontend/e2e/specs/real/account-password.spec.ts",
+      "commit": "094a2ba3a3e4f3b6aaaeae938333ee9547d9967b",
+      "start_line": 90,
+      "classification": "Literal in a negative password validation case; fails application password policy"
+    },
+    {
+      "rule": "curl-auth-header",
+      "path": "README.md",
+      "commit": "465f1c9a66a58e0a273a2ab5dbc1c9c6580d9a00",
+      "start_line": 946,
+      "classification": "Explicit bearer-token placeholder in documentation; not a credential"
+    },
+    {
+      "rule": "curl-auth-header",
+      "path": "README.md",
+      "commit": "465f1c9a66a58e0a273a2ab5dbc1c9c6580d9a00",
+      "start_line": 952,
+      "classification": "Explicit bearer-token placeholder in documentation; not a credential"
+    },
+    {
+      "rule": "curl-auth-header",
+      "path": "README.md",
+      "commit": "465f1c9a66a58e0a273a2ab5dbc1c9c6580d9a00",
+      "start_line": 1053,
+      "classification": "Explicit bearer-token placeholder in documentation; not a credential"
+    }
+  ],
+  "unclassified_findings": 0,
+  "limitations": [
+    "Pattern-based detection cannot prove that every secret type is absent",
+    "Diff scanner complemented by exhaustive literal/object and commit/tag-message scans",
+    "No credentials were authenticated",
+    "No network push protection verdict is available; no push attempted"
+  ]
+}

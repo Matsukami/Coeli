@@ -1,0 +1,62 @@
+{
+  "version_count": 11,
+  "passed": 11,
+  "results": [
+    {
+      "sanitized_commit": "20bcbdd6a421882ee45f73d31ad56c9d4df93b42",
+      "test_blob": "8458cfb36d5537570f3137a54caddab5b4406ba6",
+      "exit_code": 0
+    },
+    {
+      "sanitized_commit": "9bac084013228f63f11803f52ad085e6586cd6c6",
+      "test_blob": "3c3f631fb4421cd1c3bd7af8ac9873309d7aad56",
+      "exit_code": 0
+    },
+    {
+      "sanitized_commit": "81de460f35967eb7c4a4856a482d6d587021947d",
+      "test_blob": "dfc2b25ac85ca67639fec864c8efa5462f246377",
+      "exit_code": 0
+    },
+    {
+      "sanitized_commit": "65ded9983282c47dc9070da3b3dae1db9e2e3a05",
+      "test_blob": "79d22d7015d8203c96e039e7b926c06c2fce71c8",
+      "exit_code": 0
+    },
+    {
+      "sanitized_commit": "aca43a05633677de73e077582c7bb35087afb22a",
+      "test_blob": "33a55f6ef05e70a12dec1d0664771811d716073a",
+      "exit_code": 0
+    },
+    {
+      "sanitized_commit": "fe56d6997d9e17c7d7d64d30f03a95175ef5285f",
+      "test_blob": "97d2e0075499e12201b26b9c242bbce2a7da2680",
+      "exit_code": 0
+    },
+    {
+      "sanitized_commit": "ae015f0433972223ae467a32a5a5ada532175de0",
+      "test_blob": "9d4d088ac56e9e0deb2b2b3229c426ff257a2496",
+      "exit_code": 0
+    },
+    {
+      "sanitized_commit": "6abf05ace142df384f9200c841c9c1bf3e1f2336",
+      "test_blob": "fda3ff597aab4db3f718557920a7ffbd155a240a",
+      "exit_code": 0
+    },
+    {
+      "sanitized_commit": "c549aab0aef0e9543429488c9279c205553b89fe",
+      "test_blob": "ad8e4a80beb6c00816d607711cfe2aa8e921c6d9",
+      "exit_code": 0
+    },
+    {
+      "sanitized_commit": "f869703dbca4c5608590d9470f20c1adbc61c216",
+      "test_blob": "0308b89eac2ca26f85a81053c7171463905b7c33",
+      "exit_code": 0
+    },
+    {
+      "sanitized_commit": "13d61de5fda5bac7718e46640eb1660cd13132df",
+      "test_blob": "967081dbe4aaf298d812ee4f27adab5f3bedcce2",
+      "exit_code": 0
+    }
+  ],
+  "scope": "Each historical config package source set plus config_test.go, using the current pinned Go toolchain and dependency graph; unrelated newer package files excluded"
+}

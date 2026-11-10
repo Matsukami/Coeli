@@ -1,0 +1,15 @@
+✔ real local HTTP purple exercise: exploit, telemetry, containment, reversal, patch, independent retest, memory (119.904269ms)
+✔ observation records would_execute, leaves unauthorized access possible, and preserves availability (8.785377ms)
+✔ deterministic audit records a hypothesis and artifact hash, and resumes idempotently (2.904546ms)
+✔ production and unsupported operations are refused before creating a workspace (0.106208ms)
+✔ project-owned vulnerable fixture permits the cross-owner boundary violation (0.062188ms)
+✔ maintenance prepares a real git branch and diff from a labelled test finding without changing source (36.376047ms)
+✔ worker credentials are separate and network destination refuses cleartext remote and URL credentials (0.465405ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 234.377024

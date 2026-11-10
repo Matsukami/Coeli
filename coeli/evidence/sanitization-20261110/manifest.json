@@ -1,0 +1,48 @@
+{
+  "date": "2026-11-10",
+  "publication_branch": "publication/coeli-sanitized",
+  "rewritten_history_tip": "20bcbdd6a421882ee45f73d31ad56c9d4df93b42",
+  "historical_commits": 956,
+  "historical_merges": 75,
+  "retained_tags": 10,
+  "replaced_literals": 15,
+  "modified_blobs": 26,
+  "credentials_in_reports": false,
+  "gitleaks_exit_code": 1,
+  "gitleaks_classified_benign_findings": 5,
+  "gitleaks_unclassified_findings": 0,
+  "previous_evidence_directory": "coeli/evidence/validation-20261110",
+  "previous_evidence_hashes_refer_to": "Original commits; resolve through commit-map.tsv",
+  "prior_evidence_files_modified": false,
+  "old_to_new_coeli": {
+    "86f1f425387a9d8405f55db22033f316fe90a68b": "b6b05e1966e7dff3c890fab4a86a882018e06f5d",
+    "b73c5103ade030af872c66a5805e6b780a5cd415": "20bcbdd6a421882ee45f73d31ad56c9d4df93b42"
+  },
+  "excluded_from_deliverable": [
+    "Source repository snapshot",
+    "Original credential values and substitution tables",
+    "Private scanner intermediates",
+    "Discarded first-pass clone",
+    "Tools and mutation/historical overlays"
+  ],
+  "checksums": {
+    "classification.redacted.json": "43cda8cabd286a2e6085daf553642813a1f6bf218e010598407036972c5d7425",
+    "commit-map.tsv": "ce82f2a5f7ff84ed7707ebfaed718e3fb64bcce448ac1fa375584b80b432fe17",
+    "config-mutation.json": "3710c9cf05304a9c57f095c6b6850c4d90e9f438f4a9439d71670cc8e010d44b",
+    "config-mutation.txt": "3b267f6bf00605ad59d84041f535f5c7f3362e1343534eccfce4a0f6046fd060",
+    "contracts.json": "396f9f7d6d63dec66a4da085faf001db1f41ecf1fa764802cceca406793b5c40",
+    "contracts.txt": "484819fc6115ded4f95980c301dc1cb3bd42b75d97061c070633332d47142c79",
+    "gitleaks-history.redacted.json": "23ef9f512a1a3137958519eebef0f49b9d01153a8dab6e23e489e545b0df75c2",
+    "go-affected.json": "643545e2d362ff97eb937fe8b5ff8ef1dc446b472dcff1163d6ecb8d594ec8f4",
+    "go-affected.txt": "7272a5ecf937a87232b7980e38e040f7471c8973797444802e92815731d5ca0e",
+    "go-coeli.json": "8315823debd8d0f27592b3b21ae8acfa0d0a5ec3d227e1e77b1dc77e26fad2e7",
+    "go-coeli.txt": "7f0e972c1d667dea2dce3a776cd6b45e60f795d1ac171fdbb5a1e412dd49f6d2",
+    "historical-config.json": "db69dc0bbc0dbb471a7c1d8ce57016a61c2b5a711a2854b2709a8a3ea8ca4710",
+    "node-lab-sdk.json": "e439d4334e55b4e2f0dd5dadbf6adcc3ecae46906c646e690989e1c7e146b3f0",
+    "node-lab-sdk.txt": "49ea03e7c4ba003a41180a19a3688225ef4ace3931b6912df337796b53d4ee3b",
+    "original-preservation.json": "122083ae2d258f6df067d319154c6918998a8c16242e9cd89108a060af141b92",
+    "preservation-and-object-scan.json": "18600cd11452a3071d20551a52f270ff45d6c9a06fcacdc75e3aaf9ec0bcb68b",
+    "refs-map.tsv": "7db93ec767825930cf2332f61913254e6772792df0ffdef549bd2a646665d752",
+    "rewrite-summary.json": "20ffce480c6df6a3021c57e5164ecd30ee86b9a95c34759ced486314043ea91e"
+  }
+}

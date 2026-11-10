@@ -1,0 +1,11 @@
+{
+  "command": [
+    "node",
+    "--test",
+    "--test-isolation=none",
+    "coeli/lab/runner.test.mjs",
+    "coeli/sdk/client.test.mjs",
+    "coeli/lab/integration.test.mjs"
+  ],
+  "exit_code": 0
+}

@@ -1,0 +1,6 @@
+ok  	pentagi/pkg/config	(cached)
+ok  	pentagi/cmd/installer/hardening	1.030s
+ok  	pentagi/cmd/installer/wizard/controller	2.349s
+ok  	pentagi/pkg/providers	(cached)
+ok  	pentagi/pkg/server/models	(cached)
+ok  	pentagi/pkg/tools	(cached)

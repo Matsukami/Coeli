@@ -1,0 +1,51 @@
+{
+  "values_included": false,
+  "authentication_attempts": 0,
+  "categories": [
+    {
+      "category": "Google OAuth client ID and secret",
+      "classification": "Potentially real; authenticity and revocation unknown",
+      "action": "Replaced in all historical occurrences"
+    },
+    {
+      "category": "Google API / Gemini and OpenAI project-shaped keys",
+      "classification": "Potentially real; no explicit fictional provenance",
+      "action": "Replaced"
+    },
+    {
+      "category": "AWS access-key-shaped fixture",
+      "classification": "Explicit test marker, but provider-compatible format",
+      "action": "Replaced with a synthetic non-provider-shaped fixture"
+    },
+    {
+      "category": "Other opaque provider, OAuth GitHub, federation, Langfuse and license literals",
+      "classification": "Not proven safe to publish from local provenance alone",
+      "action": "Replaced; shared installer expectations updated by the same literal substitution"
+    },
+    {
+      "category": "JWT-shaped samples",
+      "classification": "Format fixtures; no authentication attempted, validity unverified",
+      "action": "Replaced with synthetic lexical three-segment fixtures without encoded identity claims or cryptographic signatures"
+    },
+    {
+      "category": "README bearer arguments",
+      "classification": "Explicit documentation placeholders",
+      "action": "Retained; three redacted Gitleaks findings, no scanner suppression"
+    },
+    {
+      "category": "WebSocket nonce",
+      "classification": "Sec-WebSocket-Key protocol fixture, not an authentication credential",
+      "action": "Retained; one redacted Gitleaks finding"
+    },
+    {
+      "category": "Negative password-policy test",
+      "classification": "Deliberately rejected literal lacking required composition at its length",
+      "action": "Retained; one redacted Gitleaks finding"
+    },
+    {
+      "category": "Truncated key examples / padded-value fixtures",
+      "classification": "Do not meet provider credential shapes; part of trim and regex tests",
+      "action": "Retained; a first substitution attempt exposed a regex expectation collision and was discarded before rebuilding this copy"
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "unique_replaced_literals": 15,
+  "modified_blobs": 26,
+  "modified_messages": 0,
+  "categories": {
+    "config:GeminiAPIKey": 2,
+    "config:AnthropicAPIKey": 1,
+    "config:DeepSeekAPIKey": 1,
+    "config:TavilyAPIKey": 1,
+    "config:OAuthGoogleClientID": 1,
+    "config:OAuthGoogleClientSecret": 1,
+    "config:OAuthGithubClientSecret": 1,
+    "config:BedrockAccessKey": 1,
+    "config:LangfuseSecretKey": 1,
+    "config:AnthropicIdentityToken": 1,
+    "scanner:generic-api-key:backend/cmd/installer/hardening/hardening_test.go": 1,
+    "scanner:jwt:backend/pkg/server/models/fixtures_test.go": 1,
+    "scanner:generic-api-key:backend/pkg/tools/tools_test.go": 1,
+    "scanner:generic-api-key:backend/pkg/config/config_test.go": 1
+  },
+  "original_values_written_to_replacement_file": false,
+  "scope": "isolated copy only"
+}

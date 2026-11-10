@@ -1,0 +1,3 @@
+ok  	pentagi/pkg/coeli	1.048s
+ok  	pentagi/pkg/providers/provider	1.050s
+ok  	pentagi/pkg/server	1.213s

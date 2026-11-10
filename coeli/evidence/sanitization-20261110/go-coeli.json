@@ -1,0 +1,14 @@
+{
+  "command": [
+    "go",
+    "test",
+    "-p",
+    "1",
+    "-race",
+    "./pkg/coeli",
+    "./pkg/providers/provider",
+    "./pkg/server"
+  ],
+  "exit_code": 0,
+  "output_redacted": true
+}

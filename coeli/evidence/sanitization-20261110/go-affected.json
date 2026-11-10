@@ -1,0 +1,17 @@
+{
+  "command": [
+    "go",
+    "test",
+    "-p",
+    "1",
+    "-race",
+    "./pkg/config",
+    "./cmd/installer/hardening",
+    "./cmd/installer/wizard/controller",
+    "./pkg/providers",
+    "./pkg/server/models",
+    "./pkg/tools"
+  ],
+  "exit_code": 0,
+  "output_redacted": true
+}

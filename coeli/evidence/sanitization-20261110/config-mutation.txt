@@ -1,0 +1,3 @@
+Expected negative control: regex escaping removed through an external Go overlay.
+--- FAIL: TestConfig_GetSecretPatterns_FindsEachSecretVerbatim
+Exit code: 1 (expected); assertion payloads withheld.

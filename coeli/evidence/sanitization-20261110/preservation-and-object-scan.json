@@ -1,0 +1,39 @@
+{
+  "status": "passed",
+  "original_commit_count": 956,
+  "mapped_commit_count": 956,
+  "preserved_merge_commits": 75,
+  "commit_messages_authors_committers_dates_and_parents_preserved": true,
+  "original_signed_commits": 938,
+  "tag_count": 10,
+  "annotated_tag_count": 8,
+  "changed_historical_paths": [
+    "backend/cmd/installer/hardening/hardening_test.go",
+    "backend/cmd/installer/wizard/controller/controller_test.go",
+    "backend/pkg/config/config_test.go",
+    "backend/pkg/providers/routing_test.go",
+    "backend/pkg/server/models/api_tokens_test.go",
+    "backend/pkg/server/models/fixtures_test.go",
+    "backend/pkg/server/models/users_test.go",
+    "backend/pkg/tools/tools_test.go"
+  ],
+  "changed_blob_pairs": 26,
+  "coeli_existing_paths_identical": 76,
+  "licenses_and_production_files_identical_in_every_commit": true,
+  "physical_objects_scanned": 14033,
+  "object_types": {
+    "blob": 6612,
+    "tree": 6457,
+    "commit": 956,
+    "tag": 8
+  },
+  "original_literals_remaining": 0,
+  "high_confidence_pattern_hits": [],
+  "commit_and_tag_message_gitleaks_exit_code": 0,
+  "coeli_commit_map": {
+    "86f1f425387a9d8405f55db22033f316fe90a68b": "b6b05e1966e7dff3c890fab4a86a882018e06f5d",
+    "b73c5103ade030af872c66a5805e6b780a5cd415": "20bcbdd6a421882ee45f73d31ad56c9d4df93b42"
+  },
+  "rewritten_commit_signatures": 0,
+  "signature_limitation": "Original cryptographic commit signatures cannot survive rewriting; no original signature is presented as valid for rewritten commits"
+}
