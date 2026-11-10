@@ -1,0 +1,16 @@
+$ vitest run --maxWorkers=2
+
+ RUN  v4.1.9 /home/matsukami/IA defesa/pentagi/frontend
+
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+sandbox baseline was never taken; refusing to sweep
+Not implemented: HTMLCanvasElement's getContext() method: without installing the canvas npm package
+Not implemented: HTMLCanvasElement's getContext() method: without installing the canvas npm package
+Not implemented: HTMLCanvasElement's getContext() method: without installing the canvas npm package
+
+ Test Files  118 passed (118)
+      Tests  2539 passed (2539)
+   Start at  00:10:12
+   Duration  74.55s (transform 2.32s, setup 8.68s, import 34.64s, tests 56.21s, environment 39.97s)

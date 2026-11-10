@@ -1,0 +1,22 @@
+✔ deterministic audit records a hypothesis and artifact hash, and resumes idempotently (8.3261ms)
+✔ production and unsupported operations are refused before creating a workspace (0.126041ms)
+✔ project-owned vulnerable fixture permits the cross-owner boundary violation (0.094918ms)
+✖ maintenance prepares a real git branch and diff from a labelled test finding without changing source (33.81956ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 3
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 63.792083
+
+✖ failing tests:
+
+test at ../../../../tmp/coeli-mutation-shq8dnd6/runner.test.mjs:31:1
+✖ maintenance prepares a real git branch and diff from a labelled test finding without changing source (33.81956ms)
+  Error: maintainer authorization checks failed
+      at executeStage (file:///tmp/coeli-mutation-shq8dnd6/runner.mjs:96:29)
+      at async TestContext.<anonymous> (file:///tmp/coeli-mutation-shq8dnd6/runner.test.mjs:36:20)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7)

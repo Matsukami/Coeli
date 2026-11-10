@@ -1,0 +1,36 @@
+[WebServer] (node:139644) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] $ tsc -b && vite build
+[WebServer] (node:139927) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer]
+[WebServer]  WARN  The plugin "vite-tsconfig-paths" is detected. Vite now supports tsconfig paths resolution natively via the resolve.tsconfigPaths option. You can remove the plugin and set resolve.tsconfigPaths: true in your Vite config instead.
+[WebServer]
+[WebServer]
+[WebServer]  WARN  [plugin builtin:vite-reporter]
+[WebServer] (!) Some chunks are larger than 1000 kB after minification. Consider:
+[WebServer] - Using dynamic import() to code-split the application
+[WebServer] - Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+[WebServer] - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+[WebServer]
+[WebServer] (node:140165) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:140177) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer]
+[WebServer]  WARN  The plugin "vite-tsconfig-paths" is detected. Vite now supports tsconfig paths resolution natively via the resolve.tsconfigPaths option. You can remove the plugin and set resolve.tsconfigPaths: true in your Vite config instead.
+[WebServer]
+[WebServer]
+[WebServer]  WARN  [vite:react-swc] We recommend switching to @vitejs/plugin-react for improved performance as no swc plugins are used. More information at https://vite.dev/rolldown
+[WebServer]
+
+Running 4 tests using 1 worker
+
+(node:140285) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [mock-chromium] › e2e/specs/smoke.spec.ts:10:9 › smoke › unauthenticated › redirects a protected route to /login with returnUrl @smoke (478ms)
+  ✓  2 [mock-chromium] › e2e/specs/smoke.spec.ts:20:9 › smoke › unauthenticated › logs in through the form and lands on the flows list @smoke (455ms)
+  ✓  3 [mock-chromium] › e2e/specs/smoke.spec.ts:35:9 › smoke › rejected login › surfaces the error and re-disables Sign in until a field changes @smoke (1.2s)
+  ✓  4 [mock-chromium] › e2e/specs/smoke.spec.ts:59:9 › smoke › authenticated › renders the flows list with a clean page and no unmatched calls @smoke (594ms)
+
+  4 passed (23.8s)

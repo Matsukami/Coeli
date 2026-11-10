@@ -1,0 +1,126 @@
+$ tsc -b && vite build
+
+ WARN  The plugin "vite-tsconfig-paths" is detected. Vite now supports tsconfig paths resolution natively via the resolve.tsconfigPaths option. You can remove the plugin and set resolve.tsconfigPaths: true in your Vite config instead.
+
+vite v8.0.16 building client environment for production...
+[2K
+transforming...✓ 5448 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                                    2.21 kB │ gzip:   0.71 kB
+dist/assets/terminal-BrP-ENHg.css                  3.93 kB │ gzip:   1.01 kB
+dist/assets/index-ajCNLSBj.css                   147.00 kB │ gzip:  23.13 kB
+dist/assets/regex-BF0YOdNt.js                      0.07 kB │ gzip:   0.09 kB
+dist/assets/utils-lDBxy5y0.js                      0.09 kB │ gzip:   0.10 kB
+dist/assets/chevron-right-CCVQMZbm.js              0.12 kB │ gzip:   0.13 kB
+dist/assets/chevron-down-Bl5jlqEr.js               0.12 kB │ gzip:   0.13 kB
+dist/assets/chevron-up-Cj4J3p0s.js                 0.12 kB │ gzip:   0.13 kB
+dist/assets/code-ABX5sj9N.js                       0.15 kB │ gzip:   0.14 kB
+dist/assets/search-CKr0bmVL.js                     0.17 kB │ gzip:   0.16 kB
+dist/assets/circle-check-big-CvDVlorP.js           0.19 kB │ gzip:   0.17 kB
+dist/assets/rotate-ccw-DH9SceNl.js                 0.19 kB │ gzip:   0.17 kB
+dist/assets/log-C8Pjx2DA.js                        0.20 kB │ gzip:   0.17 kB
+dist/assets/circle-x-C9q2Scqa.js                   0.20 kB │ gzip:   0.17 kB
+dist/assets/platform-BNNmT-e3.js                   0.22 kB │ gzip:   0.16 kB
+dist/assets/trash-CT3hokYH.js                      0.24 kB │ gzip:   0.18 kB
+dist/assets/circle-alert-cw0DvG1L.js               0.24 kB │ gzip:   0.18 kB
+dist/assets/eye-D8amr5XX.js                        0.25 kB │ gzip:   0.19 kB
+dist/assets/pencil-DB7ucckw.js                     0.27 kB │ gzip:   0.21 kB
+dist/assets/list-todo-fQlkcysS.js                  0.29 kB │ gzip:   0.21 kB
+dist/assets/wrench-DCHmpkKD.js                     0.29 kB │ gzip:   0.23 kB
+dist/assets/pencil-line-DzitVMs8.js                0.31 kB │ gzip:   0.23 kB
+dist/assets/bot-CqSUbFCL.js                        0.32 kB │ gzip:   0.22 kB
+dist/assets/list-filter-C-fl819x.js                0.41 kB │ gzip:   0.28 kB
+dist/assets/form-submit-button-BIMS5bR_.js         0.42 kB │ gzip:   0.31 kB
+dist/assets/loading-state-COsDuxGP.js              0.43 kB │ gzip:   0.28 kB
+dist/assets/collapsible-B1mZIbC3.js                0.43 kB │ gzip:   0.24 kB
+dist/assets/use-is-own-flow-BnkwUJX0.js            0.49 kB │ gzip:   0.33 kB
+dist/assets/use-page-storage-keys-QWAPl52y.js      0.55 kB │ gzip:   0.36 kB
+dist/assets/scrollable-region-F7cv-EqO.js          0.72 kB │ gzip:   0.46 kB
+dist/assets/rolldown-runtime-z4PIMsjO.js           0.81 kB │ gzip:   0.47 kB
+dist/assets/card-DHQbhtVx.js                       0.86 kB │ gzip:   0.37 kB
+dist/assets/error-state-CY6_dIj9.js                0.87 kB │ gzip:   0.50 kB
+dist/assets/switch-DprZSTjS.js                     0.93 kB │ gzip:   0.49 kB
+dist/assets/alert-dOzVBJDU.js                      1.02 kB │ gzip:   0.51 kB
+dist/assets/popover-XYB3j3qh.js                    1.14 kB │ gzip:   0.52 kB
+dist/assets/local-storage-DgwF7qjN.js              1.17 kB │ gzip:   0.60 kB
+dist/assets/toggle-B6lFOpGy.js                     1.19 kB │ gzip:   0.60 kB
+dist/assets/table-DevcgFnE.js                      1.23 kB │ gzip:   0.51 kB
+dist/assets/oauth-result-t1-g3HOT.js               1.36 kB │ gzip:   0.74 kB
+dist/assets/flow-status-icon-BF3LmR42.js           1.54 kB │ gzip:   0.73 kB
+dist/assets/clipboard-Cj14E3gV.js                  1.63 kB │ gzip:   0.85 kB
+dist/assets/inline-edit-D8qiT3jx.js                1.67 kB │ gzip:   0.86 kB
+dist/assets/use-table-state-DJGUB_uu.js            1.67 kB │ gzip:   0.82 kB
+dist/assets/new-flow-oUo1I016.js                   1.91 kB │ gzip:   0.92 kB
+dist/assets/form-DDL4yjd4.js                       2.03 kB │ gzip:   0.88 kB
+dist/assets/app-header-DkhPG0Gf.js                 2.23 kB │ gzip:   0.86 kB
+dist/assets/flow-report-BN5cGVvJ.js                3.21 kB │ gzip:   1.29 kB
+dist/assets/select-C9bVT-qG.js                     3.29 kB │ gzip:   1.20 kB
+dist/assets/detail-split-layout-CxfPJeki.js        3.34 kB │ gzip:   1.49 kB
+dist/assets/autocomplete-Blmfyn8c.js               3.98 kB │ gzip:   1.71 kB
+dist/assets/dropdown-menu-CkV5nhjh.js              4.24 kB │ gzip:   1.36 kB
+dist/assets/password-change-form-CUbRDvLJ.js       4.54 kB │ gzip:   1.79 kB
+dist/assets/resources-utils-CGUxNUdi.js            4.57 kB │ gzip:   2.05 kB
+dist/assets/dashboard-B7hMqizo.js                  5.22 kB │ gzip:   1.77 kB
+dist/assets/templates-CFVOj9Iu.js                  5.42 kB │ gzip:   2.08 kB
+dist/assets/markdown-editor-CojMB9Fr.js            5.74 kB │ gzip:   2.56 kB
+dist/assets/login-DvXDcjVI.js                      5.95 kB │ gzip:   2.63 kB
+dist/assets/report-pdf-DnUtTFpc.js                 6.75 kB │ gzip:   2.40 kB
+dist/assets/input-group-DwS7_U5d.js                6.81 kB │ gzip:   2.65 kB
+dist/assets/settings-account-Bc5d5rqW.js           7.42 kB │ gzip:   2.29 kB
+dist/assets/report-dbXx8hBz.js                     8.03 kB │ gzip:   3.49 kB
+dist/assets/settings-providers-a5DyXtck.js         8.54 kB │ gzip:   3.09 kB
+dist/assets/detail-navigation-kaVwbfem.js          9.96 kB │ gzip:   3.81 kB
+dist/assets/spinner-CLe-92Ot.js                    9.98 kB │ gzip:   3.29 kB
+dist/assets/knowledges-DCkworqo.js                10.43 kB │ gzip:   3.76 kB
+dist/assets/flows-kuqsF7zH.js                     11.10 kB │ gzip:   3.66 kB
+dist/assets/flow-form-ByFGVi6Y.js                 12.16 kB │ gzip:   3.99 kB
+dist/assets/command-Dc-mPWF4.js                   13.77 kB │ gzip:   5.18 kB
+dist/assets/settings-prompts-Ba1wFbCW.js          15.26 kB │ gzip:   3.58 kB
+dist/assets/coeli-D_Fyl5-E.js                     15.53 kB │ gzip:   4.89 kB
+dist/assets/dashboard-DQYik9A2.js                 17.10 kB │ gzip:   4.57 kB
+dist/assets/knowledge-dNtBV4Ro.js                 17.31 kB │ gzip:   5.70 kB
+dist/assets/format-Dw_ibuLZ.js                    19.29 kB │ gzip:   5.59 kB
+dist/assets/resources-9oOvWb5L.js                 20.29 kB │ gzip:   6.27 kB
+dist/assets/provider-icon-CEYFH3nU.js             22.12 kB │ gzip:   8.82 kB
+dist/assets/template-Cptu7JAB.js                  23.73 kB │ gzip:   8.56 kB
+dist/assets/text-filter-BEpLSnYH.js               24.48 kB │ gzip:   7.45 kB
+dist/assets/utils-D1Mw6nC_.js                     28.45 kB │ gzip:   8.56 kB
+dist/assets/use-app-form-DAoIsztE.js              33.42 kB │ gzip:  11.79 kB
+dist/assets/resizable-BlShwSzK.js                 33.69 kB │ gzip:  10.92 kB
+dist/assets/dist-BAlYy0aP.js                      33.80 kB │ gzip:   9.32 kB
+dist/assets/settings-provider-BTzmoM3L.js         34.55 kB │ gzip:  10.22 kB
+dist/assets/marked-D_hCP6yj.js                    41.47 kB │ gzip:  12.38 kB
+dist/assets/settings-api-tokens-BVC_AleS.js       63.69 kB │ gzip:  19.30 kB
+dist/assets/workerBundle-CEpYC-9q.js              67.63 kB │ gzip:  23.26 kB
+dist/assets/data-table-DXuyuAlb.js                67.80 kB │ gzip:  18.33 kB
+dist/assets/schemas-B1hNWjfl.js                   70.61 kB │ gzip:  18.83 kB
+dist/assets/markdown-editor-OO4399g7.js           74.05 kB │ gzip:  24.70 kB
+dist/assets/chunk-BV7QT456-DgasEOfP.js            99.55 kB │ gzip:  32.88 kB
+dist/assets/flow-DELLsS-D.js                     116.06 kB │ gzip:  28.75 kB
+dist/assets/settings-prompt-zgBbnSir.js          137.19 kB │ gzip:  43.89 kB
+dist/assets/radix-ui-B-5FGqxk.js                 146.39 kB │ gzip:  42.77 kB
+dist/assets/react-vendor-CWP9Inff.js             188.92 kB │ gzip:  59.89 kB
+dist/assets/apollo-client-CZf5Gw48.js            200.07 kB │ gzip:  58.97 kB
+dist/assets/markdown-DeYwfWUf.js                 339.45 kB │ gzip:  99.55 kB
+dist/assets/charts-BMTqvwu5.js                   362.02 kB │ gzip: 104.78 kB
+dist/assets/tiptap-BBNF_WZA.js                   473.04 kB │ gzip: 146.71 kB
+dist/assets/terminal-C3L5V7gb.js                 504.07 kB │ gzip: 130.71 kB
+dist/assets/index-BqgGhEB7.js                    537.00 kB │ gzip: 119.89 kB
+dist/assets/pdf-DBqnbasH.js                    1,429.96 kB │ gzip: 477.40 kB
+
+
+ WARN  [33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugins. Here is a breakdown:
+  - vite-tsconfig-paths (94%)
+  - vite:terser (6%)
+See https://rolldown.rs/options/checks#plugintimings for more details.
+
+
+
+ WARN  [plugin builtin:vite-reporter]
+(!) Some chunks are larger than 1000 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+
+✓ built in 6.87s

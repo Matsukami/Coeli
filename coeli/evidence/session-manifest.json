@@ -1,0 +1,52 @@
+{
+  "upstream_commit": "cffed9485aa1cca70762cd08a57ac62a80406258",
+  "worktree": "uncommitted-Coeli-extension",
+  "session_date": "2026-11-09",
+  "test_environment": {
+    "node": "24.19.0",
+    "go": "not-installed",
+    "pnpm": "not-installed",
+    "loopback": "listen-EPERM",
+    "docker": "socket-permission-denied"
+  },
+  "results": {
+    "node_offline": {
+      "passed": 5,
+      "failed": 0
+    },
+    "json_schema": {
+      "passed": 6,
+      "failed": 0
+    },
+    "node_http_integration": {
+      "passed": 0,
+      "failed": 2,
+      "reason": "listen EPERM before HTTP requests"
+    },
+    "go_build": "not-executed",
+    "frontend_build": "not-executed",
+    "postgres": "not-executed"
+  },
+  "sha256": {
+    "coeli/lab/runner.test.mjs": "71b251d5262198b02034fa503178509c8a9f231a678eaff8e4015784ef37d83b",
+    "coeli/lab/runner.mjs": "e2dc2ef7d6b4bb176d25c98962f286f9c506ea0ac2eaa5c8b1f440518a1fdb95",
+    "coeli/lab/application.mjs": "2bfdd9e748f9e76c049907001658c70308f300d2ef86c85ec899e30e87a71b2e",
+    "coeli/lab/integration.test.mjs": "47ab94a8a0d696556f3595d47fa77bca3903af4df07c0afc2d7c4084d8be048e",
+    "coeli/lab/evaluator.mjs": "b56551d10b6e947617f3f1a8b86be57f27634e3a169434a4b4e13828315f0dac",
+    "coeli/sdk/client.mjs": "33a339c807e1b34cfaf8bc071729b2fdf454a3450482c0b9edc829d3aeb0e5e2",
+    "coeli/sdk/client.test.mjs": "a4bda110dd21f868541535ea966b3657caf58e83adc1255c79731e0f8647ad2b",
+    "coeli/sdk/demo-worker.mjs": "1805c79804e7a21b0948ba99ed275f86b4a7e66f0d5bd682d460d63cf6107608",
+    "backend/pkg/coeli/optional_test.go": "105b1edf57181c8f6860ec8d8654f04fa491563fbd8ae16aeed9f3c657e6d914",
+    "backend/pkg/coeli/workflow_test.go": "11746cdbf275a0f8ce28f6d0a23d5ee236d13db112b41785dd4dacfd509d279e",
+    "backend/pkg/coeli/types.go": "86736c0b65c770b59c84f24662d9c86ddf0a79263aa4b092836ae7df1e0a4225",
+    "backend/pkg/coeli/engine.go": "68ed7a4aa4048c783027ac1556f30bbf0ac6b4b9e7ea44f52af0d0f637a5b9db",
+    "backend/pkg/coeli/store_live_test.go": "684940e41f2e6ed9ba83dd506e42f1af6169338b253cad04d5c5681005121056",
+    "backend/pkg/coeli/optional.go": "1dcf5b99316bce51ee5f5e461b53ed5b4089ea5424b84661f8873ea89345227b",
+    "backend/pkg/coeli/workflow.go": "35638d01ec0a6c55cae210a3a5a5f81a92dd2f02b4c10635fe5c0260f1ba7604",
+    "backend/pkg/coeli/store.go": "1294fd167fb02adce07fa90fa23d4ab284bf2f48d5c7f3ac6a8dd4558a34327b",
+    "backend/pkg/coeli/http.go": "6f7daab4b769ee9efbca5cf57241bba7532b10717b4d191b6ed1f5f2c76e1a34",
+    "backend/pkg/coeli/executor.go": "20a0deaa59def2cb3e9d77d11238e9fb251f995d4a4559b86965ac71f1d50964",
+    "backend/migrations/sql/20261109_120000_coeli.sql": "cf98c42229ea20f921bd8f1d809f12c80a7d1ff7bbbd61ed5f9c5717cdb279dd",
+    "frontend/src/pages/coeli/coeli.tsx": "d069da3438dea16b36819c8f078d958ba9a6f146138f40733f1dc57a39c69636"
+  }
+}

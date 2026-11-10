@@ -1,0 +1,38 @@
+{
+  "acceptance": "blocked",
+  "requirements_and_lockfiles_unchanged": {
+    "backend/go.mod": true,
+    "backend/go.sum": true,
+    "frontend/.nvmrc": true,
+    "frontend/package.json": true,
+    "frontend/pnpm-lock.yaml": true,
+    ".github/workflows/ci.yml": true
+  },
+  "go_logic_only": {
+    "go_version": "1.27.3",
+    "race": true,
+    "passed": 6,
+    "full_backend_built": false
+  },
+  "backend_build_required_toolchain": "blocked-network",
+  "frontend_install_frozen_lockfile": "blocked-network",
+  "http_tests": {
+    "passed": 0,
+    "failed": 2,
+    "reason": "loopback EPERM"
+  },
+  "postgres_migrations": "not-executed",
+  "integrated_demo": "not-executed",
+  "sha256": {
+    "backend/pkg/coeli/engine.go": "dc4ed13ff36d9b6ea8b60035c2a2e7e2dfdc0a9a2f61cd518e69460bdd19e464",
+    "backend/pkg/coeli/executor.go": "ed95348229915fb7fa5773726f7d9596acfc5b6c8d8ccfb3b58e07ee0290c999",
+    "backend/pkg/coeli/http.go": "acacde011992ca5d4d874d6c4eeadedbb384fd2ef6c2a9f2f1fa5983f5889755",
+    "backend/pkg/coeli/optional.go": "c2882f12cf6c3c4064a3f21f5a5d2a5d98246220ed0aa1d63d3c1f286f9e61f4",
+    "backend/pkg/coeli/optional_test.go": "9431e02ffa09bfeba2ef04358ae11ba2a338f7fb600d6cd4a75ece2365c41c11",
+    "backend/pkg/coeli/store.go": "dd94e12c221803fd72202db39d94e9392f87a92c58bd49d35d4360658a14c4fa",
+    "backend/pkg/coeli/store_live_test.go": "fb39e8498f83a8dc67fc4badf688284a6ca8b52d14980209cc10898f0956c223",
+    "backend/pkg/coeli/types.go": "aa902cfe785eeb5b1aa18184981c46aaf66d8f2cefa1bb91f64059ee0071164e",
+    "backend/pkg/coeli/workflow.go": "75df492f21828466e459c7dca3a3e2628ada97da27b4e886a661831d0f119b0c",
+    "backend/pkg/coeli/workflow_test.go": "4790833ffd6e5d1cb64e543533ae25ab422651979f13780b20ca8d131247221f"
+  }
+}

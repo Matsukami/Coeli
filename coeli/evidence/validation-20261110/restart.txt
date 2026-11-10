@@ -1,0 +1,2 @@
+Campaign paused and persisted before process restart
+{"process_restart": "passed", "persisted_pause": "passed", "resume": "passed", "campaign_status": "succeeded", "activities": 7}

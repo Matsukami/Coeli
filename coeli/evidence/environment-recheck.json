@@ -1,0 +1,80 @@
+{
+  "acceptance": "blocked",
+  "requirements_modified": false,
+  "checks": {
+    "go": {
+      "expected": "1.26.5",
+      "actual": null,
+      "path": null,
+      "ok": false,
+      "error": "[Errno 2] No such file or directory: 'go'",
+      "other_installed": [
+        {
+          "path": "/home/matsukami/.local/opt/go1.27.3/go/bin/go",
+          "version_output": "go version go1.27.3 linux/amd64",
+          "exit_code": 0
+        }
+      ]
+    },
+    "node": {
+      "expected": "24.17.0",
+      "actual": "24.19.0",
+      "path": "/home/matsukami/.nvm/versions/node/v24.19.0/bin/node",
+      "ok": false,
+      "error": "",
+      "other_installed": [
+        {
+          "path": "/home/matsukami/.nvm/versions/node/v24.19.0/bin/node",
+          "version_output": "v24.19.0",
+          "exit_code": 0
+        },
+        {
+          "path": "/home/matsukami/.nvm/versions/node/v26.13.0/bin/node",
+          "version_output": "v26.13.0",
+          "exit_code": 0
+        }
+      ]
+    },
+    "pnpm": {
+      "expected": "11.8.0",
+      "actual": null,
+      "path": null,
+      "ok": false,
+      "error": "[Errno 2] No such file or directory: 'pnpm'",
+      "other_installed": [
+        {
+          "path": "/home/matsukami/.nvm/versions/node/v26.13.0/bin/pnpm",
+          "version_output": "12.18.0",
+          "exit_code": 0
+        }
+      ]
+    },
+    "docker": {
+      "client": {
+        "Platform": {
+          "Name": "Docker Engine - Community"
+        },
+        "Version": "29.9.3",
+        "ApiVersion": "1.56",
+        "DefaultAPIVersion": "1.56",
+        "GitCommit": "5457199",
+        "GoVersion": "go1.26.10",
+        "Os": "linux",
+        "Arch": "amd64",
+        "BuildTime": "Tue Nov  3 21:41:31 2026",
+        "Context": "default"
+      },
+      "server": null,
+      "ok": false,
+      "error": "permission denied while trying to connect to the docker API at unix:///var/run/docker.sock"
+    },
+    "loopback": {
+      "ok": false,
+      "error": "EPERM"
+    },
+    "frontend_dependencies": {
+      "ok": false
+    }
+  },
+  "prerequisites_ok": false
+}

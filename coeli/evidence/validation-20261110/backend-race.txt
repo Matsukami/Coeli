@@ -1,0 +1,120 @@
+ok  	pentagi/cmd/ctester	(cached)
+?   	pentagi/cmd/etester	[no test files]
+?   	pentagi/cmd/ftester	[no test files]
+?   	pentagi/cmd/ftester/mocks	[no test files]
+ok  	pentagi/cmd/ftester/worker	1.101s
+ok  	pentagi/cmd/installer	1.101s
+ok  	pentagi/cmd/installer/checker	(cached)
+ok  	pentagi/cmd/installer/cloud	(cached)
+ok  	pentagi/cmd/installer/files	1.054s
+ok  	pentagi/cmd/installer/hardening	(cached)
+ok  	pentagi/cmd/installer/loader	(cached)
+ok  	pentagi/cmd/installer/navigator	1.092s
+ok  	pentagi/cmd/installer/processor	1.220s
+ok  	pentagi/cmd/installer/state	(cached)
+?   	pentagi/cmd/installer/wizard	[no test files]
+ok  	pentagi/cmd/installer/wizard/controller	2.535s
+?   	pentagi/cmd/installer/wizard/locale	[no test files]
+?   	pentagi/cmd/installer/wizard/logger	[no test files]
+ok  	pentagi/cmd/installer/wizard/models	1.270s
+ok  	pentagi/cmd/installer/wizard/models/helpers	(cached)
+?   	pentagi/cmd/installer/wizard/registry	[no test files]
+?   	pentagi/cmd/installer/wizard/styles	[no test files]
+ok  	pentagi/cmd/installer/wizard/terminal	(cached)
+ok  	pentagi/cmd/installer/wizard/terminal/vt	(cached)
+ok  	pentagi/cmd/installer/wizard/window	(cached)
+?   	pentagi/cmd/pentagi	[no test files]
+ok  	pentagi/migrations	(cached)
+ok  	pentagi/pkg/cast	(cached)
+ok  	pentagi/pkg/coeli	1.059s
+ok  	pentagi/pkg/config	(cached)
+ok  	pentagi/pkg/controller	87.182s
+ok  	pentagi/pkg/csum	(cached)
+ok  	pentagi/pkg/database	(cached)
+ok  	pentagi/pkg/database/converter	(cached)
+ok  	pentagi/pkg/database/knowledge	(cached)
+ok  	pentagi/pkg/database/knowledge/limits	(cached)
+?   	pentagi/pkg/database/knowledge/vectorstore	[no test files]
+ok  	pentagi/pkg/docker	50.210s
+ok  	pentagi/pkg/flowfiles	1.095s
+ok  	pentagi/pkg/graph	1.608s
+?   	pentagi/pkg/graph/model	[no test files]
+ok  	pentagi/pkg/graph/subscriptions	1.044s
+ok  	pentagi/pkg/graphiti	(cached)
+ok  	pentagi/pkg/observability	4.206s
+ok  	pentagi/pkg/observability/langfuse	(cached)
+?   	pentagi/pkg/observability/langfuse/api	[no test files]
+?   	pentagi/pkg/observability/langfuse/api/annotationqueues	[no test files]
+?   	pentagi/pkg/observability/langfuse/api/blobstorageintegrations	[no test files]
+ok  	pentagi/pkg/observability/langfuse/api/client	(cached)
+?   	pentagi/pkg/observability/langfuse/api/comments	[no test files]
+?   	pentagi/pkg/observability/langfuse/api/core	[no test files]
+?   	pentagi/pkg/observability/langfuse/api/datasetitems	[no test files]
+?   	pentagi/pkg/observability/langfuse/api/datasetrunitems	[no test files]
+?   	pentagi/pkg/observability/langfuse/api/datasets	[no test files]
+?   	pentagi/pkg/observability/langfuse/api/health	[no test files]
+?   	pentagi/pkg/observability/langfuse/api/ingestion	[no test files]
+ok  	pentagi/pkg/observability/langfuse/api/internal	19.244s
+?   	pentagi/pkg/observability/langfuse/api/llmconnections	[no test files]
+?   	pentagi/pkg/observability/langfuse/api/media	[no test files]
+?   	pentagi/pkg/observability/langfuse/api/metrics	[no test files]
+?   	pentagi/pkg/observability/langfuse/api/metricsv2	[no test files]
+?   	pentagi/pkg/observability/langfuse/api/models	[no test files]
+?   	pentagi/pkg/observability/langfuse/api/observations	[no test files]
+?   	pentagi/pkg/observability/langfuse/api/observationsv2	[no test files]
+?   	pentagi/pkg/observability/langfuse/api/opentelemetry	[no test files]
+?   	pentagi/pkg/observability/langfuse/api/option	[no test files]
+?   	pentagi/pkg/observability/langfuse/api/organizations	[no test files]
+?   	pentagi/pkg/observability/langfuse/api/projects	[no test files]
+?   	pentagi/pkg/observability/langfuse/api/prompts	[no test files]
+?   	pentagi/pkg/observability/langfuse/api/promptversion	[no test files]
+?   	pentagi/pkg/observability/langfuse/api/scim	[no test files]
+?   	pentagi/pkg/observability/langfuse/api/score	[no test files]
+?   	pentagi/pkg/observability/langfuse/api/scoreconfigs	[no test files]
+?   	pentagi/pkg/observability/langfuse/api/scorev2	[no test files]
+?   	pentagi/pkg/observability/langfuse/api/sessions	[no test files]
+?   	pentagi/pkg/observability/langfuse/api/trace	[no test files]
+?   	pentagi/pkg/observability/profiling	[no test files]
+ok  	pentagi/pkg/password	(cached)
+ok  	pentagi/pkg/providers	13.202s
+ok  	pentagi/pkg/providers/anthropic	(cached)
+ok  	pentagi/pkg/providers/bedrock	(cached)
+ok  	pentagi/pkg/providers/custom	1.086s
+ok  	pentagi/pkg/providers/deepseek	(cached)
+ok  	pentagi/pkg/providers/embeddings	1.084s
+ok  	pentagi/pkg/providers/gemini	(cached)
+ok  	pentagi/pkg/providers/glm	1.297s
+ok  	pentagi/pkg/providers/kimi	1.209s
+ok  	pentagi/pkg/providers/minimax	1.086s
+ok  	pentagi/pkg/providers/mistral	1.137s
+ok  	pentagi/pkg/providers/ollama	1.097s
+ok  	pentagi/pkg/providers/openai	1.110s
+ok  	pentagi/pkg/providers/openaicompat	1.026s
+ok  	pentagi/pkg/providers/pconfig	(cached)
+ok  	pentagi/pkg/providers/provider	(cached)
+ok  	pentagi/pkg/providers/qwen	1.232s
+ok  	pentagi/pkg/providers/tester	2.090s
+ok  	pentagi/pkg/providers/tester/cases	1.395s
+ok  	pentagi/pkg/providers/tester/mock	1.026s
+ok  	pentagi/pkg/providers/xai	1.053s
+ok  	pentagi/pkg/resources	(cached)
+ok  	pentagi/pkg/schema	1.023s
+ok  	pentagi/pkg/server	(cached)
+ok  	pentagi/pkg/server/auth	14.718s
+ok  	pentagi/pkg/server/context	1.012s
+?   	pentagi/pkg/server/docs	[no test files]
+ok  	pentagi/pkg/server/logger	1.024s
+ok  	pentagi/pkg/server/models	1.062s
+?   	pentagi/pkg/server/oauth	[no test files]
+ok  	pentagi/pkg/server/rdb	1.013s
+ok  	pentagi/pkg/server/response	1.030s
+ok  	pentagi/pkg/server/services	82.912s
+ok  	pentagi/pkg/server/update	1.052s
+ok  	pentagi/pkg/system	2.721s
+ok  	pentagi/pkg/templates	1.081s
+ok  	pentagi/pkg/templates/validator	1.054s
+ok  	pentagi/pkg/terminal	1.070s
+ok  	pentagi/pkg/timezone	1.010s
+ok  	pentagi/pkg/tools	8.357s
+ok  	pentagi/pkg/tools/searchers	9.781s
+ok  	pentagi/pkg/version	1.030s

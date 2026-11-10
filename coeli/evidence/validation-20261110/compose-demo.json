@@ -1,0 +1,292 @@
+{
+  "results": [
+    {
+      "schema_version": "coeli.activity.v1",
+      "stage": "audit",
+      "mode": "purple",
+      "environment": "laboratory",
+      "revision": "lab-idor-v1",
+      "fingerprint": "269644c7c9e9836bc82d821e549ddc642161a3e0d9b2b576f538867352a90dbf",
+      "timestamp": "2026-11-10T03:13:07.144Z",
+      "model": null,
+      "synthetic_data": true,
+      "coverage": [
+        {
+          "unit": "records authorization",
+          "status": "reviewed",
+          "method": "source inspection",
+          "artifact_sha256": "2bfdd9e748f9e76c049907001658c70308f300d2ef86c85ec899e30e87a71b2e"
+        }
+      ],
+      "finding": {
+        "status": "hypothesis",
+        "boundary": "alice must not read bob records",
+        "category": "CWE-639",
+        "source_sha256": "2bfdd9e748f9e76c049907001658c70308f300d2ef86c85ec899e30e87a71b2e",
+        "verification": "pending HTTP reproduction"
+      }
+    },
+    {
+      "schema_version": "coeli.activity.v1",
+      "stage": "attack",
+      "mode": "purple",
+      "environment": "laboratory",
+      "revision": "lab-idor-v1",
+      "fingerprint": "269644c7c9e9836bc82d821e549ddc642161a3e0d9b2b576f538867352a90dbf",
+      "timestamp": "2026-11-10T03:13:07.148Z",
+      "model": null,
+      "synthetic_data": true,
+      "probe": {
+        "status": 200,
+        "body": {
+          "id": "2",
+          "owner": "bob",
+          "text": "Pedido sint\u00e9tico Bob"
+        }
+      },
+      "legitimate": {
+        "status": 200,
+        "body": {
+          "id": "1",
+          "owner": "alice",
+          "text": "Pedido sint\u00e9tico Alice"
+        }
+      },
+      "available": true,
+      "events": [
+        {
+          "id": "7e127f42ad746d006b766af81910ec6c",
+          "schema_version": "coeli.telemetry.v1",
+          "timestamp": "2026-11-10T03:13:07.163Z",
+          "source": "coeli-lab",
+          "asset": "synthetic-records",
+          "kind": "cross_owner_access",
+          "status": 200
+        },
+        {
+          "id": "98bd66f2bdfcbee3c54b62bf8a21256e",
+          "schema_version": "coeli.telemetry.v1",
+          "timestamp": "2026-11-10T03:13:07.169Z",
+          "source": "coeli-lab",
+          "asset": "synthetic-records",
+          "kind": "legitimate_access",
+          "status": 200
+        }
+      ],
+      "finding": {
+        "status": "confirmed",
+        "category": "CWE-639",
+        "verifier": "HTTP response and principal boundary"
+      }
+    },
+    {
+      "schema_version": "coeli.activity.v1",
+      "stage": "defend",
+      "mode": "purple",
+      "environment": "laboratory",
+      "revision": "lab-idor-v1",
+      "fingerprint": "269644c7c9e9836bc82d821e549ddc642161a3e0d9b2b576f538867352a90dbf",
+      "timestamp": "2026-11-10T03:13:07.175Z",
+      "model": null,
+      "synthetic_data": true,
+      "rule": "cross-owner-v1",
+      "detected_at": "2026-11-10T03:13:07.176Z",
+      "detected": true,
+      "action": "executed",
+      "procedure": "block-cross-owner-v1",
+      "control": {
+        "blocked_until": 1794280447177
+      },
+      "probe": {
+        "status": 403,
+        "body": {
+          "error": "denied"
+        }
+      },
+      "legitimate": {
+        "status": 200,
+        "body": {
+          "id": "1",
+          "owner": "alice",
+          "text": "Pedido sint\u00e9tico Alice"
+        }
+      },
+      "available": true,
+      "verified": true,
+      "containment_verified": true,
+      "contained_at": "2026-11-10T03:13:07.182Z",
+      "reversal": {
+        "blocked_until": 0
+      },
+      "after_reversal": {
+        "status": 200,
+        "body": {
+          "id": "2",
+          "owner": "bob",
+          "text": "Pedido sint\u00e9tico Bob"
+        }
+      },
+      "containment_closed": true,
+      "cause_eliminated": false
+    },
+    {
+      "schema_version": "coeli.activity.v1",
+      "stage": "maintain",
+      "mode": "purple",
+      "environment": "laboratory",
+      "revision": "lab-idor-v1",
+      "fingerprint": "269644c7c9e9836bc82d821e549ddc642161a3e0d9b2b576f538867352a90dbf",
+      "timestamp": "2026-11-10T03:13:07.187Z",
+      "model": null,
+      "synthetic_data": true,
+      "patch": {
+        "status": "prepared",
+        "branch": "coeli/fix-authorization",
+        "base_commit": "669298717e36a8e212e3751f5f62625cd2bc87be",
+        "candidate_commit": "642b2ff2907ebc278a9590b35ade34b235010869",
+        "diff_sha256": "935f6fa0db7ad5177132406f44694f241c3d7c70f67e4b5854d5f408fca50bbc",
+        "source_sha256": "57eeae34be4b36536e2c0f12466dac8616709cc7920599d52f48860db57095ad",
+        "applied_to_main": false,
+        "migrations": "none"
+      },
+      "tests": {
+        "author": "internal-maintainer",
+        "passed": true,
+        "cases": 3,
+        "method": "authorization function checks; independent HTTP retest pending"
+      }
+    },
+    {
+      "schema_version": "coeli.activity.v1",
+      "stage": "retest",
+      "mode": "purple",
+      "environment": "laboratory",
+      "revision": "lab-idor-v1",
+      "fingerprint": "269644c7c9e9836bc82d821e549ddc642161a3e0d9b2b576f538867352a90dbf",
+      "timestamp": "2026-11-10T03:13:07.233Z",
+      "model": null,
+      "synthetic_data": true,
+      "evaluation": {
+        "author": "internal-maintainer",
+        "evaluator": "deterministic-independent-verifier",
+        "criteria": {
+          "version": "release-v1",
+          "unauthorized_status": 403,
+          "legitimate_status": 200,
+          "availability_required": true
+        },
+        "unauthorized_status": 403,
+        "legitimate_status": 200,
+        "second_principal_status": 200,
+        "available": true,
+        "decision": "approved",
+        "correction_confirmed": true
+      },
+      "patch": {
+        "status": "prepared",
+        "branch": "coeli/fix-authorization",
+        "base_commit": "669298717e36a8e212e3751f5f62625cd2bc87be",
+        "candidate_commit": "642b2ff2907ebc278a9590b35ade34b235010869",
+        "diff_sha256": "935f6fa0db7ad5177132406f44694f241c3d7c70f67e4b5854d5f408fca50bbc",
+        "source_sha256": "57eeae34be4b36536e2c0f12466dac8616709cc7920599d52f48860db57095ad",
+        "applied_to_main": false,
+        "migrations": "none"
+      },
+      "metrics": {
+        "detected": 1,
+        "attacks_not_detected": 0,
+        "containment_ms": 6,
+        "false_blocks": 0,
+        "legitimate_operations_completed": 3,
+        "corrections_confirmed": 1,
+        "model_calls": 0,
+        "model_cost": 0,
+        "duration_ms": 91,
+        "conditions": {
+          "fixture": "lab-idor-v1",
+          "rules": "cross-owner-v1",
+          "criteria": "release-v1",
+          "model": null,
+          "environment": "laboratory",
+          "mode": "purple"
+        }
+      }
+    },
+    {
+      "schema_version": "coeli.activity.v1",
+      "stage": "evaluate",
+      "mode": "purple",
+      "environment": "laboratory",
+      "revision": "lab-idor-v1",
+      "fingerprint": "269644c7c9e9836bc82d821e549ddc642161a3e0d9b2b576f538867352a90dbf",
+      "timestamp": "2026-11-10T03:13:07.240Z",
+      "model": null,
+      "synthetic_data": true,
+      "evaluation": {
+        "author": "internal-maintainer",
+        "evaluator": "deterministic-independent-verifier",
+        "criteria": {
+          "version": "release-v1",
+          "unauthorized_status": 403,
+          "legitimate_status": 200,
+          "availability_required": true
+        },
+        "unauthorized_status": 403,
+        "legitimate_status": 200,
+        "second_principal_status": 200,
+        "available": true,
+        "decision": "approved",
+        "correction_confirmed": true
+      },
+      "patch": {
+        "status": "prepared",
+        "branch": "coeli/fix-authorization",
+        "base_commit": "669298717e36a8e212e3751f5f62625cd2bc87be",
+        "candidate_commit": "642b2ff2907ebc278a9590b35ade34b235010869",
+        "diff_sha256": "935f6fa0db7ad5177132406f44694f241c3d7c70f67e4b5854d5f408fca50bbc",
+        "source_sha256": "57eeae34be4b36536e2c0f12466dac8616709cc7920599d52f48860db57095ad",
+        "applied_to_main": false,
+        "migrations": "none"
+      },
+      "metrics": {
+        "detected": 1,
+        "attacks_not_detected": 0,
+        "containment_ms": 6,
+        "false_blocks": 0,
+        "legitimate_operations_completed": 3,
+        "corrections_confirmed": 1,
+        "model_calls": 0,
+        "model_cost": 0,
+        "duration_ms": 97,
+        "conditions": {
+          "fixture": "lab-idor-v1",
+          "rules": "cross-owner-v1",
+          "criteria": "release-v1",
+          "model": null,
+          "environment": "laboratory",
+          "mode": "purple"
+        }
+      }
+    },
+    {
+      "schema_version": "coeli.activity.v1",
+      "stage": "remember",
+      "mode": "purple",
+      "environment": "laboratory",
+      "revision": "lab-idor-v1",
+      "fingerprint": "269644c7c9e9836bc82d821e549ddc642161a3e0d9b2b576f538867352a90dbf",
+      "timestamp": "2026-11-10T03:13:07.245Z",
+      "model": null,
+      "synthetic_data": true,
+      "knowledge": {
+        "status": "validated",
+        "category": "CWE-639",
+        "valid_for_commit": "642b2ff2907ebc278a9590b35ade34b235010869",
+        "artifact_sha256": "57eeae34be4b36536e2c0f12466dac8616709cc7920599d52f48860db57095ad",
+        "environment": "laboratory",
+        "criteria": "release-v1",
+        "invalidation": "commit, artifact, rules or environment change"
+      }
+    }
+  ]
+}

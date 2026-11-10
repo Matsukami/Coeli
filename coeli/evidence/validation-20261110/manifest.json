@@ -1,0 +1,62 @@
+{
+  "date": "2026-11-10",
+  "scope": "deterministic synthetic laboratory; no live model or external target",
+  "executed_outside_restricted_sandbox": true,
+  "versions": {
+    "go": "1.26.5",
+    "node": "24.17.0",
+    "pnpm": "11.8.0",
+    "docker_client": "29.9.3",
+    "docker_server": "29.9.3"
+  },
+  "final_exit_codes": {
+    "environment.json": 0,
+    "backend-race.txt": 0,
+    "postgres.txt": 0,
+    "coeli-live.txt": 0,
+    "http-demo.json": 0,
+    "browser.json": 0,
+    "restart.txt": 0,
+    "docker-tests.txt": 0,
+    "frontend-tests.txt": 0,
+    "frontend-build.txt": 0,
+    "frontend-lint.txt": 0,
+    "playwright-smoke.txt": 0,
+    "node-http.txt": 0,
+    "offline.txt": 0
+  },
+  "compose_exit_code": 0,
+  "backend_build_exit_code": 0,
+  "go_packages_with_tests": 77,
+  "vitest_tests": 2539,
+  "playwright_smoke_tests": 4,
+  "docker_skips": [
+    "PID namespace sweep is container-only",
+    "debian:latest absent; busybox case passed"
+  ],
+  "artifacts": {
+    "backend-race.txt": "31dbcddfa91fe042db318fdd2e392bb354874a0956c1eb07837fc5c1be19f8d4",
+    "browser.json": "5120435d9ab737654b36f57b319fae780e0dd715eb35f35cefdc3f7442f1ef10",
+    "coeli-live.txt": "17af7a31d7296292ae9e11c18a66f9edc9c39053c980b0b386e40b853a05dac3",
+    "compose-demo.json": "6616be7bffbcaad69535d0597e6cc378a9fa427988d244bf980627ea43344475",
+    "docker-tests.txt": "6196c677204816cff9838c37749e61b22fa1a187527a5b239c7d45e8e42401ed",
+    "environment.json": "0a8d6f1954edcdca5282f8d4f5337641e2c3b39d9b745f10cf09b8ad48ace6a4",
+    "failures.json": "9d581ad9f1aceba871d29124a02accaf9d780b7541ae4d5ae8271157f970f677",
+    "frontend-build.txt": "cf026fc1fdc3ba6a7d1420fa5011281b003c7dc33cdc1af9f38e5f078581dceb",
+    "frontend-lint.txt": "a120b889407c759acdc71c9e79c9848a2b723aaaf728035904c5d43817adf0e0",
+    "frontend-tests.txt": "76855d1bc19ef590002dfd4bf2250b992f181292ef5657d9af849bfd7ef61555",
+    "http-demo.json": "9ec2109b5cad7fd3ed197e01cbbe72f8bcb9cc214f29e8d14e79f5633051d9ea",
+    "node-http.txt": "1b52c9b4da99b791cceebcaf7ac8acaeebe7f82a6955b381703ced32a49088d8",
+    "offline.txt": "ba6b5892e408d5a7293e428c8860977e6dd30d5ee1b78f304281237779927e14",
+    "playwright-last-run.json": "91d1c43004802cd49950d78eb11c8fa7d05da8ffffe219a8b13b2f561bc00903",
+    "playwright-smoke.txt": "a3a77e16f7e059bca4467b4cb63c36da1d16ac9f736cba6e7c45c7e2f57915ce",
+    "postgres.txt": "c198cdddc6f62031512a6c9bbf559b325d5fd6204ba1ed5ed25bf71cd55adfcc",
+    "restart.txt": "9fa15dfecba880f2439c107792e8a3fe9848932360571d5ceada91b53915f87a"
+  },
+  "implementation_commit": "86f1f42",
+  "disposable_services_cleanup": {
+    "server": "stopped",
+    "postgres_container_and_anonymous_volume": "removed"
+  },
+  "log_normalization": "Trailing whitespace and final blank lines removed; contents otherwise preserved"
+}

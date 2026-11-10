@@ -1,0 +1,25 @@
+/home/matsukami/.nvm/versions/node/v24.19.0/lib/node_modules/corepack/dist/lib/corepack.cjs:12951
+    throw new Error(
+          ^
+
+Error: Error when performing the request to https://registry.npmjs.org/pnpm/-/pnpm-11.8.0.tgz; for troubleshooting help, see https://github.com/nodejs/corepack#troubleshooting
+    at fetch (/home/matsukami/.nvm/versions/node/v24.19.0/lib/node_modules/corepack/dist/lib/corepack.cjs:12951:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async fetchUrlStream (/home/matsukami/.nvm/versions/node/v24.19.0/lib/node_modules/corepack/dist/lib/corepack.cjs:12981:20)
+    at async download (/home/matsukami/.nvm/versions/node/v24.19.0/lib/node_modules/corepack/dist/lib/corepack.cjs:13133:18)
+    at async installVersion (/home/matsukami/.nvm/versions/node/v24.19.0/lib/node_modules/corepack/dist/lib/corepack.cjs:13229:55)
+    at async Engine.ensurePackageManager (/home/matsukami/.nvm/versions/node/v24.19.0/lib/node_modules/corepack/dist/lib/corepack.cjs:13744:32)
+    at async Engine.executePackageManagerRequest (/home/matsukami/.nvm/versions/node/v24.19.0/lib/node_modules/corepack/dist/lib/corepack.cjs:13855:25)
+    at async Object.runMain (/home/matsukami/.nvm/versions/node/v24.19.0/lib/node_modules/corepack/dist/lib/corepack.cjs:14566:7) {
+  [cause]: [TypeError: fetch failed] {
+    [cause]: Error: getaddrinfo EAI_AGAIN registry.npmjs.org
+        at GetAddrInfoReqWrap.onlookupall [as oncomplete] (node:dns:122:26) {
+      errno: -3001,
+      code: 'EAI_AGAIN',
+      syscall: 'getaddrinfo',
+      hostname: 'registry.npmjs.org'
+    }
+  }
+}
+
+Node.js v24.19.0

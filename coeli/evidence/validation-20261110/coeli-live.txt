@@ -1,0 +1,31 @@
+=== RUN   TestHTTP_Workflow_DatabaseExecutorAndWorkerTransport
+[GIN-debug] [WARNING] Running in "debug" mode. Switch to "release" mode in production.
+ - using env:	export GIN_MODE=release
+ - using code:	gin.SetMode(gin.ReleaseMode)
+
+[GIN-debug] POST   /user/runs                --> pentagi/pkg/coeli.(*Service).create-fm (2 handlers)
+[GIN-debug] POST   /user/workers             --> pentagi/pkg/coeli.(*Service).registerWorker-fm (2 handlers)
+[GIN-debug] POST   /user/workers/:id/revoke  --> pentagi/pkg/coeli.(*Service).revokeWorker-fm (2 handlers)
+[GIN-debug] POST   /user/runs/:id/control    --> pentagi/pkg/coeli.(*Service).control-fm (2 handlers)
+[GIN-debug] GET    /user/evidence/:id        --> pentagi/pkg/coeli.(*Service).evidence-fm (2 handlers)
+[GIN-debug] POST   /worker/:owner/claim      --> pentagi/pkg/coeli.(*Service).workerClaim-fm (2 handlers)
+[GIN-debug] POST   /worker/:owner/tasks/:id/heartbeat --> pentagi/pkg/coeli.(*Service).heartbeat-fm (2 handlers)
+[GIN-debug] POST   /worker/:owner/tasks/:id/evidence --> pentagi/pkg/coeli.(*Service).workerEvidence-fm (2 handlers)
+[GIN-debug] POST   /worker/:owner/tasks/:id/result --> pentagi/pkg/coeli.(*Service).workerResult-fm (2 handlers)
+--- PASS: TestHTTP_Workflow_DatabaseExecutorAndWorkerTransport (1.78s)
+=== RUN   TestOptional_CyberAdapter_FailsClosedWithoutNetwork
+--- PASS: TestOptional_CyberAdapter_FailsClosedWithoutNetwork (0.00s)
+=== RUN   TestOptional_ImportAuditCandidate_NeverTrustsConfirmedClaims
+--- PASS: TestOptional_ImportAuditCandidate_NeverTrustsConfirmedClaims (0.00s)
+=== RUN   TestStore_Update_RestartConcurrentClaimsAndOwnerIsolation
+--- PASS: TestStore_Update_RestartConcurrentClaimsAndOwnerIsolation (0.05s)
+=== RUN   TestWorkflow_CreateRun_ScopeDeduplicationAndBudget
+--- PASS: TestWorkflow_CreateRun_ScopeDeduplicationAndBudget (0.00s)
+=== RUN   TestWorkflow_Lease_RecoveryAndCompletion
+--- PASS: TestWorkflow_Lease_RecoveryAndCompletion (0.00s)
+=== RUN   TestWorkflow_Ingest_DeduplicationAndOrganizationIsolation
+--- PASS: TestWorkflow_Ingest_DeduplicationAndOrganizationIsolation (0.00s)
+=== RUN   TestWorkflow_EncodeState_KeepsSecretsOutOfAPI
+--- PASS: TestWorkflow_EncodeState_KeepsSecretsOutOfAPI (0.00s)
+PASS
+ok  	pentagi/pkg/coeli	2.885s

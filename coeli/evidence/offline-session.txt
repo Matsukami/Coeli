@@ -1,0 +1,18 @@
+✔ deterministic audit records a hypothesis and artifact hash, and resumes idempotently (7.272119ms)
+✔ production and unsupported operations are refused before creating a workspace (0.138342ms)
+✔ project-owned vulnerable fixture permits the cross-owner boundary violation (0.076514ms)
+✔ maintenance prepares a real git branch and diff from a labelled test finding without changing source (37.455059ms)
+✔ worker credentials are separate and network destination refuses cleartext remote and URL credentials (0.363456ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 68.082362
+......
+----------------------------------------------------------------------
+Ran 6 tests in 0.023s
+
+OK

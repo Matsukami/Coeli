@@ -1,0 +1,23 @@
+[
+  {
+    "check": "HTTP replay before fix",
+    "exit_code": 1,
+    "excerpts": [
+      "    http_live_test.go:148: /worker/1/tasks/14e2bc498c8c81a7f0e481f34190037b1404838f4d851064/result: got 409, want 200: {\"error\":\"state conflict or expired lease\"}"
+    ]
+  },
+  {
+    "check": "Disk exhaustion",
+    "exit_code": 2,
+    "excerpts": [
+      "error TS5033: Could not write file '/home/matsukami/IA defesa/pentagi/frontend/dist/tsconfig.node.tsbuildinfo': ENOSPC: no space left on device, write."
+    ]
+  },
+  {
+    "check": "Migration fixture before fix",
+    "exit_code": 1,
+    "excerpts": [
+      "--- FAIL: TestRenumberedMigrations_RenumberMigrations_MovesADatabaseRecordedUnderTheEarlierNumbering (0.45s)"
+    ]
+  }
+]

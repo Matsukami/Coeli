@@ -1,0 +1,73 @@
+{
+  "acceptance": "deterministic-http-demonstration-passed",
+  "scenarios": [
+    {
+      "mode": "purple",
+      "environment": "laboratory",
+      "status": "succeeded",
+      "records": {
+        "release": "approved",
+        "containment": "verified_and_reversed",
+        "retest": "approved",
+        "finding": "hypothesis",
+        "patch": "prepared",
+        "knowledge": "validated"
+      },
+      "artifact_sha256": [
+        "0b60d7849a4f2b2badb59fd2e0991e941b545fd9dda1b42621adefb009de97a7",
+        "42734bdb6791a617ec679298f01311b56a3fbdad7b48309a42a24f03663d3c91",
+        "55d3e9171569473ffecd351f455e134add30254a61efb752ebce15af6ccb00a3",
+        "556421829e73b92c9effa085d4c8781256e8902a8529ebfd5df23124638af215",
+        "b874d96e992dee195434d3a1f5792bdbe2b1f8d541e46bd08ccc899bb83a5439",
+        "f57d6d31626a33947a24f9666c3bdbb0994a8def9cc5cb4e13af054993873d44",
+        "5e856e4585a6309ca81d31aeb1e9e5db728a19214b79ddba2b368f4496275da7"
+      ]
+    },
+    {
+      "mode": "observe",
+      "environment": "laboratory",
+      "status": "succeeded",
+      "records": {
+        "containment": "would_execute",
+        "finding": "confirmed"
+      },
+      "artifact_sha256": [
+        "ac3e352e6244525e3dba6ef454cb46eb48a78ce13f0ae8189a63ef6c1c385055",
+        "6b8b7ab5e4bebcdd60c0e205615859c1dc7b4339c017f7b6564972d10dd982df"
+      ]
+    },
+    {
+      "mode": "release",
+      "environment": "staging",
+      "status": "succeeded",
+      "records": {
+        "containment": "verified_and_reversed",
+        "knowledge": "validated",
+        "finding": "confirmed",
+        "retest": "approved",
+        "patch": "prepared",
+        "release": "approved"
+      },
+      "artifact_sha256": [
+        "5072561e8d5b5b23e8976b1bb76b60786955864d7f11d4eea3263dadfeafba4b",
+        "a842cd6d1060e3427ce8bd87012b84d0bb05a0d9b3412174d37a11ae583e762b",
+        "c85e7616bdf911781488aaf05b30e1364ed3ae64997dd6dc536f1bbba4f31a73",
+        "50099421c887fb4b725a2962f38b0d6da00b7bf00da44213febc7a93c2fc078d",
+        "720b9be28b54340b7a246ab4ec6a49e29ae1f1eaca8debb22aae8560a1d37c9d",
+        "c4f64c640f000408de3021e5f863eb9cbf1fb656866f8e243c6a7a1b70e9a3a3",
+        "032c0fc2a01248ac9726aa25d45d5f348a0447116e625339bce5331f56630df9"
+      ]
+    }
+  ],
+  "credentials_logged": false,
+  "worker": {
+    "authentication": "passed",
+    "heartbeat": "passed",
+    "completion_replay": "passed",
+    "revocation": "passed"
+  },
+  "limitations": [
+    "No live model or offensive PentAGI flow",
+    "No browser interaction or process restart in this script"
+  ]
+}

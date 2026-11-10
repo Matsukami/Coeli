@@ -1,0 +1,240 @@
+=== RUN   TestClient_StatContainerEntries_ReturnsEveryEntryAsAStatOrAFailure
+=== RUN   TestClient_StatContainerEntries_ReturnsEveryEntryAsAStatOrAFailure/no_names
+=== RUN   TestClient_StatContainerEntries_ReturnsEveryEntryAsAStatOrAFailure/every_stat_succeeds
+=== RUN   TestClient_StatContainerEntries_ReturnsEveryEntryAsAStatOrAFailure/some_stats_fail
+--- PASS: TestClient_StatContainerEntries_ReturnsEveryEntryAsAStatOrAFailure (0.00s)
+    --- PASS: TestClient_StatContainerEntries_ReturnsEveryEntryAsAStatOrAFailure/no_names (0.00s)
+    --- PASS: TestClient_StatContainerEntries_ReturnsEveryEntryAsAStatOrAFailure/every_stat_succeeds (0.00s)
+    --- PASS: TestClient_StatContainerEntries_ReturnsEveryEntryAsAStatOrAFailure/some_stats_fail (0.00s)
+=== RUN   TestClient_StatContainerEntries_BoundsConcurrentStats
+=== RUN   TestClient_StatContainerEntries_BoundsConcurrentStats/the_requested_bound
+=== RUN   TestClient_StatContainerEntries_BoundsConcurrentStats/a_zero_bound_falls_back_to_twenty
+=== RUN   TestClient_StatContainerEntries_BoundsConcurrentStats/a_negative_bound_falls_back_to_twenty
+--- PASS: TestClient_StatContainerEntries_BoundsConcurrentStats (0.07s)
+    --- PASS: TestClient_StatContainerEntries_BoundsConcurrentStats/the_requested_bound (0.05s)
+    --- PASS: TestClient_StatContainerEntries_BoundsConcurrentStats/a_zero_bound_falls_back_to_twenty (0.01s)
+    --- PASS: TestClient_StatContainerEntries_BoundsConcurrentStats/a_negative_bound_falls_back_to_twenty (0.01s)
+=== RUN   TestClient_StatContainerEntries_PassesTheCallerContextToEachStat
+--- PASS: TestClient_StatContainerEntries_PassesTheCallerContextToEachStat (0.00s)
+=== RUN   TestClient_ParseFindEntries_SplitsOnNULAndCapsTheCount
+=== RUN   TestClient_ParseFindEntries_SplitsOnNULAndCapsTheCount/exactly_the_cap_is_kept_whole
+=== RUN   TestClient_ParseFindEntries_SplitsOnNULAndCapsTheCount/one_past_the_cap_is_cut_to_the_cap
+=== RUN   TestClient_ParseFindEntries_SplitsOnNULAndCapsTheCount/empty_tokens_are_dropped
+--- PASS: TestClient_ParseFindEntries_SplitsOnNULAndCapsTheCount (0.01s)
+    --- PASS: TestClient_ParseFindEntries_SplitsOnNULAndCapsTheCount/exactly_the_cap_is_kept_whole (0.00s)
+    --- PASS: TestClient_ParseFindEntries_SplitsOnNULAndCapsTheCount/one_past_the_cap_is_cut_to_the_cap (0.00s)
+    --- PASS: TestClient_ParseFindEntries_SplitsOnNULAndCapsTheCount/empty_tokens_are_dropped (0.00s)
+=== RUN   TestClient_DemuxExecStdout_ReturnsStdoutOrRefusesTheStream
+=== RUN   TestClient_DemuxExecStdout_ReturnsStdoutOrRefusesTheStream/stdout_is_kept_and_stderr_dropped
+=== RUN   TestClient_DemuxExecStdout_ReturnsStdoutOrRefusesTheStream/stdout_beyond_the_cap_is_refused
+=== RUN   TestClient_DemuxExecStdout_ReturnsStdoutOrRefusesTheStream/a_header_cut_short_is_refused
+=== RUN   TestClient_DemuxExecStdout_ReturnsStdoutOrRefusesTheStream/a_frame_body_cut_short_is_refused
+=== RUN   TestClient_DemuxExecStdout_ReturnsStdoutOrRefusesTheStream/a_daemon_systemerr_is_surfaced
+--- PASS: TestClient_DemuxExecStdout_ReturnsStdoutOrRefusesTheStream (0.00s)
+    --- PASS: TestClient_DemuxExecStdout_ReturnsStdoutOrRefusesTheStream/stdout_is_kept_and_stderr_dropped (0.00s)
+    --- PASS: TestClient_DemuxExecStdout_ReturnsStdoutOrRefusesTheStream/stdout_beyond_the_cap_is_refused (0.00s)
+    --- PASS: TestClient_DemuxExecStdout_ReturnsStdoutOrRefusesTheStream/a_header_cut_short_is_refused (0.00s)
+    --- PASS: TestClient_DemuxExecStdout_ReturnsStdoutOrRefusesTheStream/a_frame_body_cut_short_is_refused (0.00s)
+    --- PASS: TestClient_DemuxExecStdout_ReturnsStdoutOrRefusesTheStream/a_daemon_systemerr_is_surfaced (0.00s)
+=== RUN   TestClient_IsContainerRunning_ReportsRunningUntilTheContainerIsRemoved
+--- PASS: TestClient_IsContainerRunning_ReportsRunningUntilTheContainerIsRemoved (0.34s)
+=== RUN   TestClient_RunContainer_AppliesSandboxDefaults
+--- PASS: TestClient_RunContainer_AppliesSandboxDefaults (1.87s)
+=== RUN   TestClient_RunContainer_KeepsTheCallerPidsLimit
+--- PASS: TestClient_RunContainer_KeepsTheCallerPidsLimit (1.81s)
+=== RUN   TestClient_RunContainer_BacksWorkDirWithAVolume
+--- PASS: TestClient_RunContainer_BacksWorkDirWithAVolume (1.88s)
+=== RUN   TestClient_RunContainer_BindsThePerFlowHostDir
+--- PASS: TestClient_RunContainer_BindsThePerFlowHostDir (1.89s)
+=== RUN   TestClient_RunContainer_JoinsTheNetworkAndPublishesFlowPorts
+--- PASS: TestClient_RunContainer_JoinsTheNetworkAndPublishesFlowPorts (2.03s)
+=== RUN   TestClient_EnsureDockerNetwork_CreatesAMissingNetworkOnce
+--- PASS: TestClient_EnsureDockerNetwork_CreatesAMissingNetworkOnce (0.13s)
+=== RUN   TestClient_RunContainer_RejectsAnInvalidPublicIP
+--- PASS: TestClient_RunContainer_RejectsAnInvalidPublicIP (0.03s)
+=== RUN   TestClient_RunContainer_RejectsAMissingConfig
+--- PASS: TestClient_RunContainer_RejectsAMissingConfig (0.01s)
+=== RUN   TestClient_RunContainer_MarksTheRowFailedWhenNoImageCanBePulled
+--- PASS: TestClient_RunContainer_MarksTheRowFailedWhenNoImageCanBePulled (3.90s)
+=== RUN   TestClient_RunContainer_MarksTheRowFailedWhenTheStartFails
+--- PASS: TestClient_RunContainer_MarksTheRowFailedWhenTheStartFails (0.21s)
+=== RUN   TestClient_RunContainer_RejectsAContainerThatDoesNotStayRunning
+=== RUN   TestClient_RunContainer_RejectsAContainerThatDoesNotStayRunning/entrypoint_crashes
+=== RUN   TestClient_RunContainer_RejectsAContainerThatDoesNotStayRunning/entrypoint_runs_to_completion
+--- PASS: TestClient_RunContainer_RejectsAContainerThatDoesNotStayRunning (0.85s)
+    --- PASS: TestClient_RunContainer_RejectsAContainerThatDoesNotStayRunning/entrypoint_crashes (0.55s)
+    --- PASS: TestClient_RunContainer_RejectsAContainerThatDoesNotStayRunning/entrypoint_runs_to_completion (0.30s)
+=== RUN   TestClient_RunContainer_ReplacesTheContainerHoldingTheName
+--- PASS: TestClient_RunContainer_ReplacesTheContainerHoldingTheName (1.86s)
+=== RUN   TestClient_RunContainer_HostNetworkSkipsPortPublishing
+--- PASS: TestClient_RunContainer_HostNetworkSkipsPortPublishing (1.65s)
+=== RUN   TestClient_RunContainer_FallsBackToTheDefaultImage
+--- PASS: TestClient_RunContainer_FallsBackToTheDefaultImage (3.04s)
+=== RUN   TestClient_RunContainer_WiresDockerInsideAccess
+--- PASS: TestClient_RunContainer_WiresDockerInsideAccess (1.81s)
+=== RUN   TestClient_SweepFlowCommands_RunsTheTermThenTheKillPass
+=== RUN   TestClient_SweepFlowCommands_RunsTheTermThenTheKillPass/a_TERM_pass_that_signalled_something_is_given_a_grace_period
+=== RUN   TestClient_SweepFlowCommands_RunsTheTermThenTheKillPass/a_TERM_pass_that_signalled_nothing_goes_straight_to_KILL
+=== RUN   TestClient_SweepFlowCommands_RunsTheTermThenTheKillPass/a_TERM_pass_that_fails_stops_the_sweep
+=== RUN   TestClient_SweepFlowCommands_RunsTheTermThenTheKillPass/a_KILL_pass_that_fails_is_reported
+--- PASS: TestClient_SweepFlowCommands_RunsTheTermThenTheKillPass (1.00s)
+    --- PASS: TestClient_SweepFlowCommands_RunsTheTermThenTheKillPass/a_TERM_pass_that_signalled_something_is_given_a_grace_period (1.00s)
+    --- PASS: TestClient_SweepFlowCommands_RunsTheTermThenTheKillPass/a_TERM_pass_that_signalled_nothing_goes_straight_to_KILL (0.00s)
+    --- PASS: TestClient_SweepFlowCommands_RunsTheTermThenTheKillPass/a_TERM_pass_that_fails_stops_the_sweep (0.00s)
+    --- PASS: TestClient_SweepFlowCommands_RunsTheTermThenTheKillPass/a_KILL_pass_that_fails_is_reported (0.00s)
+=== RUN   TestClient_KillFlowCommands_SkipsASandboxThatIsNotRunning
+=== RUN   TestClient_KillFlowCommands_SkipsASandboxThatIsNotRunning/a_stopped_sandbox
+=== RUN   TestClient_KillFlowCommands_SkipsASandboxThatIsNotRunning/a_removed_sandbox
+--- PASS: TestClient_KillFlowCommands_SkipsASandboxThatIsNotRunning (10.38s)
+    --- PASS: TestClient_KillFlowCommands_SkipsASandboxThatIsNotRunning/a_stopped_sandbox (10.19s)
+    --- PASS: TestClient_KillFlowCommands_SkipsASandboxThatIsNotRunning/a_removed_sandbox (0.19s)
+=== RUN   TestClient_KillFlowCommands_FinishesTheSweepAfterTheCallerGivesUp
+=== RUN   TestClient_KillFlowCommands_FinishesTheSweepAfterTheCallerGivesUp/the_caller_gave_up_before_the_stop
+=== RUN   TestClient_KillFlowCommands_FinishesTheSweepAfterTheCallerGivesUp/the_caller_gives_up_between_the_passes
+--- PASS: TestClient_KillFlowCommands_FinishesTheSweepAfterTheCallerGivesUp (2.80s)
+    --- PASS: TestClient_KillFlowCommands_FinishesTheSweepAfterTheCallerGivesUp/the_caller_gave_up_before_the_stop (1.40s)
+    --- PASS: TestClient_KillFlowCommands_FinishesTheSweepAfterTheCallerGivesUp/the_caller_gives_up_between_the_passes (1.40s)
+=== RUN   TestClient_KillFlowCommands_SweepsAnUnhealthySandbox
+--- PASS: TestClient_KillFlowCommands_SweepsAnUnhealthySandbox (1.49s)
+=== RUN   TestClient_KillFlowCommands_RunsTheShellFoundOnThePath
+--- PASS: TestClient_KillFlowCommands_RunsTheShellFoundOnThePath (1.31s)
+=== RUN   TestClient_KillFlowCommands_ReportsASweepThatCannotRun
+--- PASS: TestClient_KillFlowCommands_ReportsASweepThatCannotRun (0.23s)
+=== RUN   TestFlowCommands_FlowCommand_SweepEndsItsCommandsInThisPidNamespace
+    flow_commands_linux_test.go:15: the sweep signals every marked process in the pid namespace; it runs only inside a container
+--- SKIP: TestFlowCommands_FlowCommand_SweepEndsItsCommandsInThisPidNamespace (0.00s)
+=== RUN   TestFlowCommands_FlowCommand_StopEndsItsCommandsAndNothingElse
+=== RUN   TestFlowCommands_FlowCommand_StopEndsItsCommandsAndNothingElse/a_busybox_sandbox
+=== RUN   TestFlowCommands_FlowCommand_StopEndsItsCommandsAndNothingElse/the_default_sandbox_image
+    flow_commands_test.go:96: debian:latest is not present locally
+--- PASS: TestFlowCommands_FlowCommand_StopEndsItsCommandsAndNothingElse (1.38s)
+    --- PASS: TestFlowCommands_FlowCommand_StopEndsItsCommandsAndNothingElse/a_busybox_sandbox (1.38s)
+    --- SKIP: TestFlowCommands_FlowCommand_StopEndsItsCommandsAndNothingElse/the_default_sandbox_image (0.00s)
+=== RUN   TestFlowCommands_WrapperAndSweepRunAtThePidsLimit
+--- PASS: TestFlowCommands_WrapperAndSweepRunAtThePidsLimit (0.45s)
+=== RUN   TestFlowCommands_BackgroundCommandsOutliveTheTerminalThatStartedThem
+=== RUN   TestFlowCommands_BackgroundCommandsOutliveTheTerminalThatStartedThem/a_flow_task's_command
+=== RUN   TestFlowCommands_BackgroundCommandsOutliveTheTerminalThatStartedThem/a_command_outside_a_flow
+--- PASS: TestFlowCommands_BackgroundCommandsOutliveTheTerminalThatStartedThem (6.43s)
+    --- PASS: TestFlowCommands_BackgroundCommandsOutliveTheTerminalThatStartedThem/a_flow_task's_command (3.22s)
+    --- PASS: TestFlowCommands_BackgroundCommandsOutliveTheTerminalThatStartedThem/a_command_outside_a_flow (3.21s)
+=== RUN   TestSandbox_ParseReport_ReadsTheProbeWithoutGuessing
+=== PAUSE TestSandbox_ParseReport_ReadsTheProbeWithoutGuessing
+=== RUN   TestSandbox_DecideSandbox_TurnsTheSandboxOffRatherThanRefusingToStart
+=== RUN   TestSandbox_DecideSandbox_TurnsTheSandboxOffRatherThanRefusingToStart/sandbox_off_by_configuration_says_nothing
+=== RUN   TestSandbox_DecideSandbox_TurnsTheSandboxOffRatherThanRefusingToStart/no_designated_daemon_disables_it_instead_of_failing_the_boot
+time="2026-11-10T00:19:04-03:00" level=error msg="sandbox DISABLED for this deployment: DOCKER_INSIDE_HOST is empty, so a worker would be given whichever daemon this process could autodetect -- possibly the one running PentAGI itself. Agents will run without Docker access until this is fixed; PentAGI keeps running. Setup guide: https://raw.githubusercontent.com/vxcontrol/pentagi/refs/heads/main/examples/guides/worker_node.md" docker_inside_host=
+=== RUN   TestSandbox_DecideSandbox_TurnsTheSandboxOffRatherThanRefusingToStart/tests_not_asked_for:_allowed,_but_the_operator_is_told_it_is_unmeasured
+time="2026-11-10T00:19:04-03:00" level=warning msg="sandbox is ENABLED but its isolation was NOT tested: agents get Docker access nobody has measured. Set DOCKER_INSIDE_POLICY_TESTS=true to have PentAGI check at startup that the sandbox daemon is separate from its own and refuses host-escape requests. Setup guide: https://raw.githubusercontent.com/vxcontrol/pentagi/refs/heads/main/examples/guides/worker_node.md" docker_inside_host="tcp://10.0.0.1:2376"
+=== RUN   TestSandbox_DecideSandbox_TurnsTheSandboxOffRatherThanRefusingToStart/a_passing_sandbox_stays_on
+time="2026-11-10T00:19:04-03:00" level=info msg="sandbox isolation verified: agents reach a separate Docker daemon that refused every host-escape request and served every legitimate one" authorization="[]" checks=35 daemon=sandbox-daemon docker_inside_host="tcp://10.0.0.1:2376"
+=== RUN   TestSandbox_DecideSandbox_TurnsTheSandboxOffRatherThanRefusingToStart/a_probe_that_could_not_run_disables_it
+time="2026-11-10T00:19:04-03:00" level=error msg="sandbox DISABLED for this deployment: the sandbox isolation test could not be completed. Agents will run without Docker access until this is fixed; PentAGI keeps running. Setup guide: https://raw.githubusercontent.com/vxcontrol/pentagi/refs/heads/main/examples/guides/worker_node.md" docker_inside_host="tcp://10.0.0.1:2376" error="could not create the check container"
+=== RUN   TestSandbox_DecideSandbox_TurnsTheSandboxOffRatherThanRefusingToStart/the_sandbox_daemon_is_the_one_PentAGI_runs_on
+time="2026-11-10T00:19:04-03:00" level=error msg="sandbox DISABLED for this deployment: DOCKER_INSIDE_HOST is the same daemon PentAGI orchestrates on, so an agent that escapes its container reaches PentAGI, the other flows and their credentials. Agents will run without Docker access until this is fixed; PentAGI keeps running. Setup guide: https://raw.githubusercontent.com/vxcontrol/pentagi/refs/heads/main/examples/guides/worker_node.md" daemon=orchestrator docker_inside_host="tcp://10.0.0.1:2376"
+=== RUN   TestSandbox_DecideSandbox_TurnsTheSandboxOffRatherThanRefusingToStart/a_failing_check_disables_it_and_names_what_failed
+time="2026-11-10T00:19:04-03:00" level=error msg="sandbox DISABLED for this deployment: the sandbox daemon did not pass the isolation test. Agents will run without Docker access until this is fixed; PentAGI keeps running. Setup guide: https://raw.githubusercontent.com/vxcontrol/pentagi/refs/heads/main/examples/guides/worker_node.md" daemon=sandbox-daemon docker_inside_host="tcp://10.0.0.1:2376" failed_checks="[create/privileged]" passed=34 total=35
+--- PASS: TestSandbox_DecideSandbox_TurnsTheSandboxOffRatherThanRefusingToStart (0.00s)
+    --- PASS: TestSandbox_DecideSandbox_TurnsTheSandboxOffRatherThanRefusingToStart/sandbox_off_by_configuration_says_nothing (0.00s)
+    --- PASS: TestSandbox_DecideSandbox_TurnsTheSandboxOffRatherThanRefusingToStart/no_designated_daemon_disables_it_instead_of_failing_the_boot (0.00s)
+    --- PASS: TestSandbox_DecideSandbox_TurnsTheSandboxOffRatherThanRefusingToStart/tests_not_asked_for:_allowed,_but_the_operator_is_told_it_is_unmeasured (0.00s)
+    --- PASS: TestSandbox_DecideSandbox_TurnsTheSandboxOffRatherThanRefusingToStart/a_passing_sandbox_stays_on (0.00s)
+    --- PASS: TestSandbox_DecideSandbox_TurnsTheSandboxOffRatherThanRefusingToStart/a_probe_that_could_not_run_disables_it (0.00s)
+    --- PASS: TestSandbox_DecideSandbox_TurnsTheSandboxOffRatherThanRefusingToStart/the_sandbox_daemon_is_the_one_PentAGI_runs_on (0.00s)
+    --- PASS: TestSandbox_DecideSandbox_TurnsTheSandboxOffRatherThanRefusingToStart/a_failing_check_disables_it_and_names_what_failed (0.00s)
+=== RUN   TestSandbox_ProbeSandbox_StartsTheCheckContainerOnTheConfiguredNetwork
+=== RUN   TestSandbox_ProbeSandbox_StartsTheCheckContainerOnTheConfiguredNetwork/the_host_network
+=== RUN   TestSandbox_ProbeSandbox_StartsTheCheckContainerOnTheConfiguredNetwork/the_default_network
+--- PASS: TestSandbox_ProbeSandbox_StartsTheCheckContainerOnTheConfiguredNetwork (0.39s)
+    --- PASS: TestSandbox_ProbeSandbox_StartsTheCheckContainerOnTheConfiguredNetwork/the_host_network (0.16s)
+    --- PASS: TestSandbox_ProbeSandbox_StartsTheCheckContainerOnTheConfiguredNetwork/the_default_network (0.23s)
+=== RUN   TestSandbox_WorkerSpec_IsTheSameContainerAgentsGet
+=== PAUSE TestSandbox_WorkerSpec_IsTheSameContainerAgentsGet
+=== RUN   TestSandbox_ProbeScript_EmitsTheContractTheParserReads
+=== PAUSE TestSandbox_ProbeScript_EmitsTheContractTheParserReads
+=== RUN   TestWorkerDaemon_RunsPentagi_FindsOurContainerOrSaysWhyItCannot
+=== RUN   TestWorkerDaemon_RunsPentagi_FindsOurContainerOrSaysWhyItCannot/a_container_that_exited_before_its_inspect_does_not_hide_ours
+=== RUN   TestWorkerDaemon_RunsPentagi_FindsOurContainerOrSaysWhyItCannot/a_daemon_that_cannot_be_listed
+=== RUN   TestWorkerDaemon_RunsPentagi_FindsOurContainerOrSaysWhyItCannot/an_inspect_the_daemon_failed
+=== RUN   TestWorkerDaemon_RunsPentagi_FindsOurContainerOrSaysWhyItCannot/an_inspect_that_ran_out_of_time
+=== RUN   TestWorkerDaemon_RunsPentagi_FindsOurContainerOrSaysWhyItCannot/a_daemon_running_our_container
+=== RUN   TestWorkerDaemon_RunsPentagi_FindsOurContainerOrSaysWhyItCannot/a_daemon_running_only_other_containers
+--- PASS: TestWorkerDaemon_RunsPentagi_FindsOurContainerOrSaysWhyItCannot (0.20s)
+    --- PASS: TestWorkerDaemon_RunsPentagi_FindsOurContainerOrSaysWhyItCannot/a_container_that_exited_before_its_inspect_does_not_hide_ours (0.00s)
+    --- PASS: TestWorkerDaemon_RunsPentagi_FindsOurContainerOrSaysWhyItCannot/a_daemon_that_cannot_be_listed (0.00s)
+    --- PASS: TestWorkerDaemon_RunsPentagi_FindsOurContainerOrSaysWhyItCannot/an_inspect_the_daemon_failed (0.00s)
+    --- PASS: TestWorkerDaemon_RunsPentagi_FindsOurContainerOrSaysWhyItCannot/an_inspect_that_ran_out_of_time (0.20s)
+    --- PASS: TestWorkerDaemon_RunsPentagi_FindsOurContainerOrSaysWhyItCannot/a_daemon_running_our_container (0.00s)
+    --- PASS: TestWorkerDaemon_RunsPentagi_FindsOurContainerOrSaysWhyItCannot/a_daemon_running_only_other_containers (0.00s)
+=== RUN   TestWorkerDaemon_WorkerDaemonClient_TargetsTheConfiguredEndpoint
+--- PASS: TestWorkerDaemon_WorkerDaemonClient_TargetsTheConfiguredEndpoint (0.00s)
+=== RUN   TestWorkerDaemon_LogWorkerDaemonIsolation_ReportsWhatAgentsReach
+=== RUN   TestWorkerDaemon_LogWorkerDaemonIsolation_ReportsWhatAgentsReach/nothing_is_logged_without_a_config
+=== RUN   TestWorkerDaemon_LogWorkerDaemonIsolation_ReportsWhatAgentsReach/nothing_is_logged_without_DOCKER_INSIDE
+=== RUN   TestWorkerDaemon_LogWorkerDaemonIsolation_ReportsWhatAgentsReach/a_socket_mounted_beside_DOCKER_INSIDE_HOST_is_the_host_daemon
+time="2026-11-10T00:19:05-03:00" level=warning msg="DOCKER_INSIDE=true: DOCKER_SOCKET is set, so the host socket is mounted into every worker alongside DOCKER_INSIDE_HOST; unset DOCKER_SOCKET to give sandboxes only the daemon of their own" docker_inside_host="tcp://127.0.0.1:1"
+time="2026-11-10T00:19:05-03:00" level=warning msg="DOCKER_INSIDE=true: agents are given the host daemon, the one running PentAGI itself. An agent that escapes its sandbox can start a privileged container and take the node, PentAGI and the other flows' containers with it. Check the daemon's hardening and whether an authorization plugin is installed, or move sandboxes onto their own daemon with DOCKER_INSIDE_HOST (see examples/guides/worker_node.md)" worker_docker=/run/d.sock
+=== RUN   TestWorkerDaemon_LogWorkerDaemonIsolation_ReportsWhatAgentsReach/certificates_on_the_worker_node_cannot_be_checked
+time="2026-11-10T00:19:05-03:00" level=info msg="DOCKER_INSIDE=true: sandboxes reach DOCKER_INSIDE_HOST with TLS client certificates that live on the worker node, so this process cannot open that endpoint itself" docker_inside_host="tcp://10.0.0.1:3376"
+=== RUN   TestWorkerDaemon_LogWorkerDaemonIsolation_ReportsWhatAgentsReach/a_shared_daemon_without_our_container_does_not_rule_out_this_host
+time="2026-11-10T00:19:05-03:00" level=warning msg="DOCKER_INSIDE=true: agents and the orchestrator share one daemon, and PentAGI's own container is not among the containers it runs. If PentAGI runs in a container elsewhere, an escape does not reach this process; if it runs directly on this host, it does. Check the daemon's hardening and whether an authorization plugin is installed" worker_docker="autodetected host socket"
+=== RUN   TestWorkerDaemon_LogWorkerDaemonIsolation_ReportsWhatAgentsReach/a_separate_daemon_that_cannot_be_listed_is_not_claimed_as_isolated
+time="2026-11-10T00:19:05-03:00" level=warning msg="DOCKER_INSIDE=true: agents are pointed at a separate daemon that could not be listed, so whether it also runs PentAGI is unknown; verify it by hand" docker_inside_host="tcp://127.0.0.1:1" error="failed to list containers: Cannot connect to the Docker daemon at tcp://127.0.0.1:1. Is the docker daemon running?"
+--- PASS: TestWorkerDaemon_LogWorkerDaemonIsolation_ReportsWhatAgentsReach (0.00s)
+    --- PASS: TestWorkerDaemon_LogWorkerDaemonIsolation_ReportsWhatAgentsReach/nothing_is_logged_without_a_config (0.00s)
+    --- PASS: TestWorkerDaemon_LogWorkerDaemonIsolation_ReportsWhatAgentsReach/nothing_is_logged_without_DOCKER_INSIDE (0.00s)
+    --- PASS: TestWorkerDaemon_LogWorkerDaemonIsolation_ReportsWhatAgentsReach/a_socket_mounted_beside_DOCKER_INSIDE_HOST_is_the_host_daemon (0.00s)
+    --- PASS: TestWorkerDaemon_LogWorkerDaemonIsolation_ReportsWhatAgentsReach/certificates_on_the_worker_node_cannot_be_checked (0.00s)
+    --- PASS: TestWorkerDaemon_LogWorkerDaemonIsolation_ReportsWhatAgentsReach/a_shared_daemon_without_our_container_does_not_rule_out_this_host (0.00s)
+    --- PASS: TestWorkerDaemon_LogWorkerDaemonIsolation_ReportsWhatAgentsReach/a_separate_daemon_that_cannot_be_listed_is_not_claimed_as_isolated (0.00s)
+=== RUN   TestWorkerDaemon_LogSeparateDaemon_ClaimsIsolationOnlyWhenItHolds
+=== RUN   TestWorkerDaemon_LogSeparateDaemon_ClaimsIsolationOnlyWhenItHolds/an_orchestration_daemon_that_could_not_be_listed_is_not_reported_as_clear
+time="2026-11-10T00:19:05-03:00" level=info msg="DOCKER_INSIDE=true: sandboxes use a daemon of their own and PentAGI does not run on it, so an escape stays inside the sandbox tier; whether PentAGI runs on the daemon it orchestrates on could not be determined" docker_inside_host="tcp://node:2376" error="failed to list containers: error during connect: Get \"http://daemon.invalid:2375/v1.44/containers/json?filters=%7B%22status%22%3A%7B%22running%22%3Atrue%7D%7D\": daemon is down"
+=== RUN   TestWorkerDaemon_LogSeparateDaemon_ClaimsIsolationOnlyWhenItHolds/one_daemon_reached_through_both_variables_is_reported_as_shared
+time="2026-11-10T00:19:05-03:00" level=warning msg="DOCKER_INSIDE=true: DOCKER_INSIDE_HOST names the daemon PentAGI orchestrates on, so sandboxes do not get a daemon of their own" docker_inside_host="tcp://node:2376"
+time="2026-11-10T00:19:05-03:00" level=warning msg="DOCKER_INSIDE=true: agents and the orchestrator share one daemon, and PentAGI's own container is not among the containers it runs. If PentAGI runs in a container elsewhere, an escape does not reach this process; if it runs directly on this host, it does. Check the daemon's hardening and whether an authorization plugin is installed" worker_docker="autodetected host socket"
+=== RUN   TestWorkerDaemon_LogSeparateDaemon_ClaimsIsolationOnlyWhenItHolds/a_worker_daemon_that_runs_PentAGI_is_not_claimed_as_isolated
+time="2026-11-10T00:19:05-03:00" level=warning msg="DOCKER_INSIDE=true: the daemon designated for sandboxes is the one running PentAGI itself, so pointing agents at it grants what a separate daemon exists to withhold. Point DOCKER_INSIDE_HOST at a daemon that does not run PentAGI (see examples/guides/worker_node.md)" docker_inside_host="tcp://node:2376"
+=== RUN   TestWorkerDaemon_LogSeparateDaemon_ClaimsIsolationOnlyWhenItHolds/a_worker_daemon_apart_from_the_one_running_PentAGI_keeps_an_escape_in_the_sandbox_tier
+time="2026-11-10T00:19:05-03:00" level=info msg="DOCKER_INSIDE=true: sandboxes use a daemon of their own and PentAGI does not run on it, so an escape stays inside the sandbox tier" docker_inside_host="tcp://node:2376"
+--- PASS: TestWorkerDaemon_LogSeparateDaemon_ClaimsIsolationOnlyWhenItHolds (0.00s)
+    --- PASS: TestWorkerDaemon_LogSeparateDaemon_ClaimsIsolationOnlyWhenItHolds/an_orchestration_daemon_that_could_not_be_listed_is_not_reported_as_clear (0.00s)
+    --- PASS: TestWorkerDaemon_LogSeparateDaemon_ClaimsIsolationOnlyWhenItHolds/one_daemon_reached_through_both_variables_is_reported_as_shared (0.00s)
+    --- PASS: TestWorkerDaemon_LogSeparateDaemon_ClaimsIsolationOnlyWhenItHolds/a_worker_daemon_that_runs_PentAGI_is_not_claimed_as_isolated (0.00s)
+    --- PASS: TestWorkerDaemon_LogSeparateDaemon_ClaimsIsolationOnlyWhenItHolds/a_worker_daemon_apart_from_the_one_running_PentAGI_keeps_an_escape_in_the_sandbox_tier (0.00s)
+=== CONT  TestSandbox_ParseReport_ReadsTheProbeWithoutGuessing
+=== RUN   TestSandbox_ParseReport_ReadsTheProbeWithoutGuessing/a_clean_run
+=== CONT  TestSandbox_WorkerSpec_IsTheSameContainerAgentsGet
+=== PAUSE TestSandbox_ParseReport_ReadsTheProbeWithoutGuessing/a_clean_run
+=== RUN   TestSandbox_ParseReport_ReadsTheProbeWithoutGuessing/a_failing_check_is_named_by_group_and_id
+=== PAUSE TestSandbox_ParseReport_ReadsTheProbeWithoutGuessing/a_failing_check_is_named_by_group_and_id
+--- PASS: TestSandbox_WorkerSpec_IsTheSameContainerAgentsGet (0.00s)
+=== RUN   TestSandbox_ParseReport_ReadsTheProbeWithoutGuessing/the_probe_could_not_reach_the_daemon
+=== CONT  TestSandbox_ProbeScript_EmitsTheContractTheParserReads
+=== PAUSE TestSandbox_ParseReport_ReadsTheProbeWithoutGuessing/the_probe_could_not_reach_the_daemon
+=== RUN   TestSandbox_ParseReport_ReadsTheProbeWithoutGuessing/no_summary
+=== PAUSE TestSandbox_ParseReport_ReadsTheProbeWithoutGuessing/no_summary
+=== RUN   TestSandbox_ParseReport_ReadsTheProbeWithoutGuessing/no_daemon_identity
+--- PASS: TestSandbox_ProbeScript_EmitsTheContractTheParserReads (0.00s)
+=== PAUSE TestSandbox_ParseReport_ReadsTheProbeWithoutGuessing/no_daemon_identity
+=== RUN   TestSandbox_ParseReport_ReadsTheProbeWithoutGuessing/a_line_that_is_not_JSON
+=== PAUSE TestSandbox_ParseReport_ReadsTheProbeWithoutGuessing/a_line_that_is_not_JSON
+=== RUN   TestSandbox_ParseReport_ReadsTheProbeWithoutGuessing/an_empty_daemon_identity
+=== PAUSE TestSandbox_ParseReport_ReadsTheProbeWithoutGuessing/an_empty_daemon_identity
+=== CONT  TestSandbox_ParseReport_ReadsTheProbeWithoutGuessing/a_clean_run
+=== CONT  TestSandbox_ParseReport_ReadsTheProbeWithoutGuessing/no_summary
+=== CONT  TestSandbox_ParseReport_ReadsTheProbeWithoutGuessing/an_empty_daemon_identity
+=== CONT  TestSandbox_ParseReport_ReadsTheProbeWithoutGuessing/the_probe_could_not_reach_the_daemon
+=== CONT  TestSandbox_ParseReport_ReadsTheProbeWithoutGuessing/no_daemon_identity
+=== CONT  TestSandbox_ParseReport_ReadsTheProbeWithoutGuessing/a_failing_check_is_named_by_group_and_id
+=== CONT  TestSandbox_ParseReport_ReadsTheProbeWithoutGuessing/a_line_that_is_not_JSON
+--- PASS: TestSandbox_ParseReport_ReadsTheProbeWithoutGuessing (0.00s)
+    --- PASS: TestSandbox_ParseReport_ReadsTheProbeWithoutGuessing/a_clean_run (0.00s)
+    --- PASS: TestSandbox_ParseReport_ReadsTheProbeWithoutGuessing/no_summary (0.00s)
+    --- PASS: TestSandbox_ParseReport_ReadsTheProbeWithoutGuessing/the_probe_could_not_reach_the_daemon (0.00s)
+    --- PASS: TestSandbox_ParseReport_ReadsTheProbeWithoutGuessing/an_empty_daemon_identity (0.00s)
+    --- PASS: TestSandbox_ParseReport_ReadsTheProbeWithoutGuessing/no_daemon_identity (0.00s)
+    --- PASS: TestSandbox_ParseReport_ReadsTheProbeWithoutGuessing/a_line_that_is_not_JSON (0.00s)
+    --- PASS: TestSandbox_ParseReport_ReadsTheProbeWithoutGuessing/a_failing_check_is_named_by_group_and_id (0.00s)
+PASS
+ok  	pentagi/pkg/docker	50.522s
